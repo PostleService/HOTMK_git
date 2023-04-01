@@ -1,2 +1,2 @@
-# HOTMK
-HallsOfTheMountainKing
+-# HOTMK repository
+-Keeps track of changes in my code, I guess
