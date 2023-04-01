@@ -5,6 +5,8 @@ using UnityEngine.Audio;
 
 public class AudioTest : MonoBehaviour
 {
+    // adding some test commentary here just to be sure I understand how it works
+
     public AudioClip audioclip1;
     public AudioClip audioclip2;
     public AudioClip CurrentAudio;
