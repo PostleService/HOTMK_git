@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class Heart : MonoBehaviour
 {
+    public int Order = 0;
     public bool IsLast = false;
     private Animator _animator;
     private string _currentAnimatorState;
-
     private float _animationLength;
 
     public void SpawnInstructions(string aInstruction)

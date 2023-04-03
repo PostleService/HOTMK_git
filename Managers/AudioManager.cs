@@ -46,9 +46,9 @@ public class AudioManager : MonoBehaviour
     private void OnDisable()
     { LevelManagerScript.OnLevelStageChange -= ReactToLvlChange; }
 
-    public void ReactToLvlChange() 
+    public void ReactToLvlChange(int aLevelStage, int aCurrentItems, int aDefaultItems) 
     {
-        if (_levelManager != null) { LevelStageValue = _levelManager.LevelStage; }
+        LevelStageValue = aLevelStage;
         _levelStageChanged = true; 
         _instantCheck = false; 
     }

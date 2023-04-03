@@ -78,8 +78,9 @@ public class PlayerScript : MonoBehaviour
     [Tooltip("Offset from main raycast when looking for enemy")]
     public float DegreeOfSpread = 2f;
 
-    // ANIMATION
     private Animator _animator;
+    public delegate void MyHandler(int aCurrentHealth, int aMaxHealth, string aUpdateState);
+    public static event MyHandler OnHealthUpdate;
 
     private void Awake()
     {
@@ -95,8 +96,8 @@ public class PlayerScript : MonoBehaviour
         GameObject.Find("PlayerCamera").transform.SetParent(gameObject.transform);
 
         CurrentLives = MaxPlayerLives;
+        OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "start");
         //_canvasManager = GameObject.Find("CanvasManager").GetComponent<UIManager>();
-        //_canvasManager.DrawHearts("start");
 
         ResetStunTimer();
         ResetSlowTimer();
@@ -432,7 +433,7 @@ public class PlayerScript : MonoBehaviour
         if (AllowLevelUp)
         {
             PlayerLevel += 1;
-            // _canvasManager.DrawHearts("levelup");
+            OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "levelup");
         }
     }
 
@@ -442,15 +443,12 @@ public class PlayerScript : MonoBehaviour
         CurrentLives = CurrentLives - aDamage;
 
         if (CurrentLives <= 0)
-        {
-            Die();
-            // _canvasManager.DrawHearts("death");
-        }
+        { Die(); }
         else 
         {
-            // if (aDamage < 0) { _canvasManager.DrawHearts("heal"); }
-            // else if (aDamage == 0) { return; }
-            // else { _canvasManager.DrawHearts("damage"); }
+            if (aDamage < 0) { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "heal"); }
+            else if (aDamage == 0) { return; }
+            else { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "damage"); }
         }
     }
 
@@ -458,6 +456,7 @@ public class PlayerScript : MonoBehaviour
     {
         foreach (Transform childtr in this.gameObject.transform)
         { if (childtr.GetComponent<Camera>() != null) { childtr.parent = null; } }
+        OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "death");
         Destroy(this.gameObject);
 
         if (PlayerDeathObject != null)

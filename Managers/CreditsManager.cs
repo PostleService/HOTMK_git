@@ -56,6 +56,8 @@ public class CreditsManager : MonoBehaviour
 
         GameObject TutorialGO = Instantiate(aTutorialWindow, Vector3.zero, Quaternion.identity, GameObject.Find("Menu").transform);
         TutorialGO.name = aTutorialWindow.name;
+        TutorialGO.GetComponent<Canvas>().worldCamera = Camera.main;
+
         CurrentCreditsScreen = TutorialGO;
 
         if (CurrentCreditsScreen != null)

@@ -140,7 +140,7 @@ public class LevelManagerScript : MonoBehaviour
     {
         PlayerScript ps = null;
         LevelStage += 1;
-        OnLevelStageChange?.Invoke();
+        OnLevelStageChange?.Invoke(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage]);
 
         _remainingItemsFound = false;
         // Debug.LogWarning("Level stage is now " + LevelStage);
@@ -157,12 +157,12 @@ public class LevelManagerScript : MonoBehaviour
         }
     }
 
-    public void StopConcealingEnemies() { OnEnemiesDeconceal?.Invoke(); _playerCanSeeThroughWalls = true; } 
+    public void StopConcealingEnemies() { OnEnemiesDeconceal?.Invoke(); _playerCanSeeThroughWalls = true; }
+
+    public delegate void MyHandler(int aLevelStage, int aCurrentItems, int aDefaultItems);
+    public static event MyHandler OnLevelStageChange;
 
     public static event Action OnRememberFog;
-
-    public static event Action OnLevelStageChange;
-
     public static event Action OnEnemiesDeconceal;
 
     private void LocateWalkableTiles()
@@ -263,7 +263,7 @@ public class LevelManagerScript : MonoBehaviour
                 itemToSpawn.GetComponent<DarkObeliskScript>()._levelManager = this.gameObject.GetComponent<LevelManagerScript>();
             }
         }
-        LevelStage += 1;
+        RaiseLevelStage();
     }
 
     private void SpawnLevel3(int aLevelStage)

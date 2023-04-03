@@ -13,17 +13,12 @@ public class UIManager : MonoBehaviour
     private LevelManagerScript _lm;
     private GameObject _player;
 
-    [Header("UI Scaling")]
-    public Vector2 DevelopmentScreenSize = new Vector2(2560, 1440);
-    public Vector2 HeartContOffsetMin = new Vector2(1970, 1226);
-    public Vector2 HeartContOffsetMax = new Vector2(49, 49);
-    public Vector2 ItemContOffsetMin = new Vector2(1970, 1054);
-    public Vector2 ItemContOffsetMax = new Vector2(49, 222);
-    public Vector2 CommonContOffsetMin = new Vector2(2155, 1165);
-    public Vector2 CommonContOffsetMax = new Vector2(95, 150);
-
     private float _visualElementsScale = 1f;
     public bool _screenResizeQueued = false;
+
+    [Header("Screens")]
+    public List<GameObject> HeartsInDisplay = new List<GameObject>(3);
+    public GameObject ItemsScreen;
 
     [Header("Arrow Pointers")]
     public GameObject LevelStageEndPointer;
@@ -33,122 +28,168 @@ public class UIManager : MonoBehaviour
     public int FailsafeObjectCount = 1;
     public Vector2 ArrowSize = new Vector2(50, 50);
 
-    [Header("Health")]
-    public GameObject Heart;
-    [Tooltip("Spacial percentages along X axis of the HeartDisplay rectangle. From right edge to left edge")]
-    public float[] HeartDisplayPercentages = new float[] { 0.75f, 0.5f, 0.25f };
-    [HideInInspector]
-    public List<Vector3> _heartSpawnPositions = new List<Vector3>();
-
     [Header("StageItems")]
+    public GameObject StageItemNum_OutOf;
+    public GameObject StageItemNum_Current;
+    public GameObject StageItemImgObj;
     [Tooltip("A visual representation of levelstage objective: enemy or item")]
     public List<Sprite> LevelStageObject = new List<Sprite>() { };
-    [Tooltip("Spacial percentages along X axis of the ItemsDisplay rectangle. From right edge to left edge")]
-    public float[] ItemDisplayPercentages = new float[] { 0.8f, 0.7f, 0.6f, 0.4f };
     [Tooltip("When item is picked up, it will 'pulse' to this scale and back to 1")]
     public float PulseObjectIconUntilScale = 0.75f;
     public float SpeedOfPulse = 1f;
 
-    private List<Vector3> _elemSpawnPositions = new List<Vector3>();
-    public List<GameObject> _levelStageObjectCounterElements = new List<GameObject>() { };
-
     // THIS BIT IS FOR ITEM PULSING
-    // serves as a switch to keep track of pickups to manipulate level stage goal icon
-    [HideInInspector]
-    public int ItemPickupChecker = 0;
-    private int _itemPickupChecker
-    {
-        get { return ItemPickupChecker; }
-        set
-        {
-            if (value != ItemPickupChecker)
-            { ItemPickupChecker = value; _levelStageObjectDecremented = true; }
-        }
-    }
-    private bool _levelStageObjectDecremented = false;
+    private bool _itemPulseInitiated = false;        
     private bool _pulseBottomReached = false;
-    [HideInInspector]
-    public bool StartItemDisplay = false;
-
+    
     private void Start()
     {
-        
+        _lm = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
+    }
+
+    private void FixedUpdate()
+    {
+        if (_itemPulseInitiated && LevelStageEndPointer != null) { StageIconPulse(); }
     }
 
     private void OnEnable()
     { 
         PlayerScript.OnSpawn += AssignPlayer;
+        PlayerScript.OnHealthUpdate += UpdateHearts;
+        LevelManagerScript.OnLevelStageChange += UpdateItems;
         EnemyScript.OnDie += (aStageLevel) =>
         {
-            PulseLevelStageObjectIcon(aStageLevel);
+            InitiateLevelStageIconPulse(aStageLevel);
             LevelStagePointersDecision(aStageLevel);
+            DecrementItemsCount(aStageLevel);
         }; // lambda with listed subscriptions that takes input from the event with 1 argument
 
         DarkObeliskScript.OnDie += (aStageLevel) =>
         {
-            PulseLevelStageObjectIcon(aStageLevel);
+            InitiateLevelStageIconPulse(aStageLevel);
             LevelStagePointersDecision(aStageLevel);
+            DecrementItemsCount(aStageLevel);
         };
     }
 
     private void OnDisable()
     {
         PlayerScript.OnSpawn -= AssignPlayer;
-        
+        PlayerScript.OnHealthUpdate -= UpdateHearts;
+        LevelManagerScript.OnLevelStageChange -= UpdateItems;
         EnemyScript.OnDie -= (aStageLevel) =>
         {
-            PulseLevelStageObjectIcon(aStageLevel);
+            InitiateLevelStageIconPulse(aStageLevel);
             LevelStagePointersDecision(aStageLevel);
+            DecrementItemsCount(aStageLevel);
         };
         DarkObeliskScript.OnDie -= (aStageLevel) =>
         {
-            PulseLevelStageObjectIcon(aStageLevel);
+            InitiateLevelStageIconPulse(aStageLevel);
             LevelStagePointersDecision(aStageLevel);
+            DecrementItemsCount(aStageLevel);
         };
     }
 
     private void AssignPlayer()
     { if (_player == null) { _player = GameObject.Find("Player"); } }
 
-    private void PulseLevelStageObjectIcon(int aInt) 
-    { }
+    #region ITEMS
+
+    private void UpdateItems(int aLevelStage, int aCurrentItems, int aDefaultItems)
+    {
+        if (aLevelStage < 3)
+        {
+            // Enable item counter and image of current objective at the start of the level
+            ItemsScreen.SetActive(true);
+            
+            // Update the item counter and image when level up is occuring
+            // initiate counters for current stage
+            TextMeshProUGUI outOfTxt = StageItemNum_OutOf.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI currTxt = StageItemNum_Current.GetComponent<TextMeshProUGUI>();
+            string currValue;
+            if (aLevelStage == 0) { currValue = (aDefaultItems - aCurrentItems).ToString(); }
+            else { currValue = aCurrentItems.ToString(); }
+
+            outOfTxt.text = aDefaultItems.ToString();
+            currTxt.text = currValue;
+
+            // initiate icon for current stage
+            float iconScaleDownValue = 3f;
+
+            StageItemImgObj.GetComponent<Image>().sprite = LevelStageObject[aLevelStage];
+            RectTransform imageObjRT = StageItemImgObj.GetComponent<RectTransform>();
+            Image imageObjImg = StageItemImgObj.GetComponent<Image>();
+            Vector2 imageObjSize = new Vector2(imageObjImg.sprite.rect.width, imageObjImg.sprite.rect.height);
+            imageObjRT.sizeDelta = new Vector2((imageObjSize.x * _visualElementsScale) * iconScaleDownValue, (imageObjSize.y * _visualElementsScale) * iconScaleDownValue);
+
+            InitiateLevelStageIconPulse(aLevelStage);
+        }
+        else { ItemsScreen.SetActive(false); }
+    }
+
+    private void InitiateLevelStageIconPulse(int aLevelStage)
+    {
+        if (_lm != null) 
+        {
+            if (aLevelStage == _lm.LevelStage)
+            { _itemPulseInitiated = true; }
+        }
+    }
+
+    private void StageIconPulse()
+    {
+        // if boolean has not been flipped - keep decreasing Image scale until it reaches PulseObjectIconUntilScale
+        if (!_pulseBottomReached)
+        {
+            Vector3 LocalScale = StageItemImgObj.GetComponent<RectTransform>().localScale;
+            Vector3 newLocalScale = LocalScale - (new Vector3(Time.deltaTime, Time.deltaTime, Time.deltaTime) * SpeedOfPulse);
+            StageItemImgObj.GetComponent<RectTransform>().localScale = newLocalScale;
+
+            if (StageItemImgObj.GetComponent<RectTransform>().localScale.x <= PulseObjectIconUntilScale)
+            { _pulseBottomReached = true; }
+        }
+        // Once boolean is flipped - decrease image scale until it's back to 1 and flip both pickup and pulse bottom booleans
+        if (_pulseBottomReached)
+        {
+            Vector3 LocalScale = StageItemImgObj.GetComponent<RectTransform>().localScale;
+            Vector3 newLocalScale = LocalScale + (new Vector3(Time.deltaTime, Time.deltaTime, Time.deltaTime) * SpeedOfPulse);
+            StageItemImgObj.GetComponent<RectTransform>().localScale = newLocalScale;
+
+            if (StageItemImgObj.GetComponent<RectTransform>().localScale.x >= 1)
+            { _pulseBottomReached = false; _itemPulseInitiated = false; }
+        }
+    }
+
+    private void DecrementItemsCount(int aLevelStage)
+    {
+        if (aLevelStage < 3 && aLevelStage == _lm.LevelStage)
+        {
+            TextMeshProUGUI currTxt = StageItemNum_Current.GetComponent<TextMeshProUGUI>();
+            string currValue;
+            if (aLevelStage == 0) { currValue = (int.Parse(currTxt.text) + 1).ToString(); }
+            else { currValue = (int.Parse(currTxt.text) - 1).ToString(); }
+
+            currTxt.text = currValue;
+        }
+    }
+
+    #endregion ITEMS
+
+    #region HEARTS
+
+    private void UpdateHearts(int aCurrentLives, int aMaxLives, string aCommand)
+    {
+        // Enable health counter
+        // subscribe to PlayerScript.OnSpawn
+    }
+
+    #endregion HEARTS
 
     private void LevelStagePointersDecision(int aInt) 
     { }
 
-    public void DrawHearts(string aRedrawDetails, int aNumberOfHearts)
-    { }
-
-    /*
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        _screenResizeQueued = true;
-
-        _lm = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
-        GameObject.Find("Canvas_UserInterface(BackGround)").GetComponent<Canvas>().worldCamera = Camera.main;
-        GameObject.Find("Canvas_UserInterface(Display)").GetComponent<Canvas>().worldCamera = Camera.main;
-        GameObject.Find("Canvas_UserInterface(Arrows)").GetComponent<Canvas>().worldCamera = Camera.main;
-
-        _heartSpawnPositions = DefineHeartPositions();
-        _elemSpawnPositions = DefineLevelStageObjectsCounterPositions();
-    }
-
-    // Update is called once per frame
-    void FixedUpdate()
-    {
-        if (_lm.LevelStage >= 0 && _lm.LevelStage < 4) { StartItemDisplay = true; }
-        else StartItemDisplay = false;
-        DrawLevelStageObjects();
-
-        MonitorLevelStagePointers();
-        PulseLevelStageObjectIcon();
-
-        if (_screenResizeQueued) { ResizeDisplay(); }
-    }
-
-
+/*
     // UPDATE FUNCTIONS
 
     // ARROW POINTERS
@@ -252,35 +293,6 @@ public class UIManager : MonoBehaviour
 
                     heart.GetComponent<Heart>().SpawnInstructions(instructions);
                 }
-            }
-        }
-    }
-
-    private void PulseLevelStageObjectIcon()
-    {
-        // if the object has been decremented or changed in any way
-        // and the list of level stage objects is not empty
-        if (_levelStageObjectDecremented && _levelStageObjectCounterElements.Any())
-        {
-            // if boolean has not been flipped - keep decreasing Image scale until it reaches PulseObjectIconUntilScale
-            if (!_pulseBottomReached)
-            {
-                Vector3 LocalScale = _levelStageObjectCounterElements[3].GetComponent<RectTransform>().localScale;
-                Vector3 newLocalScale = LocalScale - (new Vector3(Time.deltaTime, Time.deltaTime, Time.deltaTime) * SpeedOfPulse);
-                _levelStageObjectCounterElements[3].GetComponent<RectTransform>().localScale = newLocalScale;
-
-                if (_levelStageObjectCounterElements[3].GetComponent<RectTransform>().localScale.x <= PulseObjectIconUntilScale)
-                { _pulseBottomReached = true; }
-            }
-            // Once boolean is flipped - decrease image scale until it's back to 1 and flip both pickup and pulse bottom booleans
-            if (_pulseBottomReached)
-            {
-                Vector3 LocalScale = _levelStageObjectCounterElements[3].GetComponent<RectTransform>().localScale;
-                Vector3 newLocalScale = LocalScale + (new Vector3(Time.deltaTime, Time.deltaTime, Time.deltaTime) * SpeedOfPulse);
-                _levelStageObjectCounterElements[3].GetComponent<RectTransform>().localScale = newLocalScale;
-
-                if (_levelStageObjectCounterElements[3].GetComponent<RectTransform>().localScale.x >= 1)
-                { _levelStageObjectDecremented = false; _pulseBottomReached = false; }
             }
         }
     }
