@@ -23,17 +23,16 @@ public class LevelManagerScript : MonoBehaviour
 
     [Header("Level Progression")]
     [Tooltip("Five in total: items_lvl1,mobs_lvl1,items_lvl2,mobs_lvl2,endgame_lvl3")]
-    public int LevelStage = 0;
+    public int LevelStage = -1;
 
     [Tooltip("A number of items of each level the game will attempt to spawn")]
     public List<int> DefaultItemsCount = new List<int>();
     public List<int> _currentItemsCount = new List<int>();
 
-    public List<GameObject> ItemPrefabs = new List<GameObject>();
+    public GameObject ObeliskPrefab;
 
     // ITEM SPAWN
     public List<Vector3> Lvl1ItemLocations = new List<Vector3>();
-    public List<Vector3> Lvl2ItemLocations = new List<Vector3>();
     [Tooltip("A distance in units below which items do not spawn close to each other")]
     public float ItemSpawnDistance = 5;
     [Tooltip("Layers which will be discarded when trying to spawn items. Walls, collision")]
@@ -64,7 +63,7 @@ public class LevelManagerScript : MonoBehaviour
         SpawnHealth();
         PlayerSpawner.GetComponent<SpawnerScript>().Activated = true; 
         LocateWalkableTiles();
-        LevelStage = -1;
+        SpawnItems();
     }
 
     // Update is called once per frame
@@ -75,12 +74,30 @@ public class LevelManagerScript : MonoBehaviour
     { 
         PlayerScript.OnSpawn += AssignPlayer;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow += AllowLvl3ToSpawn;
+        EnemyScript.OnSpawn += ReactToEnemySpawn;
+        EnemyScript.OnDie += (aStageLevel) =>
+        {
+            ReactToDeath(aStageLevel);
+        }; // lambda with listed subscriptions that takes input from the event with 1 argument
+        DarkObeliskScript.OnDie += (aStageLevel) =>
+        {
+            ReactToDeath(aStageLevel);
+        };
     }
 
     private void OnDisable()
     { 
         PlayerScript.OnSpawn -= AssignPlayer;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
+        EnemyScript.OnSpawn -= ReactToEnemySpawn;
+        EnemyScript.OnDie -= (aStageLevel) =>
+        {
+            ReactToDeath(aStageLevel);
+        };
+        DarkObeliskScript.OnDie -= (aStageLevel) =>
+        {
+            ReactToDeath(aStageLevel);
+        };
     }
 
     private void AssignPlayer()
@@ -89,27 +106,31 @@ public class LevelManagerScript : MonoBehaviour
     private void AllowLvl3ToSpawn()
     { Lvl3Spawner.GetComponent<SpawnerScript>().AllowLvl3Spawn = true; }
 
+    public void ReactToEnemySpawn(int aStageLevel)
+    {
+        _currentItemsCount[aStageLevel] += 1;
+        DefaultItemsCount[aStageLevel] += 1;
+    }
+
+    private void ReactToDeath(int aStageLevel) 
+    { 
+        _currentItemsCount[aStageLevel] -= 1;
+    }
+
     // UPDATE FUNCTIONS
 
     private void MonitorItems()
     {
-        if (LevelStage < 0)
-        {
-            SpawnItems(LevelStage + 1);
-            RaiseLevelStage();
-        }
-
-        else if (LevelStage < 4)
+        if (LevelStage > - 1 && LevelStage < 3)
         {
             if (_currentItemsCount[LevelStage] <= 0)
             {
                 RaiseLevelStage();
-                if (LevelStage == 2) { SpawnItems(LevelStage); }
-                else if (LevelStage == 3) { SpawnLevel3(LevelStage); }
+                if (LevelStage == 2) { SpawnLevel3(LevelStage); }
             }
         }
 
-        else if (LevelStage == 4)
+        else if (LevelStage == 3)
         { if (EnemyLvl3 != null) 
             {  EnemyLvl3.GetComponent<EnemyScript>().Die(); } 
         }
@@ -127,8 +148,8 @@ public class LevelManagerScript : MonoBehaviour
         if (_player != null)
         {
             ps = _player.GetComponent<PlayerScript>();
-            if (LevelStage == 1 || LevelStage == 3)
-            { if (_player != null) { ps.LevelUp(); } }
+            if (LevelStage == 1 || LevelStage == 2)
+            { ps?.LevelUp(); }
             if (LevelStage >= ps.RememberFogAtLevelStage)
             { OnRememberFog?.Invoke(); } // if not equal to null, invoke action
             if (LevelStage >= ps.CanSeeThroughWallsAtStage)
@@ -184,28 +205,27 @@ public class LevelManagerScript : MonoBehaviour
         }
     }
 
-    private void SpawnItems(int aLevelStage)
+    // even if no items are spawned, it will still increment lvl stage form -1, which will initiate monitoring process and give time for enemies to increment respective counts
+    private void SpawnItems()
     {
-        int nItemsToSpawn = DefaultItemsCount[aLevelStage]; // take level stage and check corresponding index within the DefaultItemsCount list
+        int nItemsToSpawn = DefaultItemsCount[0]; // take level stage and check corresponding index within the DefaultItemsCount list
         int randomNumber = new System.Random().Next(AllWalkableTiles.Count);
         Vector3 itemSpawnLocation = Vector3.zero;
 
         for (int i = 0; i < nItemsToSpawn; i++)
         {
             int IterationsOfManual = -1;
-            if (aLevelStage == 0 && Lvl1ItemLocations.Any()) { IterationsOfManual = Lvl1ItemLocations.Count(); }
-            else if (aLevelStage == 2 && Lvl2ItemLocations.Any()) { IterationsOfManual = Lvl2ItemLocations.Count(); }
+            IterationsOfManual = Lvl1ItemLocations.Count();
             
             // create a temp list of vectors, checking whether any of them are close to already spawned items
             List<Vector3> tempV3List = new List<Vector3>();
 
             if (i < IterationsOfManual)
             {
-                if (aLevelStage == 0) { itemSpawnLocation = Lvl1ItemLocations[i]; }
-                else if (aLevelStage == 2) { itemSpawnLocation = Lvl2ItemLocations[i]; }
+                itemSpawnLocation = Lvl1ItemLocations[i];
 
-                GameObject itemToSpawn = Instantiate(ItemPrefabs[aLevelStage], itemSpawnLocation, new Quaternion(), GameObject.Find("ItemHolder").transform);
-                _currentItemsCount[aLevelStage] += 1;
+                GameObject itemToSpawn = Instantiate(ObeliskPrefab, itemSpawnLocation, new Quaternion(), GameObject.Find("ItemHolder").transform);
+                _currentItemsCount[0] += 1;
                 itemToSpawn.GetComponent<DarkObeliskScript>()._levelManager = this.gameObject.GetComponent<LevelManagerScript>();
             }
 
@@ -238,11 +258,12 @@ public class LevelManagerScript : MonoBehaviour
                     randomNumber = new System.Random().Next(tempV3List.Count);
                     itemSpawnLocation = tempV3List[randomNumber];
                 }
-                GameObject itemToSpawn = Instantiate(ItemPrefabs[aLevelStage], itemSpawnLocation, new Quaternion(), GameObject.Find("ItemHolder").transform);
-                _currentItemsCount[aLevelStage] += 1;
+                GameObject itemToSpawn = Instantiate(ObeliskPrefab, itemSpawnLocation, new Quaternion(), GameObject.Find("ItemHolder").transform);
+                _currentItemsCount[0] += 1;
                 itemToSpawn.GetComponent<DarkObeliskScript>()._levelManager = this.gameObject.GetComponent<LevelManagerScript>();
             }
         }
+        LevelStage += 1;
     }
 
     private void SpawnLevel3(int aLevelStage)

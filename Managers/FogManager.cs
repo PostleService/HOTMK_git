@@ -95,12 +95,14 @@ public class FogManager : MonoBehaviour
     private void OnEnable()
     { 
         LevelManagerScript.OnRememberFog += StopConcealingFog;
+        EnemyScript.OnDie += DespawnAllFog;
         PlayerScript.OnSpawn += AssignPlayer;
     }
 
     private void OnDisable()
     { 
         LevelManagerScript.OnRememberFog -= StopConcealingFog;
+        EnemyScript.OnDie -= DespawnAllFog;
         PlayerScript.OnSpawn -= AssignPlayer;
     }
 
@@ -168,7 +170,7 @@ public class FogManager : MonoBehaviour
             GameObject[] goList = FindObjectsOfType<GameObject>();
             foreach (GameObject go in goList)
             { 
-                if (go.GetComponent<EnemyScript>() != null && go.GetComponent<EnemyScript>().ItemStageLevel == 4)
+                if (go.GetComponent<EnemyScript>() != null && go.GetComponent<EnemyScript>().ItemStageLevel == 3)
                 { _lvl3 = go; }
             }
         }
@@ -440,45 +442,48 @@ public class FogManager : MonoBehaviour
         FogTilemap.SetTiles(cellPosArray, tbArray);
     }
 
-    public void DespawnAllFog()
+    public void DespawnAllFog(int aLevelStage)
     {
-        _lvl3 = null;
-
-        Tilemap[] tilemapsArray = GameObject.FindObjectsOfType<Tilemap>();
-        Tilemap tilemap = null;
-        List<Vector3Int> AllTiles = new List<Vector3Int>();
-        Vector3Int[] cellPosArray = new Vector3Int[] { };
-        List<TileBase> tbList = new List<TileBase>();
-        TileBase[] tbArray = new TileBase[] { };
-        foreach (Tilemap tlmp in tilemapsArray)
+        if (aLevelStage == 3)
         {
-            if (tlmp.name == "Abisso")
-            { tilemap = tlmp; }
-        }
+            _lvl3 = null;
 
-        // if I get lost for any reason, original grid cellcize was 1 with tiles = 32x32 pixels
-        Grid grid = FindObjectOfType<Grid>();
-        float scaleX = grid.cellSize.x; float scaleY = grid.cellSize.y;
-
-        Bounds tlmpBounds = tilemap.GetComponent<TilemapRenderer>().bounds;
-        float boundsXmin = tlmpBounds.min.x; float boundsXmax = tlmpBounds.max.x;
-        float boundsYmin = tlmpBounds.min.y; float boundsYmax = tlmpBounds.max.y;
-
-        // We are not adding absolute values, because tile center is in 0.5,0.5 coordinates for tile of scale 1.
-        // Hence the formula of dividing by 2
-        for (float x = (boundsXmin + (scaleX / 2)); x <= (boundsXmax - (scaleX / 2)); x += scaleX)
-        {
-            for (float y = (boundsYmin + (scaleY / 2)); y <= (boundsYmax - (scaleY / 2)); y += scaleY)
+            Tilemap[] tilemapsArray = GameObject.FindObjectsOfType<Tilemap>();
+            Tilemap tilemap = null;
+            List<Vector3Int> AllTiles = new List<Vector3Int>();
+            Vector3Int[] cellPosArray = new Vector3Int[] { };
+            List<TileBase> tbList = new List<TileBase>();
+            TileBase[] tbArray = new TileBase[] { };
+            foreach (Tilemap tlmp in tilemapsArray)
             {
-                Vector3Int vec3Int = Vector3Int.RoundToInt(new Vector3(x, y, 0));
-                Vector3Int cellPos = _gridLayout.WorldToCell(new Vector3Int(vec3Int.x, vec3Int.y, 0));
-                AllTiles.Add(cellPos); tbList.Add(null);
+                if (tlmp.name == "Abisso")
+                { tilemap = tlmp; }
             }
-        }
-        cellPosArray = AllTiles.ToArray();
-        tbArray = tbList.ToArray(); // SetTiles function is less resource heavy than SetTile one by one, thus creating arrays for SetTiles in this step
 
-        FogTilemap.SetTiles(cellPosArray, tbArray);
+            // if I get lost for any reason, original grid cellcize was 1 with tiles = 32x32 pixels
+            Grid grid = FindObjectOfType<Grid>();
+            float scaleX = grid.cellSize.x; float scaleY = grid.cellSize.y;
+
+            Bounds tlmpBounds = tilemap.GetComponent<TilemapRenderer>().bounds;
+            float boundsXmin = tlmpBounds.min.x; float boundsXmax = tlmpBounds.max.x;
+            float boundsYmin = tlmpBounds.min.y; float boundsYmax = tlmpBounds.max.y;
+
+            // We are not adding absolute values, because tile center is in 0.5,0.5 coordinates for tile of scale 1.
+            // Hence the formula of dividing by 2
+            for (float x = (boundsXmin + (scaleX / 2)); x <= (boundsXmax - (scaleX / 2)); x += scaleX)
+            {
+                for (float y = (boundsYmin + (scaleY / 2)); y <= (boundsYmax - (scaleY / 2)); y += scaleY)
+                {
+                    Vector3Int vec3Int = Vector3Int.RoundToInt(new Vector3(x, y, 0));
+                    Vector3Int cellPos = _gridLayout.WorldToCell(new Vector3Int(vec3Int.x, vec3Int.y, 0));
+                    AllTiles.Add(cellPos); tbList.Add(null);
+                }
+            }
+            cellPosArray = AllTiles.ToArray();
+            tbArray = tbList.ToArray(); // SetTiles function is less resource heavy than SetTile one by one, thus creating arrays for SetTiles in this step
+
+            FogTilemap.SetTiles(cellPosArray, tbArray);
+        }
     }
 
     public void StopConcealingFog() { ReconcealTiles = false; }

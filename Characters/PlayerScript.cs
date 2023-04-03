@@ -95,8 +95,8 @@ public class PlayerScript : MonoBehaviour
         GameObject.Find("PlayerCamera").transform.SetParent(gameObject.transform);
 
         CurrentLives = MaxPlayerLives;
-        _canvasManager = GameObject.Find("CanvasManager").GetComponent<UIManager>();
-        _canvasManager.DrawHearts("start");
+        //_canvasManager = GameObject.Find("CanvasManager").GetComponent<UIManager>();
+        //_canvasManager.DrawHearts("start");
 
         ResetStunTimer();
         ResetSlowTimer();
@@ -432,7 +432,7 @@ public class PlayerScript : MonoBehaviour
         if (AllowLevelUp)
         {
             PlayerLevel += 1;
-            _canvasManager.DrawHearts("levelup");
+            // _canvasManager.DrawHearts("levelup");
         }
     }
 
@@ -444,13 +444,13 @@ public class PlayerScript : MonoBehaviour
         if (CurrentLives <= 0)
         {
             Die();
-            _canvasManager.DrawHearts("death");
+            // _canvasManager.DrawHearts("death");
         }
         else 
         {
-            if (aDamage < 0) { _canvasManager.DrawHearts("heal"); }
-            else if (aDamage == 0) { return; }
-            else { _canvasManager.DrawHearts("damage"); }
+            // if (aDamage < 0) { _canvasManager.DrawHearts("heal"); }
+            // else if (aDamage == 0) { return; }
+            // else { _canvasManager.DrawHearts("damage"); }
         }
     }
 

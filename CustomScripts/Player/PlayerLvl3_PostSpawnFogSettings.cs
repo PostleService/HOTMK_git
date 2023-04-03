@@ -25,6 +25,6 @@ public class PlayerLvl3_PostSpawnFogSettings : MonoBehaviour
     {
         if (RememberFog) { _fm.StopConcealingFog(); }
         if (SeeThroughWalls) { _lms.StopConcealingEnemies(); }
-        if (DespawnAllFog) { _fm.DespawnAllFog(); }
+        if (DespawnAllFog) { _fm.DespawnAllFog(4); }
     }
 }

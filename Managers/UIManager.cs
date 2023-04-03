@@ -70,6 +70,57 @@ public class UIManager : MonoBehaviour
     [HideInInspector]
     public bool StartItemDisplay = false;
 
+    private void Start()
+    {
+        
+    }
+
+    private void OnEnable()
+    { 
+        PlayerScript.OnSpawn += AssignPlayer;
+        EnemyScript.OnDie += (aStageLevel) =>
+        {
+            PulseLevelStageObjectIcon(aStageLevel);
+            LevelStagePointersDecision(aStageLevel);
+        }; // lambda with listed subscriptions that takes input from the event with 1 argument
+
+        DarkObeliskScript.OnDie += (aStageLevel) =>
+        {
+            PulseLevelStageObjectIcon(aStageLevel);
+            LevelStagePointersDecision(aStageLevel);
+        };
+    }
+
+    private void OnDisable()
+    {
+        PlayerScript.OnSpawn -= AssignPlayer;
+        
+        EnemyScript.OnDie -= (aStageLevel) =>
+        {
+            PulseLevelStageObjectIcon(aStageLevel);
+            LevelStagePointersDecision(aStageLevel);
+        };
+        DarkObeliskScript.OnDie -= (aStageLevel) =>
+        {
+            PulseLevelStageObjectIcon(aStageLevel);
+            LevelStagePointersDecision(aStageLevel);
+        };
+    }
+
+    private void AssignPlayer()
+    { if (_player == null) { _player = GameObject.Find("Player"); } }
+
+    private void PulseLevelStageObjectIcon(int aInt) 
+    { }
+
+    private void LevelStagePointersDecision(int aInt) 
+    { }
+
+    public void DrawHearts(string aRedrawDetails, int aNumberOfHearts)
+    { }
+
+    /*
+
     // Start is called before the first frame update
     void Start()
     {
@@ -97,14 +148,6 @@ public class UIManager : MonoBehaviour
         if (_screenResizeQueued) { ResizeDisplay(); }
     }
 
-    private void OnEnable()
-    { PlayerScript.OnSpawn += AssignPlayer; }
-
-    private void OnDisable()
-    { PlayerScript.OnSpawn -= AssignPlayer; }
-
-    private void AssignPlayer()
-    { if (_player == null) { _player = GameObject.Find("Player"); } }
 
     // UPDATE FUNCTIONS
 
@@ -163,40 +206,6 @@ public class UIManager : MonoBehaviour
         return result;
     }
 
-    public List<Vector3> DefineHeartPositions()
-    {
-        GameObject heartDisplay = GameObject.Find("HealthDisplay");
-        RectTransform heartDisplayRT = heartDisplay.GetComponent<RectTransform>();
-
-        // We create an empty array of 4 Vec3s, call for GetWorldCorners function from RectTransform of the particular UI element, which populates the array with values
-        // After that we can convert received values into screen positions for ease of use if necessary
-        // What the document does not say is values of array elements:
-        // 0 bottom left corner; 1 top left; 2 top right; 3 bottom right
-
-        Vector3[] WorldVectors = new Vector3[4];
-        List<Vector3> ScreenVectors = new List<Vector3>();
-        heartDisplayRT.GetWorldCorners(WorldVectors);
-        for (var i = 0; i < 4; i++)
-        { ScreenVectors.Add(Camera.main.WorldToScreenPoint(WorldVectors[i])); }
-
-        // Upper edges of the heart monitor box to subtract internal percentage-wise scaled positions
-        float RightEdge = ScreenVectors[3].x;
-        float TopEdge = ScreenVectors[1].y;
-
-        // Height and width of the heart monitor box itself
-        float width = ScreenVectors[3].x - ScreenVectors[1].x;
-        float height = ScreenVectors[1].y - ScreenVectors[0].y;
-
-        List<Vector3> HeartSpawnPositions = new List<Vector3>();
-
-        foreach (float percent in HeartDisplayPercentages)
-        {
-            HeartSpawnPositions.Add
-            (new Vector3(RightEdge - (width - (width * percent)), TopEdge - (height * 0.5f), 0));
-        }
-        return HeartSpawnPositions;
-    }
-
     // HEALTH DISPLAY
 
     // uses a single function to communicate with already existing hearts and hearts to spawn in their stead
@@ -247,36 +256,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // Same process as in DefineHeartPositions. Removing extensive comments
-    private List<Vector3> DefineLevelStageObjectsCounterPositions()
-    {
-        GameObject itemsDisplay = GameObject.Find("ItemDisplay");
-        RectTransform itemsDisplayRT = itemsDisplay.GetComponent<RectTransform>();
-
-        Vector3[] WorldVectors = new Vector3[4];
-        List<Vector3> ScreenVectors = new List<Vector3>();
-        itemsDisplayRT.GetWorldCorners(WorldVectors);
-        for (var i = 0; i < 4; i++)
-        { ScreenVectors.Add(Camera.main.WorldToScreenPoint(WorldVectors[i])); }
-
-        // Upper edges of the heart monitor box to subtract internal percentage-wise scaled positions
-        float RightEdge = ScreenVectors[3].x;
-        float TopEdge = ScreenVectors[1].y;
-
-        // Height and width of the heart monitor box itself
-        float width = ScreenVectors[3].x - ScreenVectors[1].x;
-        float height = ScreenVectors[1].y - ScreenVectors[0].y;
-
-        List<Vector3> ElemSpawnPositions = new List<Vector3>();
-
-        foreach (float percent in ItemDisplayPercentages)
-        {
-            ElemSpawnPositions.Add
-            (new Vector3(RightEdge - (width - (width * percent)), TopEdge - (height * 0.5f), 0));
-        }
-        return ElemSpawnPositions;
-    }
-
     private void PulseLevelStageObjectIcon()
     {
         // if the object has been decremented or changed in any way
@@ -305,7 +284,7 @@ public class UIManager : MonoBehaviour
             }
         }
     }
-
+ 
     public void DrawLevelStageObjects()
     {
         LevelManagerScript lms = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
@@ -463,5 +442,6 @@ public class UIManager : MonoBehaviour
         _screenResizeQueued = false;
 
     }
+    */
 
 }

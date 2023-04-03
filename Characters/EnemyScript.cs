@@ -184,6 +184,10 @@ public class EnemyScript : MonoBehaviour
     [Header("Victory")]
     public GameObject DeathObject;
 
+    public delegate void MyHandler(int aItemStageLevel);
+    public static event MyHandler OnDie;
+    public static event MyHandler OnSpawn;
+
     void Start()
     {
         AdaptLightingToState(false, false);
@@ -201,9 +205,9 @@ public class EnemyScript : MonoBehaviour
         _currentEscapeAttempt = 1;
         _currentPatrolTarget = _patrolTransforms[_currentPatrolPoint];
 
+
         _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
-        _levelManager._currentItemsCount[ItemStageLevel] += 1;
-        _levelManager.DefaultItemsCount[ItemStageLevel] += 1;
+        OnSpawn?.Invoke(ItemStageLevel);
 
         if (EnemyLevel == 3) { _levelManager.EnemyLvl3 = this.gameObject; }
     }
@@ -829,10 +833,10 @@ public class EnemyScript : MonoBehaviour
     {
         if (_currentFleeSpot != null) { Destroy(_currentFleeSpot); }
         if (_currentRushTarget != null) { Destroy(_currentRushTarget.gameObject); }
-        _levelManager._currentItemsCount[ItemStageLevel] -= 1;
         Destroy(this.gameObject);
         if (DeathObject != null) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
-        if (EnemyLevel == 3) { GameObject.Find("FogManager").GetComponent<FogManager>().DespawnAllFog(); }
+
+        OnDie?.Invoke(ItemStageLevel);
     }
 
     public void Stun()
@@ -871,7 +875,7 @@ public class EnemyScript : MonoBehaviour
             } 
         }
     }
-
+    
     public void TeleportToSpawn()
     {
         CurrentlyTeleporting = true;
