@@ -54,18 +54,6 @@ public class MenuManagerScript : MonoBehaviour
     [Header("Menu navigation")]
     public GameObject EventSystemObject;
     public GameObject LastSelectedButton;
-    public GameObject MainMenuFirstButton;
-    public GameObject ResetProgressMenuFirstButton;
-    public GameObject RestartMenuFirstButton;
-    public GameObject ChooseLevelMenuFirstButton;
-    public GameObject OptionsMenuFirstButton;
-    public GameObject OptionsMenuGraphicsFirstButton;
-    public GameObject OptionsMenuAudioFirstButton;
-    public GameObject AcceptChangesOrLeaveMenuFirstButton;
-    public GameObject QuitToMainMenuMenuFirstButton;
-    public GameObject QuitToOSMenuFirstButton;
-    public GameObject DefeatScreenFirstButton;
-    public GameObject VictoryScreenFirstButton;
 
     [Header("OptionsMenu")]
     [Header("Volume")]
@@ -355,7 +343,7 @@ public class MenuManagerScript : MonoBehaviour
         }
 
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(MainMenuFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_menuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         _menuObject.SetActive(true);
         Time.timeScale = 0;
@@ -383,7 +371,7 @@ public class MenuManagerScript : MonoBehaviour
             _submenuCalled = true;
 
             EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(DefeatScreenFirstButton);
+            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_defeatScreenObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
             _defeatScreenObject.SetActive(true);
             _defeatShown = true;
@@ -397,7 +385,7 @@ public class MenuManagerScript : MonoBehaviour
         _submenuCalled = true;
 
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(VictoryScreenFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_victoryScreenObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         _victoryScreenObject.SetActive(true);
     }
@@ -487,7 +475,7 @@ public class MenuManagerScript : MonoBehaviour
         _submenuCalled = true;
 
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(RestartMenuFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_restartMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         _restartMenuObject.SetActive(true);
     }
@@ -511,7 +499,7 @@ public class MenuManagerScript : MonoBehaviour
         _submenuCalled = true;
 
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(ChooseLevelMenuFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_chooseLevelMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         foreach (Transform childtrf in _chooseLevelMenuObject.transform)
         {
@@ -542,7 +530,7 @@ public class MenuManagerScript : MonoBehaviour
         _submenuCalled = true;
 
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(ResetProgressMenuFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_resetProgressMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         _resetProgressMenuObject.SetActive(true);
     }
@@ -574,7 +562,7 @@ public class MenuManagerScript : MonoBehaviour
         _optionsMenuGraphicsObject.SetActive(false); _optionsMenuAudioObject.SetActive(false);
 
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(OptionsMenuFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_optionsMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         _optionsMenuObject.SetActive(true);
     }
@@ -586,7 +574,7 @@ public class MenuManagerScript : MonoBehaviour
 
         _optionsMenuGraphicsCalled = true;
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(OptionsMenuGraphicsFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_optionsMenuGraphicsObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
         _optionsMenuGraphicsObject.SetActive(true);
     }
 
@@ -597,7 +585,7 @@ public class MenuManagerScript : MonoBehaviour
 
         _optionsMenuAudioCalled = true;
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(OptionsMenuAudioFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_optionsMenuAudioObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
         _optionsMenuAudioObject.SetActive(true);
     }
 
@@ -749,7 +737,7 @@ public class MenuManagerScript : MonoBehaviour
 
     public void SpawnTutorialWindowConfirm()
     {
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(MainMenuFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_menuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
         Destroy(CurrentTutorialObject);
 
         _tutorialWindowCalled = false;
@@ -844,7 +832,7 @@ public class MenuManagerScript : MonoBehaviour
             _acceptChangesOrLeaveMenuCalled = true;
 
             EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(AcceptChangesOrLeaveMenuFirstButton);
+            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_optionsMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
         }
     }
 
@@ -922,7 +910,7 @@ public class MenuManagerScript : MonoBehaviour
         _submenuCalled = true;
 
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(QuitToMainMenuMenuFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_quitToMainMenuMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         _quitToMainMenuMenuObject.SetActive(true);
     }
@@ -947,7 +935,7 @@ public class MenuManagerScript : MonoBehaviour
         _submenuCalled = true;
 
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(QuitToOSMenuFirstButton);
+        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_quitToOSMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         _quitToOSMenuObject.SetActive(true);
     }
