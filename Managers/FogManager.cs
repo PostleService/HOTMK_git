@@ -9,6 +9,7 @@ public class FogManager : MonoBehaviour
 {
     private GameObject _player;
     private GameObject _lvl3;
+    private bool _lvl3Died = false;
     private GridLayout _gridLayout;
 
     public Tilemap FogTilemap;
@@ -90,7 +91,7 @@ public class FogManager : MonoBehaviour
     {
         if (_player != null)
         {
-            if (GameObject.Find("LevelManager").GetComponent<LevelManagerScript>().LevelStage == 3 && _lvl3 != null)
+            if (_lvl3 != null)
             {
                 if (Vector2.Distance(_playerPosition, _lvl3Position) < DimLightAtDistance)
                 {
@@ -108,7 +109,7 @@ public class FogManager : MonoBehaviour
                 }
             }
             // Relight player after Lvl3 enemy is dead
-            else if (GameObject.Find("LevelManager").GetComponent<LevelManagerScript>().LevelStage >= 3)
+            else if (_lvl3Died)
             {
                 if (_player.GetComponent<PlayerScript>() != null)
                 {
@@ -416,6 +417,7 @@ public class FogManager : MonoBehaviour
         if (aLevelStage == 3)
         {
             _lvl3 = null;
+            _lvl3Died = true;
 
             Tilemap[] tilemapsArray = GameObject.FindObjectsOfType<Tilemap>();
             Tilemap tilemap = null;
