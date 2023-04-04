@@ -44,7 +44,7 @@ public class UIManager : MonoBehaviour
         PlayerScript.OnSpawn += AssignPlayer;
         PlayerScript.OnHealthUpdate += UpdateHearts;
         LevelManagerScript.OnLevelStageChange += UpdateItems;
-        EnemyScript.OnDie += (aStageLevel) =>
+        EnemyScript.OnDie += (aStageLevel, aEnemyObject) =>
         {
             InitiateLevelStageIconPulse(aStageLevel);
             LevelStagePointersDecision(aStageLevel);
@@ -64,7 +64,7 @@ public class UIManager : MonoBehaviour
         PlayerScript.OnSpawn -= AssignPlayer;
         PlayerScript.OnHealthUpdate -= UpdateHearts;
         LevelManagerScript.OnLevelStageChange -= UpdateItems;
-        EnemyScript.OnDie -= (aStageLevel) =>
+        EnemyScript.OnDie -= (aStageLevel, aEnemyObject) =>
         {
             InitiateLevelStageIconPulse(aStageLevel);
             LevelStagePointersDecision(aStageLevel);
@@ -86,8 +86,8 @@ public class UIManager : MonoBehaviour
         if (_itemPulseInitiated && LevelStageEndPointer != null) { StageIconPulse(); }
     }
 
-    private void AssignPlayer()
-    { if (_player == null) { _player = GameObject.Find("Player"); } }
+    private void AssignPlayer(GameObject aGameObject)
+    { _player = aGameObject; }
 
     #region ITEMS
 

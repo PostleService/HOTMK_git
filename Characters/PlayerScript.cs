@@ -74,9 +74,12 @@ public class PlayerScript : MonoBehaviour
 
     private Animator _animator;
 
-    public delegate void MyHandler(int aCurrentHealth, int aMaxHealth, string aUpdateState);
+    public delegate void MyHandler (int aCurrentHealth, int aMaxHealth, string aUpdateState);
     public static event MyHandler OnHealthUpdate;
-    public static event Action OnSpawn;
+    public delegate void SpawnDelegate (GameObject aGameObject);
+    public static event SpawnDelegate OnSpawn;
+    public delegate void PositionTracker (GameObject aGameObject, Vector2 aPosition);
+    public static event PositionTracker OnPositionChange;
     public static event Action OnRememberFog;
     public static event Action OnEnemiesDeconceal;
 
@@ -94,7 +97,8 @@ public class PlayerScript : MonoBehaviour
 
     private void Start()
     {
-        OnSpawn?.Invoke(); // tell all related managers that player has spawned
+        OnSpawn?.Invoke(this.gameObject); // tell all related managers that player has spawned
+        OnPositionChange?.Invoke(this.gameObject, transform.position);
 
         CurrentLives = MaxPlayerLives;
         OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "start");
@@ -126,6 +130,8 @@ public class PlayerScript : MonoBehaviour
 
         if (_isDamaged) { _currentDamageAcceleration = DamageAcceleration; }
         else _currentDamageAcceleration = 1f;
+
+        OnPositionChange?.Invoke(this.gameObject, transform.position);
     }
 
     void FindMovementPoint()

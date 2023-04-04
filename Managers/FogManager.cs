@@ -33,52 +33,17 @@ public class FogManager : MonoBehaviour
     [HideInInspector] public List<GameObject> ListOfDeconcealingObjects = new List<GameObject>();
 
     // These structs monitor player and lvl3 positions
-    public Vector2Int PlayerPosition = Vector2Int.zero;
-    private Vector2Int _playerPosition
-    {
-        set
-        {
-            if (PlayerPosition != value)
-            {
-                if (_player != null)
-                {
-                    PlayerPosition = value;
-                    Reconceal();
-                    Reveal();
-                    CreateRevealEdges();
-                }
-            }
-        }
-    }
+    private Vector2Int _playerPosition = Vector2Int.zero;
+    private Vector2Int _lvl3Position = Vector2Int.zero;
 
-    public Vector2Int Lvl3Position = Vector2Int.zero;
-    private Vector2Int _lvl3Position
-    {
-        set
-        {
-            if (Lvl3Position != value)
-            {
-                Lvl3Position = value;
-                Reconceal();
-                if (_lvl3 != null) 
-                { 
-                    Conceal();
-                    CreateConcealEdges();
-                }
-                if (_player != null)
-                {
-                    Reveal();
-                    CreateRevealEdges();
-                }
-            }
-        }
-    }
 
     private void OnEnable()
     {
         PlayerScript.OnSpawn += AssignPlayer;
         PlayerScript.OnRememberFog += StopConcealingFog;
+        PlayerScript.OnPositionChange += UpdatePos_PlayerBoss;
         EnemyScript.OnSpawn += AssignLvl3;
+        EnemyScript.OnPositionChange += UpdatePos_PlayerBoss;
         EnemyScript.OnDie += DespawnAllFog;
     }
 
@@ -86,38 +51,36 @@ public class FogManager : MonoBehaviour
     {
         PlayerScript.OnSpawn -= AssignPlayer;
         PlayerScript.OnRememberFog -= StopConcealingFog;
+        PlayerScript.OnPositionChange -= UpdatePos_PlayerBoss;
         EnemyScript.OnSpawn -= AssignLvl3;
+        EnemyScript.OnPositionChange -= UpdatePos_PlayerBoss;
         EnemyScript.OnDie -= DespawnAllFog;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        _player = GameObject.Find("PlayerCamera"); // reveal a part of the map before the player spawns
-
+        _gridLayout = FogTilemap.GetComponentInParent<GridLayout>();
         _globalLightStartIntensity = GameObject.Find("GlobalLight").GetComponent<Light2D>().intensity;
 
-        _gridLayout = FogTilemap.GetComponentInParent<GridLayout>();
         if (SpawnFogFromStart) { SpawnStartingFog(); }
+        
+        _player = GameObject.Find("PlayerCamera"); // reveal a part of the map before the player spawns
+        UpdatePos_PlayerBoss(_player, _player.transform.position);
     }
 
     // Update is called once per frame
     void FixedUpdate()
-    { 
-        FindPlayerAndLvl3Pos();
-        DimPlayerLight();
-    }
+    { DimPlayerLight(); }
 
-    private void AssignPlayer()
+    private void AssignPlayer(GameObject aGameObject)
     {
-        _player = GameObject.Find("Player");
+        _player = aGameObject;
         _playerLightStartIntensity = _player.GetComponent<Light2D>().intensity;
     }
 
-    private void AssignLvl3(int aItemStageLevel)
-    {
-        if (aItemStageLevel == 3) { }
-    }
+    private void AssignLvl3(int aItemStageLevel, GameObject aEnemyObject)
+    { if (aItemStageLevel == 3) _lvl3 = aEnemyObject; }
 
     // After getting starting values of light global and light for player at Start()
     // Check if distance is smaller than DimLightAtDistance
@@ -129,14 +92,14 @@ public class FogManager : MonoBehaviour
         {
             if (GameObject.Find("LevelManager").GetComponent<LevelManagerScript>().LevelStage == 3 && _lvl3 != null)
             {
-                if (Vector2.Distance(PlayerPosition, Lvl3Position) < DimLightAtDistance)
+                if (Vector2.Distance(_playerPosition, _lvl3Position) < DimLightAtDistance)
                 {
                     float LowestLightIntensity;
                     if (_globalLightStartIntensity > LowestLightValue) { LowestLightIntensity = _globalLightStartIntensity; }
                     else { LowestLightIntensity = LowestLightValue; }
 
                     float newLightIntensity;
-                    float coefficient = Vector2.Distance(PlayerPosition, Lvl3Position) / DimLightAtDistance;
+                    float coefficient = Vector2.Distance(_playerPosition, _lvl3Position) / DimLightAtDistance;
                     float tempLightIntensity = _playerLightStartIntensity * coefficient;
                     if (tempLightIntensity >= LowestLightIntensity)
                     { newLightIntensity = tempLightIntensity; }
@@ -158,27 +121,26 @@ public class FogManager : MonoBehaviour
         }
     }
 
-    // FindPlayerPosition just keeps track of the player position changes
-    // The struct _player position calls functions to update fog if change is detected
-    private void FindPlayerAndLvl3Pos()
+    private void UpdatePos_PlayerBoss(GameObject aGameObject, Vector2 aPosition)
     {
-        Vector2 playerPosition = Vector2.zero;
-        Vector2 lvl3Position = Vector2.zero;
-
-        if (_player != null) { playerPosition = _player.transform.position; }
-        _playerPosition = Vector2Int.RoundToInt((playerPosition));
-
-        if (_lvl3 != null) { lvl3Position = _lvl3.transform.position; }
-        _lvl3Position = Vector2Int.RoundToInt((lvl3Position));
-
-        // will find _lvl3 enemy once LevelStage is 3
-        if (GameObject.Find("LevelManager").GetComponent<LevelManagerScript>().LevelStage == 3 && _lvl3 == null) 
+        Vector2Int vec2Int = Vector2Int.RoundToInt(aPosition);
+        if (aGameObject == _player && vec2Int != _playerPosition) 
         {
-            GameObject[] goList = FindObjectsOfType<GameObject>();
-            foreach (GameObject go in goList)
-            { 
-                if (go.GetComponent<EnemyScript>() != null && go.GetComponent<EnemyScript>().ItemStageLevel == 3)
-                { _lvl3 = go; }
+            _playerPosition = vec2Int;
+            Reconceal();
+            Reveal();
+            CreateRevealEdges();
+        }
+        if (aGameObject == _lvl3 && vec2Int != _lvl3Position) 
+        { 
+            _lvl3Position = vec2Int;
+            Conceal();
+            CreateConcealEdges();
+
+            if (_player != null)
+            {
+                Reveal();
+                CreateRevealEdges();
             }
         }
     }
@@ -187,7 +149,7 @@ public class FogManager : MonoBehaviour
     private void Reveal()
     {
         Dictionary<GameObject, Vector3Int> GoVec3 = new Dictionary<GameObject, Vector3Int>();
-        GoVec3.Add(_player, new Vector3Int(PlayerPosition.x, PlayerPosition.y, 0));
+        GoVec3.Add(_player, new Vector3Int(_playerPosition.x, _playerPosition.y, 0));
         foreach (GameObject go in ListOfDeconcealingObjects)
         {
             Vector3Int goVec3Int = Vector3Int.RoundToInt(go.transform.position);
@@ -230,7 +192,7 @@ public class FogManager : MonoBehaviour
     private void CreateRevealEdges()
     {
         Dictionary<GameObject, Vector3Int> GoVec3 = new Dictionary<GameObject, Vector3Int>();
-        GoVec3.Add(_player, new Vector3Int(PlayerPosition.x, PlayerPosition.y, 0));
+        GoVec3.Add(_player, new Vector3Int(_playerPosition.x, _playerPosition.y, 0));
         foreach (GameObject go in ListOfDeconcealingObjects)
         {
             Vector3Int goVec3Int = Vector3Int.RoundToInt(go.transform.position);
@@ -283,7 +245,7 @@ public class FogManager : MonoBehaviour
     {
         if (ReconcealTiles)
         {
-            Vector3Int playerPos = new Vector3Int(PlayerPosition.x, PlayerPosition.y, 0);
+            Vector3Int playerPos = new Vector3Int(_playerPosition.x, _playerPosition.y, 0);
             List<Vector3Int> cellPosList = new List<Vector3Int>();
             Vector3Int[] cellPosArray = new Vector3Int[] { };
             List<TileBase> tbList = new List<TileBase>();
@@ -320,7 +282,7 @@ public class FogManager : MonoBehaviour
     {
         // for x, for y, from (distance from player * -1) to distance from player
         // check whether vector in bounds and HasTile, create a list of only vectors that contain tiles
-        Vector3Int lvl3Pos = new Vector3Int(Lvl3Position.x, Lvl3Position.y, 0);
+        Vector3Int lvl3Pos = new Vector3Int(_lvl3Position.x, _lvl3Position.y, 0);
         List<Vector3Int> cellPosList = new List<Vector3Int>();
         Vector3Int[] cellPosArray = new Vector3Int[] { };
         List<TileBase> tbList = new List<TileBase>();
@@ -348,7 +310,7 @@ public class FogManager : MonoBehaviour
 
     private void CreateConcealEdges()
     {
-        Vector3Int lvl3Pos = new Vector3Int(Lvl3Position.x, Lvl3Position.y, 0);
+        Vector3Int lvl3Pos = new Vector3Int(_lvl3Position.x, _lvl3Position.y, 0);
         List<Vector3Int> cellPosList = new List<Vector3Int>();
 
         // calculate same distance from lvl3 as conceal to create edges on top of freshly concealed tiles
@@ -449,7 +411,7 @@ public class FogManager : MonoBehaviour
         FogTilemap.SetTiles(cellPosArray, tbArray);
     }
 
-    public void DespawnAllFog(int aLevelStage)
+    public void DespawnAllFog(int aLevelStage, GameObject aEnemyObject)
     {
         if (aLevelStage == 3)
         {

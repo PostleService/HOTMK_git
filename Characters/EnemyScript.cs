@@ -184,9 +184,11 @@ public class EnemyScript : MonoBehaviour
     [Header("Victory")]
     public GameObject DeathObject;
 
-    public delegate void MyHandler(int aItemStageLevel);
+    public delegate void MyHandler(int aItemStageLevel, GameObject aEnemyObject = null);
     public static event MyHandler OnDie;
     public static event MyHandler OnSpawn;
+    public delegate void PositionTracker (GameObject aGameObject, Vector2 aPosition);
+    public static event PositionTracker OnPositionChange;
 
     private void OnEnable()
     { PlayerScript.OnSpawn += AssignPlayer; }
@@ -203,7 +205,6 @@ public class EnemyScript : MonoBehaviour
         ResetThrowCooldownPrepped();
         ResetTeleportCountDown();
 
-        AssignPlayer();
         BecomeAgentAndSpawn();
         PathfindingLayersConversion();
         DropStartingPatrolPoints();
@@ -211,11 +212,11 @@ public class EnemyScript : MonoBehaviour
         _currentEscapeAttempt = 1;
         _currentPatrolTarget = _patrolTransforms[_currentPatrolPoint];
 
-
         _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
-        OnSpawn?.Invoke(ItemStageLevel);
-
-        if (EnemyLevel == 3) { _levelManager.EnemyLvl3 = this.gameObject; }
+        
+        OnSpawn?.Invoke(ItemStageLevel, this.gameObject);
+        if (ItemStageLevel == 3) { OnPositionChange?.Invoke(this.gameObject, transform.position); }
+        AssignPlayer(GameObject.Find("Player"));
     }
 
     // Update is called once per frame
@@ -245,13 +246,14 @@ public class EnemyScript : MonoBehaviour
 
         if (_player != null) 
         { if (_player.GetComponent<PlayerScript>().PlayerLevel >= EnemyLevel) { _isAfraid = true;} }
-        
+
+        if (ItemStageLevel == 3) { OnPositionChange?.Invoke(this.gameObject, transform.position); }
         DrawPath();
     }
 
     #region START FUNCTIONS
-    private void AssignPlayer()
-    { _player = GameObject.Find("Player"); }
+    private void AssignPlayer(GameObject aGameObject)
+    { _player = aGameObject; }
 
     // In order to use layermask, its decimal representation needs to be converted to binary for Unity to read
     public void PathfindingLayersConversion()

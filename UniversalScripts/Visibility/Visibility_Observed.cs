@@ -15,7 +15,6 @@ public class Visibility_Observed : MonoBehaviour
 
     private void Start()
     {
-        AssignPlayer();
         _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
         
         // populate list of transforms for quick render / derender
@@ -51,8 +50,8 @@ public class Visibility_Observed : MonoBehaviour
         AnimationEndDetection_PlayerDeath.OnDie -= InstantDerender;
     }
 
-    private void AssignPlayer()
-    { if (_player == null) { _player = GameObject.Find("Player"); } }
+    private void AssignPlayer(GameObject aGameObject)
+    { _player = aGameObject; }
 
     public void ScanForObjects()
     {

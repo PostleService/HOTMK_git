@@ -32,7 +32,7 @@ class AnimationEndDetection_PlayerSpawnLvl3 : AnimationEndDetection
 
                 if (RememberFog) ps.RememberFog();
                 if (SeeThroughWalls) ps.DeconcealEnemies();
-                if (DespawnAllFog) _fm.DespawnAllFog(3);
+                if (DespawnAllFog) _fm.DespawnAllFog(3, null);
             }
         }
     }

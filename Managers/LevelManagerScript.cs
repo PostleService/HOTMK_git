@@ -63,7 +63,7 @@ public class LevelManagerScript : MonoBehaviour
         PlayerScript.OnEnemiesDeconceal += StopConcealingEnemies;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow += AllowLvl3ToSpawn;
         EnemyScript.OnSpawn += ReactToEnemySpawn;
-        EnemyScript.OnDie += (aStageLevel) =>
+        EnemyScript.OnDie += (aStageLevel, aEnemyObject) =>
         {
             ReactToDeath(aStageLevel);
         }; // lambda with listed subscriptions that takes input from the event with 1 argument
@@ -79,7 +79,7 @@ public class LevelManagerScript : MonoBehaviour
         PlayerScript.OnEnemiesDeconceal -= StopConcealingEnemies;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
         EnemyScript.OnSpawn -= ReactToEnemySpawn;
-        EnemyScript.OnDie -= (aStageLevel) =>
+        EnemyScript.OnDie -= (aStageLevel, aEnemyObject) =>
         {
             ReactToDeath(aStageLevel);
         };
@@ -102,25 +102,22 @@ public class LevelManagerScript : MonoBehaviour
     void FixedUpdate()
     { MonitorItems(); }
 
-    private void SynchronizePlayerLevel()
-    {
-        GameObject player = GameObject.Find("Player");
-        player?.GetComponent<PlayerScript>().SyncronizeLevelUps(LevelStage);
-    }
+    private void SynchronizePlayerLevel(GameObject aGameObject)
+    { aGameObject?.GetComponent<PlayerScript>().SyncronizeLevelUps(LevelStage); }
 
     private void AllowLvl3ToSpawn()
     { Lvl3Spawner.GetComponent<SpawnerScript>().AllowLvl3Spawn = true; }
 
-    public void ReactToEnemySpawn(int aStageLevel)
+    public void ReactToEnemySpawn(int aStageLevel, GameObject aEnemyObject)
     {
+        if (aStageLevel == 3) { EnemyLvl3 = aEnemyObject; }
         _currentItemsCount[aStageLevel] += 1;
         DefaultItemsCount[aStageLevel] += 1;
+        
     }
 
     private void ReactToDeath(int aStageLevel) 
-    { 
-        _currentItemsCount[aStageLevel] -= 1;
-    }
+    { _currentItemsCount[aStageLevel] -= 1; }
 
     // UPDATE FUNCTIONS
 

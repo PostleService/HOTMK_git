@@ -79,8 +79,8 @@ public class TutorialMessageScript : MonoBehaviour
         }
     }
 
-    private void AssignPlayer()
-    { _player = GameObject.Find("Player"); }
+    private void AssignPlayer(GameObject aGameObject)
+    { _player = aGameObject; }
 
     public void Render()
     {
