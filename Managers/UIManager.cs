@@ -41,19 +41,9 @@ public class UIManager : MonoBehaviour
     // THIS BIT IS FOR ITEM PULSING
     private bool _itemPulseInitiated = false;        
     private bool _pulseBottomReached = false;
-    
-    private void Start()
-    {
-        _lm = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
-    }
-
-    private void FixedUpdate()
-    {
-        if (_itemPulseInitiated && LevelStageEndPointer != null) { StageIconPulse(); }
-    }
 
     private void OnEnable()
-    { 
+    {
         PlayerScript.OnSpawn += AssignPlayer;
         PlayerScript.OnHealthUpdate += UpdateHearts;
         LevelManagerScript.OnLevelStageChange += UpdateItems;
@@ -89,6 +79,14 @@ public class UIManager : MonoBehaviour
             LevelStagePointersDecision(aStageLevel);
             DecrementItemsCount(aStageLevel);
         };
+    }
+
+    private void Start()
+    { _lm = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>(); }
+
+    private void FixedUpdate()
+    {
+        if (_itemPulseInitiated && LevelStageEndPointer != null) { StageIconPulse(); }
     }
 
     private void AssignPlayer()

@@ -81,6 +81,15 @@ public class PlayerScript : MonoBehaviour
     private Animator _animator;
     public delegate void MyHandler(int aCurrentHealth, int aMaxHealth, string aUpdateState);
     public static event MyHandler OnHealthUpdate;
+    public static event Action OnSpawn;
+    public static event Action OnRememberFog;
+    public static event Action OnEnemiesDeconceal;
+
+    private void OnEnable()
+    { LevelManagerScript.OnLevelStageChange += LevelUp; }
+
+    private void OnDisable()
+    { LevelManagerScript.OnLevelStageChange -= LevelUp; }
 
     private void Awake()
     {
@@ -104,8 +113,6 @@ public class PlayerScript : MonoBehaviour
         FindMovementPoint();
     }
 
-    public static event Action OnSpawn;
-
     private void FixedUpdate()
     {
         if (_currentPostSpawnCannotMove >= 0) { _currentPostSpawnCannotMove -= Time.fixedDeltaTime; }
@@ -126,12 +133,6 @@ public class PlayerScript : MonoBehaviour
         if (_isDamaged) { _currentDamageAcceleration = DamageAcceleration; }
         else _currentDamageAcceleration = 1f;
     }
-
-    private void OnEnable()
-    { LevelManagerScript.OnEnemiesDeconceal += OnDeconceal; }
-
-    private void OnDisable()
-    { LevelManagerScript.OnEnemiesDeconceal -= OnDeconceal; }
 
     private void OnDeconceal()
     { CanSeeThroughWalls = true; }
@@ -428,11 +429,13 @@ public class PlayerScript : MonoBehaviour
     public void Stun()
     { if (!Stunned) { Stunned = true; } }
 
-    public void LevelUp()
+    public void LevelUp(int aLevelStage, int aCurrentItems, int aDefaultItems)
     {
-        if (AllowLevelUp)
+        if (aLevelStage < 3 && AllowLevelUp)
         {
-            PlayerLevel += 1;
+            PlayerLevel = aLevelStage;
+            if (PlayerLevel == RememberFogAtLevelStage) { OnRememberFog?.Invoke(); }
+            if (PlayerLevel == CanSeeThroughWallsAtStage) { CanSeeThroughWalls = true; OnEnemiesDeconceal?.Invoke(); }
             OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "levelup");
         }
     }

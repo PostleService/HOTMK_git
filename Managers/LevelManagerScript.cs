@@ -14,8 +14,6 @@ public class LevelManagerScript : MonoBehaviour
     [HideInInspector]
     public bool _playerDead = false;
     public bool _playerCanSeeThroughWalls = false;
-    [HideInInspector]
-    public bool _remainingItemsFound = false;
 
     [Header("Spawners")]
     public GameObject PlayerSpawner;
@@ -57,22 +55,13 @@ public class LevelManagerScript : MonoBehaviour
     [Tooltip("By how many items is the pool of potential healing items decreased")]
     public int HealthCountDecrement = 2;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        SpawnHealth();
-        PlayerSpawner.GetComponent<SpawnerScript>().Activated = true; 
-        LocateWalkableTiles();
-        SpawnItems();
-    }
-
-    // Update is called once per frame
-    void FixedUpdate()
-    { MonitorItems(); }
+    public delegate void MyHandler(int aLevelStage, int aCurrentItems, int aDefaultItems);
+    public static event MyHandler OnLevelStageChange;
 
     private void OnEnable()
-    { 
+    {
         PlayerScript.OnSpawn += AssignPlayer;
+        PlayerScript.OnEnemiesDeconceal += StopConcealingEnemies;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow += AllowLvl3ToSpawn;
         EnemyScript.OnSpawn += ReactToEnemySpawn;
         EnemyScript.OnDie += (aStageLevel) =>
@@ -86,8 +75,9 @@ public class LevelManagerScript : MonoBehaviour
     }
 
     private void OnDisable()
-    { 
+    {
         PlayerScript.OnSpawn -= AssignPlayer;
+        PlayerScript.OnEnemiesDeconceal -= StopConcealingEnemies;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
         EnemyScript.OnSpawn -= ReactToEnemySpawn;
         EnemyScript.OnDie -= (aStageLevel) =>
@@ -99,6 +89,19 @@ public class LevelManagerScript : MonoBehaviour
             ReactToDeath(aStageLevel);
         };
     }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        SpawnHealth();
+        PlayerSpawner.GetComponent<SpawnerScript>().Activated = true; 
+        LocateWalkableTiles();
+        SpawnItems();
+    }
+
+    // Update is called once per frame
+    void FixedUpdate()
+    { MonitorItems(); }
 
     private void AssignPlayer()
     { _player = GameObject.Find("Player"); }
@@ -138,32 +141,11 @@ public class LevelManagerScript : MonoBehaviour
 
     private void RaiseLevelStage()
     {
-        PlayerScript ps = null;
         LevelStage += 1;
         OnLevelStageChange?.Invoke(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage]);
-
-        _remainingItemsFound = false;
-        // Debug.LogWarning("Level stage is now " + LevelStage);
-
-        if (_player != null)
-        {
-            ps = _player.GetComponent<PlayerScript>();
-            if (LevelStage == 1 || LevelStage == 2)
-            { ps?.LevelUp(); }
-            if (LevelStage >= ps.RememberFogAtLevelStage)
-            { OnRememberFog?.Invoke(); } // if not equal to null, invoke action
-            if (LevelStage >= ps.CanSeeThroughWallsAtStage)
-            { StopConcealingEnemies(); } // if not equal to null, invoke action
-        }
     }
 
-    public void StopConcealingEnemies() { OnEnemiesDeconceal?.Invoke(); _playerCanSeeThroughWalls = true; }
-
-    public delegate void MyHandler(int aLevelStage, int aCurrentItems, int aDefaultItems);
-    public static event MyHandler OnLevelStageChange;
-
-    public static event Action OnRememberFog;
-    public static event Action OnEnemiesDeconceal;
+    public void StopConcealingEnemies() { _playerCanSeeThroughWalls = true; }
 
     private void LocateWalkableTiles()
     {

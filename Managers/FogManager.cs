@@ -94,14 +94,14 @@ public class FogManager : MonoBehaviour
 
     private void OnEnable()
     { 
-        LevelManagerScript.OnRememberFog += StopConcealingFog;
+        PlayerScript.OnRememberFog += StopConcealingFog;
         EnemyScript.OnDie += DespawnAllFog;
         PlayerScript.OnSpawn += AssignPlayer;
     }
 
     private void OnDisable()
-    { 
-        LevelManagerScript.OnRememberFog -= StopConcealingFog;
+    {
+        PlayerScript.OnRememberFog -= StopConcealingFog;
         EnemyScript.OnDie -= DespawnAllFog;
         PlayerScript.OnSpawn -= AssignPlayer;
     }

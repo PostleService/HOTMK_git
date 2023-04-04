@@ -188,6 +188,12 @@ public class EnemyScript : MonoBehaviour
     public static event MyHandler OnDie;
     public static event MyHandler OnSpawn;
 
+    private void OnEnable()
+    { PlayerScript.OnSpawn += AssignPlayer; }
+
+    private void OnDisable()
+    { PlayerScript.OnSpawn -= AssignPlayer; }
+
     void Start()
     {
         AdaptLightingToState(false, false);
@@ -243,11 +249,7 @@ public class EnemyScript : MonoBehaviour
         DrawPath();
     }
 
-    private void OnEnable()
-    { PlayerScript.OnSpawn += AssignPlayer; }
 
-    private void OnDisable()
-    { PlayerScript.OnSpawn -= AssignPlayer; }
 
     #region START FUNCTIONS
     private void AssignPlayer()

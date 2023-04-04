@@ -40,14 +40,14 @@ public class Visibility_Observed : MonoBehaviour
     private void OnEnable()
     {
         PlayerScript.OnSpawn += AssignPlayer;
-        LevelManagerScript.OnEnemiesDeconceal += FinalRender;
+        PlayerScript.OnEnemiesDeconceal += FinalRender;
         AnimationEndDetection_PlayerDeath.OnDie += InstantDerender;
     }
 
     private void OnDisable()
     {
         PlayerScript.OnSpawn -= AssignPlayer;
-        LevelManagerScript.OnEnemiesDeconceal -= FinalRender;
+        PlayerScript.OnEnemiesDeconceal -= FinalRender;
         AnimationEndDetection_PlayerDeath.OnDie -= InstantDerender;
     }
 
