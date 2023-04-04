@@ -17,8 +17,15 @@ public class UIManager : MonoBehaviour
     public bool _screenResizeQueued = false;
 
     [Header("Screens")]
-    public List<GameObject> HeartsInDisplay = new List<GameObject>(3);
-    public GameObject ItemsScreen;
+    public List<GameObject> Hearts = new List<GameObject>(3);
+    public List<GameObject> ItemsPanel = new List<GameObject>(4);
+
+    [Header("StageItems")]
+    [Tooltip("A visual representation of levelstage objective: enemy or item")]
+    public List<Sprite> LevelStageIcons = new List<Sprite>() { };
+    [Tooltip("When item is picked up, it will 'pulse' to this scale and back to 1")]
+    public float PulseObjectIconUntilScale = 0.75f;
+    public float SpeedOfPulse = 1f;
 
     [Header("Arrow Pointers")]
     public GameObject LevelStageEndPointer;
@@ -27,16 +34,6 @@ public class UIManager : MonoBehaviour
     [Tooltip("Failsafe number of items/enemies in case percentage does not land on full value")]
     public int FailsafeObjectCount = 1;
     public Vector2 ArrowSize = new Vector2(50, 50);
-
-    [Header("StageItems")]
-    public GameObject StageItemNum_OutOf;
-    public GameObject StageItemNum_Current;
-    public GameObject StageItemImgObj;
-    [Tooltip("A visual representation of levelstage objective: enemy or item")]
-    public List<Sprite> LevelStageObject = new List<Sprite>() { };
-    [Tooltip("When item is picked up, it will 'pulse' to this scale and back to 1")]
-    public float PulseObjectIconUntilScale = 0.75f;
-    public float SpeedOfPulse = 1f;
 
     // THIS BIT IS FOR ITEM PULSING
     private bool _itemPulseInitiated = false;        
@@ -99,12 +96,12 @@ public class UIManager : MonoBehaviour
         if (aLevelStage < 3)
         {
             // Enable item counter and image of current objective at the start of the level
-            ItemsScreen.SetActive(true);
+            foreach (GameObject go in ItemsPanel) { go.SetActive(true); }
             
             // Update the item counter and image when level up is occuring
             // initiate counters for current stage
-            TextMeshProUGUI outOfTxt = StageItemNum_OutOf.GetComponent<TextMeshProUGUI>();
-            TextMeshProUGUI currTxt = StageItemNum_Current.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI outOfTxt = ItemsPanel[0].GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI currTxt = ItemsPanel[2].GetComponent<TextMeshProUGUI>();
             string currValue;
             if (aLevelStage == 0) { currValue = (aDefaultItems - aCurrentItems).ToString(); }
             else { currValue = aCurrentItems.ToString(); }
@@ -115,15 +112,15 @@ public class UIManager : MonoBehaviour
             // initiate icon for current stage
             float iconScaleDownValue = 3f;
 
-            StageItemImgObj.GetComponent<Image>().sprite = LevelStageObject[aLevelStage];
-            RectTransform imageObjRT = StageItemImgObj.GetComponent<RectTransform>();
-            Image imageObjImg = StageItemImgObj.GetComponent<Image>();
+            ItemsPanel[3].GetComponent<Image>().sprite = LevelStageIcons[aLevelStage];
+            RectTransform imageObjRT = ItemsPanel[3].GetComponent<RectTransform>();
+            Image imageObjImg = ItemsPanel[3].GetComponent<Image>();
             Vector2 imageObjSize = new Vector2(imageObjImg.sprite.rect.width, imageObjImg.sprite.rect.height);
             imageObjRT.sizeDelta = new Vector2((imageObjSize.x * _visualElementsScale) * iconScaleDownValue, (imageObjSize.y * _visualElementsScale) * iconScaleDownValue);
 
             InitiateLevelStageIconPulse(aLevelStage);
         }
-        else { ItemsScreen.SetActive(false); }
+        else { foreach (GameObject go in ItemsPanel) { go.SetActive(false); } }
     }
 
     private void InitiateLevelStageIconPulse(int aLevelStage)
@@ -140,21 +137,21 @@ public class UIManager : MonoBehaviour
         // if boolean has not been flipped - keep decreasing Image scale until it reaches PulseObjectIconUntilScale
         if (!_pulseBottomReached)
         {
-            Vector3 LocalScale = StageItemImgObj.GetComponent<RectTransform>().localScale;
+            Vector3 LocalScale = ItemsPanel[3].GetComponent<RectTransform>().localScale;
             Vector3 newLocalScale = LocalScale - (new Vector3(Time.deltaTime, Time.deltaTime, Time.deltaTime) * SpeedOfPulse);
-            StageItemImgObj.GetComponent<RectTransform>().localScale = newLocalScale;
+            ItemsPanel[3].GetComponent<RectTransform>().localScale = newLocalScale;
 
-            if (StageItemImgObj.GetComponent<RectTransform>().localScale.x <= PulseObjectIconUntilScale)
+            if (ItemsPanel[3].GetComponent<RectTransform>().localScale.x <= PulseObjectIconUntilScale)
             { _pulseBottomReached = true; }
         }
         // Once boolean is flipped - decrease image scale until it's back to 1 and flip both pickup and pulse bottom booleans
         if (_pulseBottomReached)
         {
-            Vector3 LocalScale = StageItemImgObj.GetComponent<RectTransform>().localScale;
+            Vector3 LocalScale = ItemsPanel[3].GetComponent<RectTransform>().localScale;
             Vector3 newLocalScale = LocalScale + (new Vector3(Time.deltaTime, Time.deltaTime, Time.deltaTime) * SpeedOfPulse);
-            StageItemImgObj.GetComponent<RectTransform>().localScale = newLocalScale;
+            ItemsPanel[3].GetComponent<RectTransform>().localScale = newLocalScale;
 
-            if (StageItemImgObj.GetComponent<RectTransform>().localScale.x >= 1)
+            if (ItemsPanel[3].GetComponent<RectTransform>().localScale.x >= 1)
             { _pulseBottomReached = false; _itemPulseInitiated = false; }
         }
     }
@@ -163,7 +160,7 @@ public class UIManager : MonoBehaviour
     {
         if (aLevelStage < 3 && aLevelStage == _lm.LevelStage)
         {
-            TextMeshProUGUI currTxt = StageItemNum_Current.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI currTxt = ItemsPanel[2].GetComponent<TextMeshProUGUI>();
             string currValue;
             if (aLevelStage == 0) { currValue = (int.Parse(currTxt.text) + 1).ToString(); }
             else { currValue = (int.Parse(currTxt.text) - 1).ToString(); }

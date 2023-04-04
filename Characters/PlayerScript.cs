@@ -436,11 +436,14 @@ public class PlayerScript : MonoBehaviour
         if (aLevelStage < 3 && AllowLevelUp)
         {
             PlayerLevel = aLevelStage;
-            if (PlayerLevel == RememberFogAtLevelStage) { OnRememberFog?.Invoke(); }
-            if (PlayerLevel == CanSeeThroughWallsAtStage) { OnEnemiesDeconceal?.Invoke(); }
+            if (PlayerLevel == RememberFogAtLevelStage) { RememberFog(); }
+            if (PlayerLevel == CanSeeThroughWallsAtStage) { DeconcealEnemies(); }
             OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "levelup");
         }
     }
+
+    public void RememberFog() { OnRememberFog?.Invoke(); }
+    public void DeconcealEnemies() { OnEnemiesDeconceal?.Invoke(); }
 
     // perhaps later a call to Animator from within this function, etc.
     public void TakeDamage(int aDamage) 

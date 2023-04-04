@@ -18,6 +18,7 @@ class AnimationEndDetection_PlayerSpawnLvl3 : AnimationEndDetection
     public override void OnAnimationFinish()
     { 
         Destroy(gameObject);
+        FogManager _fm = GameObject.Find("FogManager").GetComponent<FogManager>();
 
         if (Player != null)
         {
@@ -29,13 +30,9 @@ class AnimationEndDetection_PlayerSpawnLvl3 : AnimationEndDetection
                 ps.PlayerLevel = PlayerLevel - 1; // correction for actual numbering
                 ps.AllowLevelUp = AllowPlayerToLevel;
 
-                // This wouldn't have had to exist if my code hadn't been such ass
-
-                go.AddComponent<PlayerLvl3_PostSpawnFogSettings>();
-                PlayerLvl3_PostSpawnFogSettings postSpawnScript = go.GetComponent<PlayerLvl3_PostSpawnFogSettings>();
-                postSpawnScript.RememberFog = RememberFog;
-                postSpawnScript.SeeThroughWalls = SeeThroughWalls;
-                postSpawnScript.DespawnAllFog = DespawnAllFog;
+                if (RememberFog) ps.RememberFog();
+                if (SeeThroughWalls) ps.DeconcealEnemies();
+                if (DespawnAllFog) _fm.DespawnAllFog(3);
             }
         }
     }

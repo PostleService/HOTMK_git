@@ -76,16 +76,18 @@ public class FogManager : MonoBehaviour
 
     private void OnEnable()
     {
-        PlayerScript.OnRememberFog += StopConcealingFog;
-        EnemyScript.OnDie += DespawnAllFog;
         PlayerScript.OnSpawn += AssignPlayer;
+        PlayerScript.OnRememberFog += StopConcealingFog;
+        EnemyScript.OnSpawn += AssignLvl3;
+        EnemyScript.OnDie += DespawnAllFog;
     }
 
     private void OnDisable()
     {
-        PlayerScript.OnRememberFog -= StopConcealingFog;
-        EnemyScript.OnDie -= DespawnAllFog;
         PlayerScript.OnSpawn -= AssignPlayer;
+        PlayerScript.OnRememberFog -= StopConcealingFog;
+        EnemyScript.OnSpawn -= AssignLvl3;
+        EnemyScript.OnDie -= DespawnAllFog;
     }
 
     // Start is called before the first frame update
@@ -110,6 +112,11 @@ public class FogManager : MonoBehaviour
     {
         _player = GameObject.Find("Player");
         _playerLightStartIntensity = _player.GetComponent<Light2D>().intensity;
+    }
+
+    private void AssignLvl3(int aItemStageLevel)
+    {
+        if (aItemStageLevel == 3) { }
     }
 
     // After getting starting values of light global and light for player at Start()
