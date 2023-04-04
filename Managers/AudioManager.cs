@@ -25,6 +25,12 @@ public class AudioManager : MonoBehaviour
 
     private StudioEventEmitter _musicSource;
 
+    private void OnEnable()
+    { LevelManagerScript.OnLevelStageChange += ReactToLvlChange; }
+
+    private void OnDisable()
+    { LevelManagerScript.OnLevelStageChange -= ReactToLvlChange; }
+
     private void Start()
     {
         _musicSource = GameObject.Find("PlayerCamera").GetComponent<StudioEventEmitter>();
@@ -39,12 +45,6 @@ public class AudioManager : MonoBehaviour
     {
         LevelStageTransition();
     }
-
-    private void OnEnable()
-    { LevelManagerScript.OnLevelStageChange += ReactToLvlChange; }
-
-    private void OnDisable()
-    { LevelManagerScript.OnLevelStageChange -= ReactToLvlChange; }
 
     public void ReactToLvlChange(int aLevelStage, int aCurrentItems, int aDefaultItems) 
     {

@@ -28,8 +28,7 @@ public class PlayerScript : MonoBehaviour
     private float _currentPostSpawnCannotMove = 0.1f;
 
     [Tooltip("How far in units does the player have to be from distance point to accept new movemnt input")]
-    [HideInInspector]
-    public float MovementSwitchFlipDistance = 0f;
+    [HideInInspector] public float MovementSwitchFlipDistance = 0f;
 
     [Header("Collision")]
     [Tooltip("Layers with which object will collide")]
@@ -39,12 +38,9 @@ public class PlayerScript : MonoBehaviour
 
     // This is the actual object controlled by keyboard input. The parent object will attempt to move towards it.
     private Transform _movementPoint;
-    [HideInInspector]
-    public int xInput;
-    [HideInInspector]
-    public int yInput;
-    [HideInInspector]
-    public bool movementInitiated = false;
+    [HideInInspector] public int xInput;
+    [HideInInspector] public int yInput;
+    [HideInInspector] public bool movementInitiated = false;
     private Vector2 _lastMovementInput;
     private Vector2 _lastMovementDirection;
     private bool _resolvingConflictX = false; 
@@ -62,23 +58,22 @@ public class PlayerScript : MonoBehaviour
     public GameObject PlayerDeathObject;
     public float CountdownIFramesDefault = 5.0f;
     public float _countdownIFramesCurrent;
-    [SerializeField]
+
     [Tooltip("When iframes are in effect, flash opacity till bottom value of")]
     public float FlashPlayerUponDamage = 0.25f;
     public float SpeedOfFlash = 1f;
     private bool _flashBottomReached = false;
     private bool _isDamaged = false;
-    private UIManager _canvasManager;
 
     [Header("Vision")]
     public int RememberFogAtLevelStage = 2;
-    public bool CanSeeThroughWalls = false;
     public int CanSeeThroughWallsAtStage = 3;
     public float RangeOfVision = 10f;
     [Tooltip("Offset from main raycast when looking for enemy")]
     public float DegreeOfSpread = 2f;
 
     private Animator _animator;
+
     public delegate void MyHandler(int aCurrentHealth, int aMaxHealth, string aUpdateState);
     public static event MyHandler OnHealthUpdate;
     public static event Action OnSpawn;
@@ -99,14 +94,13 @@ public class PlayerScript : MonoBehaviour
 
     private void Start()
     {
-        _animator = gameObject.GetComponent<Animator>();
-
         OnSpawn?.Invoke(); // tell all related managers that player has spawned
-        GameObject.Find("PlayerCamera").transform.SetParent(gameObject.transform);
 
         CurrentLives = MaxPlayerLives;
         OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "start");
-        //_canvasManager = GameObject.Find("CanvasManager").GetComponent<UIManager>();
+        
+        GameObject.Find("PlayerCamera").transform.SetParent(gameObject.transform);
+        _animator = gameObject.GetComponent<Animator>();
 
         ResetStunTimer();
         ResetSlowTimer();
@@ -133,9 +127,6 @@ public class PlayerScript : MonoBehaviour
         if (_isDamaged) { _currentDamageAcceleration = DamageAcceleration; }
         else _currentDamageAcceleration = 1f;
     }
-
-    private void OnDeconceal()
-    { CanSeeThroughWalls = true; }
 
     void FindMovementPoint()
     {
@@ -429,13 +420,24 @@ public class PlayerScript : MonoBehaviour
     public void Stun()
     { if (!Stunned) { Stunned = true; } }
 
+    public void SyncronizeLevelUps(int aLevelStage)
+    {
+        // in case player spawns lower level than the stage for any reason
+        while (aLevelStage < 3 && PlayerLevel < aLevelStage)
+        {
+            // go through each lvl one by one
+            int NewLevel = PlayerLevel + 1;
+            LevelUp(NewLevel, 0,0);
+        }
+    }
+
     public void LevelUp(int aLevelStage, int aCurrentItems, int aDefaultItems)
     {
         if (aLevelStage < 3 && AllowLevelUp)
         {
             PlayerLevel = aLevelStage;
             if (PlayerLevel == RememberFogAtLevelStage) { OnRememberFog?.Invoke(); }
-            if (PlayerLevel == CanSeeThroughWallsAtStage) { CanSeeThroughWalls = true; OnEnemiesDeconceal?.Invoke(); }
+            if (PlayerLevel == CanSeeThroughWallsAtStage) { OnEnemiesDeconceal?.Invoke(); }
             OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "levelup");
         }
     }
@@ -469,8 +471,6 @@ public class PlayerScript : MonoBehaviour
             go.GetComponent<SpriteSheetSwapper_PlayerDeath>()._playerLevel = PlayerLevel;
         }
     }
-
-    
 
     private void MoveDowntime()
     {

@@ -249,8 +249,6 @@ public class EnemyScript : MonoBehaviour
         DrawPath();
     }
 
-
-
     #region START FUNCTIONS
     private void AssignPlayer()
     { _player = GameObject.Find("Player"); }
@@ -1035,8 +1033,6 @@ public class EnemyScript : MonoBehaviour
                 PerformBossTeleport();
             }
         }
-        
-        
     }
 
     #endregion TIMER DECREMENTS

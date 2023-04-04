@@ -10,7 +10,6 @@ public class LevelManagerScript : MonoBehaviour
 {
     private Tilemap[] _tilemapsArray;
     private Tilemap _tilemap;
-    private GameObject _player;
     [HideInInspector]
     public bool _playerDead = false;
     public bool _playerCanSeeThroughWalls = false;
@@ -60,7 +59,7 @@ public class LevelManagerScript : MonoBehaviour
 
     private void OnEnable()
     {
-        PlayerScript.OnSpawn += AssignPlayer;
+        PlayerScript.OnSpawn += SynchronizePlayerLevel;
         PlayerScript.OnEnemiesDeconceal += StopConcealingEnemies;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow += AllowLvl3ToSpawn;
         EnemyScript.OnSpawn += ReactToEnemySpawn;
@@ -76,7 +75,7 @@ public class LevelManagerScript : MonoBehaviour
 
     private void OnDisable()
     {
-        PlayerScript.OnSpawn -= AssignPlayer;
+        PlayerScript.OnSpawn -= SynchronizePlayerLevel;
         PlayerScript.OnEnemiesDeconceal -= StopConcealingEnemies;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
         EnemyScript.OnSpawn -= ReactToEnemySpawn;
@@ -103,8 +102,11 @@ public class LevelManagerScript : MonoBehaviour
     void FixedUpdate()
     { MonitorItems(); }
 
-    private void AssignPlayer()
-    { _player = GameObject.Find("Player"); }
+    private void SynchronizePlayerLevel()
+    {
+        GameObject player = GameObject.Find("Player");
+        player?.GetComponent<PlayerScript>().SyncronizeLevelUps(LevelStage);
+    }
 
     private void AllowLvl3ToSpawn()
     { Lvl3Spawner.GetComponent<SpawnerScript>().AllowLvl3Spawn = true; }

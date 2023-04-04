@@ -116,6 +116,14 @@ public class MenuManagerScript : MonoBehaviour
         };
     public bool SettingsLoaded = false;
 
+    public static event Action OnUntoggleTutorials;
+
+    private void OnEnable()
+    { AnimationEndDetection_PlayerDeath.OnDie += ReactToPlayerDeath; }
+
+    private void OnDisable()
+    { AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath; }
+
     private void Start()
     {
         Cursor.SetCursor(CursorSkin, Vector2.zero, CursorMode.Auto);
@@ -144,12 +152,6 @@ public class MenuManagerScript : MonoBehaviour
 
         CountDownToDefeatScreen();
     }
-
-    private void OnEnable()
-    { AnimationEndDetection_PlayerDeath.OnDie += ReactToPlayerDeath; }
-
-    private void OnDisable()
-    { AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath; }
 
     public void CursorVisibility(bool aValue)
     { Cursor.visible = aValue; }
@@ -673,8 +675,6 @@ public class MenuManagerScript : MonoBehaviour
     }
 
     public void DerenderTutorials() { OnUntoggleTutorials?.Invoke(); }
-
-    public static event Action OnUntoggleTutorials;
 
     public void SpawnTutorialWindow(GameObject aTutorialWindow)
     {

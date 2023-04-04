@@ -74,6 +74,20 @@ public class FogManager : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        PlayerScript.OnRememberFog += StopConcealingFog;
+        EnemyScript.OnDie += DespawnAllFog;
+        PlayerScript.OnSpawn += AssignPlayer;
+    }
+
+    private void OnDisable()
+    {
+        PlayerScript.OnRememberFog -= StopConcealingFog;
+        EnemyScript.OnDie -= DespawnAllFog;
+        PlayerScript.OnSpawn -= AssignPlayer;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -90,20 +104,6 @@ public class FogManager : MonoBehaviour
     { 
         FindPlayerAndLvl3Pos();
         DimPlayerLight();
-    }
-
-    private void OnEnable()
-    { 
-        PlayerScript.OnRememberFog += StopConcealingFog;
-        EnemyScript.OnDie += DespawnAllFog;
-        PlayerScript.OnSpawn += AssignPlayer;
-    }
-
-    private void OnDisable()
-    {
-        PlayerScript.OnRememberFog -= StopConcealingFog;
-        EnemyScript.OnDie -= DespawnAllFog;
-        PlayerScript.OnSpawn -= AssignPlayer;
     }
 
     private void AssignPlayer()
