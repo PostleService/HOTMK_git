@@ -18,14 +18,14 @@ public class DarkObeliskScript : MonoBehaviour
 
     private bool _incremented = false;
 
-    public delegate void MyHandler(int aItemStageLevel);
+    public delegate void MyHandler(int aItemStageLevel, GameObject aGameObject);
     public static event MyHandler OnDie;
     public static event MyHandler OnSpawn;
 
     private void Start()
     {
         if (!_levelManager._playerCanSeeThroughWalls) { this.gameObject.GetComponent<SpriteRenderer>().enabled = false; }
-        OnSpawn?.Invoke(ItemStageLevel);
+        OnSpawn?.Invoke(ItemStageLevel, this.gameObject);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -36,7 +36,7 @@ public class DarkObeliskScript : MonoBehaviour
             {
                 Destroy(this.gameObject);
                 if (DeathObject != null) { Instantiate(DeathObject, gameObject.transform.position, new Quaternion(), GameObject.Find("EnemyCorpseHolder").transform); }
-                OnDie?.Invoke(ItemStageLevel);
+                OnDie?.Invoke(ItemStageLevel, this.gameObject);
                 _incremented = true;
             }
         }
@@ -48,8 +48,8 @@ public class DarkObeliskScript : MonoBehaviour
                 {
                     Destroy(this.gameObject);
                     if (DeathObject != null) { Instantiate(DeathObject, gameObject.transform.position, new Quaternion(), GameObject.Find("EnemyCorpseHolder").transform); }
-                    
-                    OnDie?.Invoke(ItemStageLevel);
+
+                    OnDie?.Invoke(ItemStageLevel, this.gameObject);
                     _incremented = true;
                 }
             }

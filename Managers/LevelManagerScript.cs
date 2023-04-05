@@ -63,14 +63,8 @@ public class LevelManagerScript : MonoBehaviour
         PlayerScript.OnEnemiesDeconceal += StopConcealingEnemies;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow += AllowLvl3ToSpawn;
         EnemyScript.OnSpawn += ReactToEnemySpawn;
-        EnemyScript.OnDie += (aStageLevel, aEnemyObject) =>
-        {
-            ReactToDeath(aStageLevel);
-        }; // lambda with listed subscriptions that takes input from the event with 1 argument
-        DarkObeliskScript.OnDie += (aStageLevel) =>
-        {
-            ReactToDeath(aStageLevel);
-        };
+        EnemyScript.OnDie += ReactToDeath;
+        DarkObeliskScript.OnDie += ReactToDeath;
     }
 
     private void OnDisable()
@@ -79,14 +73,8 @@ public class LevelManagerScript : MonoBehaviour
         PlayerScript.OnEnemiesDeconceal -= StopConcealingEnemies;
         AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
         EnemyScript.OnSpawn -= ReactToEnemySpawn;
-        EnemyScript.OnDie -= (aStageLevel, aEnemyObject) =>
-        {
-            ReactToDeath(aStageLevel);
-        };
-        DarkObeliskScript.OnDie -= (aStageLevel) =>
-        {
-            ReactToDeath(aStageLevel);
-        };
+        EnemyScript.OnDie -= ReactToDeath;
+        DarkObeliskScript.OnDie -= ReactToDeath;
     }
 
     // Start is called before the first frame update
@@ -116,7 +104,7 @@ public class LevelManagerScript : MonoBehaviour
         
     }
 
-    private void ReactToDeath(int aStageLevel) 
+    private void ReactToDeath(int aStageLevel, GameObject aGameObject) 
     { _currentItemsCount[aStageLevel] -= 1; }
 
     // UPDATE FUNCTIONS

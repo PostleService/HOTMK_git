@@ -184,7 +184,7 @@ public class EnemyScript : MonoBehaviour
     [Header("Victory")]
     public GameObject DeathObject;
 
-    public delegate void MyHandler(int aItemStageLevel, GameObject aEnemyObject = null);
+    public delegate void MyHandler(int aItemStageLevel, GameObject aEnemyObject);
     public static event MyHandler OnDie;
     public static event MyHandler OnSpawn;
     public delegate void PositionTracker (GameObject aGameObject, Vector2 aPosition);
@@ -838,7 +838,7 @@ public class EnemyScript : MonoBehaviour
         Destroy(this.gameObject);
         if (DeathObject != null) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
 
-        OnDie?.Invoke(ItemStageLevel);
+        OnDie?.Invoke(ItemStageLevel, this.gameObject);
     }
 
     public void Stun()

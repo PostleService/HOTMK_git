@@ -8,7 +8,6 @@ public class LevelStageEndPointer : MonoBehaviour
     public GameObject Target;
     private Vector3 _targetPosition;
     private Vector3 _targetPositionScreenPoint;
-    private Vector3 _cameraPosition;
     private bool _isOffScreen;
     private MenuManagerScript _menuManager;
 

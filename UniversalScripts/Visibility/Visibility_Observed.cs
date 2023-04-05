@@ -13,6 +13,20 @@ public class Visibility_Observed : MonoBehaviour
     private bool _finallyVisible = false;
     public bool _alwaysVisible = false;
 
+    private void OnEnable()
+    {
+        PlayerScript.OnSpawn += AssignPlayer;
+        PlayerScript.OnEnemiesDeconceal += FinalRender;
+        AnimationEndDetection_PlayerDeath.OnDie += InstantDerender;
+    }
+
+    private void OnDisable()
+    {
+        PlayerScript.OnSpawn -= AssignPlayer;
+        PlayerScript.OnEnemiesDeconceal -= FinalRender;
+        AnimationEndDetection_PlayerDeath.OnDie -= InstantDerender;
+    }
+
     private void Start()
     {
         _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
@@ -32,23 +46,7 @@ public class Visibility_Observed : MonoBehaviour
     }
 
     private void FixedUpdate()
-    {
-        if (!_finallyVisible) { ScanForObjects(); }
-    }
-
-    private void OnEnable()
-    {
-        PlayerScript.OnSpawn += AssignPlayer;
-        PlayerScript.OnEnemiesDeconceal += FinalRender;
-        AnimationEndDetection_PlayerDeath.OnDie += InstantDerender;
-    }
-
-    private void OnDisable()
-    {
-        PlayerScript.OnSpawn -= AssignPlayer;
-        PlayerScript.OnEnemiesDeconceal -= FinalRender;
-        AnimationEndDetection_PlayerDeath.OnDie -= InstantDerender;
-    }
+    { if (!_finallyVisible) ScanForObjects(); }
 
     private void AssignPlayer(GameObject aGameObject)
     { _player = aGameObject; }

@@ -488,7 +488,9 @@ public class MenuManagerScript : MonoBehaviour
 
         _menuObject.SetActive(false);
         Time.timeScale = 1;
+
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
     }
 
     public void RestartButton_No()
@@ -785,9 +787,6 @@ public class MenuManagerScript : MonoBehaviour
         BrightnessText.GetComponent<TextMeshProUGUI>().text = ((int)ResultingValueBrightness).ToString();
 
         Screen.SetResolution((int)TempScreenResolution.x, (int)TempScreenResolution.y, Screen.fullScreen);
-        // prevents from trying to invoke action unless in main menu. Just a precaution
-        if (SceneManager.GetActiveScene().name != "MainMenu")
-        { GameObject.Find("CanvasManager").GetComponent<UIManager>()._screenResizeQueued = true; }
 
         Screen.fullScreen = TempFullScreenSetting;
         if (TempVSyncSetting) { QualitySettings.vSyncCount = 1; }

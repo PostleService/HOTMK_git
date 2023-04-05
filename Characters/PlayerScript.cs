@@ -101,7 +101,7 @@ public class PlayerScript : MonoBehaviour
         OnPositionChange?.Invoke(this.gameObject, transform.position);
 
         CurrentLives = MaxPlayerLives;
-        OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "start");
+        OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartSpawn");
         
         GameObject.Find("PlayerCamera").transform.SetParent(gameObject.transform);
         _animator = gameObject.GetComponent<Animator>();
@@ -444,7 +444,7 @@ public class PlayerScript : MonoBehaviour
             PlayerLevel = aLevelStage;
             if (PlayerLevel == RememberFogAtLevelStage) { RememberFog(); }
             if (PlayerLevel == CanSeeThroughWallsAtStage) { DeconcealEnemies(); }
-            OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "levelup");
+            OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartLevelUp");
         }
     }
 
@@ -460,9 +460,9 @@ public class PlayerScript : MonoBehaviour
         { Die(); }
         else 
         {
-            if (aDamage < 0) { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "heal"); }
+            if (aDamage < 0) { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartHeal"); }
             else if (aDamage == 0) { return; }
-            else { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "damage"); }
+            else { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartDamage"); }
         }
     }
 
@@ -470,7 +470,7 @@ public class PlayerScript : MonoBehaviour
     {
         foreach (Transform childtr in this.gameObject.transform)
         { if (childtr.GetComponent<Camera>() != null) { childtr.parent = null; } }
-        OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "death");
+        OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartDeath");
         Destroy(this.gameObject);
 
         if (PlayerDeathObject != null)
