@@ -20,13 +20,7 @@ public class AutoScroller : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     private ScrollRect m_ScrollRect;
 
     private Vector2 m_NextScrollPosition = Vector2.up;
-    void OnEnable()
-    {
-        if (m_ScrollRect)
-        {
-            m_ScrollRect.content.GetComponentsInChildren(m_Selectables);
-        }
-    }
+
     void Awake()
     {
         m_ScrollRect = GetComponent<ScrollRect>();
@@ -39,6 +33,14 @@ public class AutoScroller : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         }
         ScrollToSelected(true);
     }
+    void OnEnable()
+    {
+        if (m_ScrollRect)
+        {
+            m_ScrollRect.content.GetComponentsInChildren(m_Selectables);
+        }
+    }
+
     void Update()
     {
         // Scroll via input.
@@ -82,9 +84,11 @@ public class AutoScroller : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
             else
             {
                 m_NextScrollPosition = new Vector2(0, 1 - (selectedIndex / ((float)m_Selectables.Count - 1)));
+                m_ScrollRect.normalizedPosition = m_NextScrollPosition;
             }
         }
     }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         mouseOver = true;
