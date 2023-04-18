@@ -6,11 +6,11 @@ public class TrapScript : MonoBehaviour
 
     [Tooltip("If it is a collapsable trap, it will update navmesh to take tile out of Walkable pool")]
     public bool Collapsable = false;
-    [Tooltip("Either stuns or damages enemies. If stuns - stuns lvl3 as well. If damages - kills enemies < lvl3")]
-    public bool SlowsEnemies = false;
-    public bool StunsEnemies = false;
-    public bool DamagesEnemies = true;
-    public bool ModifiersAffectPlayer = true;
+
+    [Header("Interactions: Enemy, Player")]
+    public bool[] Slows = new bool[] { false, false };
+    public bool[] Stuns = new bool[] { false, false };
+    public bool[] Damages = new bool[] { false, false };
     public int DamagePerHit = 1;
 
     private bool _requestedTeleport = false;
@@ -25,20 +25,26 @@ public class TrapScript : MonoBehaviour
         {
             EnemyScript es = collision.gameObject.GetComponent<EnemyScript>();
 
-            if (DamagesEnemies && es.EnemyLevel < 3) { es.Die(); }
             if (Collapsable && es.EnemyLevel >= 3 && !_requestedTeleport) { es.TeleportToSpawn(); _requestedTeleport = true; }
 
-            if (SlowsEnemies && StunsEnemies) { es.Stun(); }
-            else if (SlowsEnemies) { es.Slow(); }
-            else if (StunsEnemies) { es.Stun(); }
+            if (Damages[0])
+            { if (es.EnemyLevel < 3) es.Die(); }
+
+            else
+            {
+                if (Slows[0] && Stuns[0]) { es.Stun(); }
+                else if (Slows[0]) { es.Slow(); }
+                else if (Stuns[0]) { es.Stun(); }
+            }
         }
-        if (ModifiersAffectPlayer && collision.tag == "Player")
+
+        if (collision.tag == "Player")
         {
             PlayerScript ps = collision.gameObject.GetComponent<PlayerScript>();
 
-            if (SlowsEnemies && StunsEnemies) { ps.Stun(); }
-            else if (SlowsEnemies) { ps.Slow(); }
-            else if (StunsEnemies) { ps.Stun(); }
+            if (Slows[1] && Stuns[1]) { ps.Stun(); }
+            else if (Slows[1]) { ps.Slow(); }
+            else if (Stuns[1]) { ps.Stun(); }
         }
     }
 

@@ -22,12 +22,7 @@ public class DestructiblesScript : MonoBehaviour
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.tag == "Enemy")
-        { 
-            Crumble();
-        }
-    }
+    { if (collision.tag == "Enemy") Crumble(); }
 
     // placeholder to spawn additional animation upon death
     private void Crumble()

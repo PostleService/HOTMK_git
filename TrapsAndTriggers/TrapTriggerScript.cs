@@ -15,7 +15,8 @@ public class TrapTriggerScript : MonoBehaviour
     public enum TypesOfTraps 
     {
         NonCollapsable,
-        Collapsable
+        Collapsable,
+
     }
     public TypesOfTraps TypeOfTrap;
 
@@ -126,7 +127,6 @@ public class TrapTriggerScript : MonoBehaviour
 
             if (TypeOfTrap == TypesOfTraps.Collapsable)
             {
-
                 _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
                 // Remove the tile from a list of AllWalkableTiles in the LevelManager
                 // No navmesh recalculation required - using Nav Mesh Obstacle to carve from calculated navmesh

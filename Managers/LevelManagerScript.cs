@@ -101,7 +101,6 @@ public class LevelManagerScript : MonoBehaviour
         if (aStageLevel == 3) { EnemyLvl3 = aEnemyObject; }
         _currentItemsCount[aStageLevel] += 1;
         DefaultItemsCount[aStageLevel] += 1;
-        
     }
 
     private void ReactToDeath(int aStageLevel, GameObject aGameObject) 

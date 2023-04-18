@@ -410,22 +410,23 @@ public class EnemyScript : MonoBehaviour
         return (false, Vector3.zero, Vector3.zero);
     }
 
+    public void Deaggro()
+    {
+        if (_currentFleeSpot != null && IsAfraid)
+        {
+            Destroy(_currentFleeSpot);
+            _currentEscapeAttempt = 1;
+        }
+        if (_currentRushTarget != null) { Destroy(_currentRushTarget.gameObject); }
+        ResetThrowCooldownPrepped();
+
+        _currentlyAggroed = false;
+    }
+
     public void Aggro()
     {
         if (CanAggrDeaggr)
         {
-            void Deaggro()
-            {
-                if (_currentFleeSpot != null && IsAfraid)
-                {
-                    Destroy(_currentFleeSpot);
-                    _currentEscapeAttempt = 1;
-                }
-                if (_currentRushTarget != null) { Destroy(_currentRushTarget.gameObject); }
-                ResetThrowCooldownPrepped();
-
-                _currentlyAggroed = false;
-            }
             
             if (_player == null) { Deaggro(); }
             
