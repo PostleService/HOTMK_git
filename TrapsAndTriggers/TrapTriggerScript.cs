@@ -38,7 +38,7 @@ public class TrapTriggerScript : MonoBehaviour
     public bool ConcealTrapTrigger = true;
 
     private GameObject _trap;
-    private bool _hasBeenTriggered = false;
+    [HideInInspector] public bool _hasBeenTriggered = false;
     private bool _hasBeenSpawned = false;
     private bool _allowedToCooldown = false;
     private LevelManagerScript _levelManager;

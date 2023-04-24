@@ -24,12 +24,6 @@ public class FogWallScript : MonoBehaviour
                     ES.CurrentlyAggroed)
                     ES.Deaggro();
             }
-
-            _chasersDeaggroed = true;
         }
     }
-
-    private void OnTriggerExit2D(Collider2D collision)
-    { if (collision.tag == "Player") _chasersDeaggroed = false; }
-
 }
