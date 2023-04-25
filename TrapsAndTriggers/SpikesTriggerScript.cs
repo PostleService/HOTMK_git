@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TrapTriggerScript : MonoBehaviour
+public class SpikesTriggerScript : MonoBehaviour
 {
     public enum ReactToCharacters
     {
@@ -22,6 +22,7 @@ public class TrapTriggerScript : MonoBehaviour
 
     [Tooltip("GameObject with animation")]
     public GameObject Trap;
+    public GameObject PostTrap;
     [Tooltip("How soon after triggering does the trap start damaging")]
     public float ActivationTimer = 3f;
     private float _activationTimerCurrent;
@@ -38,14 +39,18 @@ public class TrapTriggerScript : MonoBehaviour
     public bool ConcealTrapTrigger = true;
 
     private GameObject _trap;
-    [HideInInspector] public bool _hasBeenTriggered = false;
-    [HideInInspector] public bool _hasBeenSpawned = false;
+    private bool _hasBeenTriggered = false;
+    private bool _hasBeenSpawned = false;
     private bool _allowedToCooldown = false;
+    private bool _trapDestroyed = false;
     private LevelManagerScript _levelManager;
+
+    private Animator _animator;
 
     // Start is called before the first frame update
     void Start()
     {
+        _animator = this.gameObject.GetComponent<Animator>();
         _activationTimerCurrent = ActivationTimer;
         _destroyTimerCurrent = DestroyAfter;
         _cooldownTimerCurrent = Cooldown;
@@ -64,7 +69,7 @@ public class TrapTriggerScript : MonoBehaviour
 
     private void ActivationCountdown()
     {
-        if (_hasBeenTriggered)
+        if (_hasBeenTriggered && !_allowedToCooldown)
         {
             if (_activationTimerCurrent >= 0)
             { _activationTimerCurrent -= Time.deltaTime; }
@@ -87,6 +92,7 @@ public class TrapTriggerScript : MonoBehaviour
                 _cooldownTimerCurrent = Cooldown;
                 _destroyTimerCurrent = DestroyAfter;
                 _hasBeenTriggered = false;
+                _trapDestroyed = false;
                 _allowedToCooldown = false;
             }
         }
@@ -99,7 +105,7 @@ public class TrapTriggerScript : MonoBehaviour
             if (_destroyTimerCurrent >= 0)
             { _destroyTimerCurrent -= Time.deltaTime; }
             else if (_destroyTimerCurrent < 0)
-            { DeleteTrap(); }
+            { if (!_trapDestroyed) DeleteTrap(); }
         }
     }
 
@@ -109,12 +115,13 @@ public class TrapTriggerScript : MonoBehaviour
     {
         if (!_hasBeenTriggered)
         {
+            
             if (ReactTo == ReactToCharacters.Player)
-            { if (collision.tag == "Player") { _hasBeenTriggered = true; } }
+            { if (collision.tag == "Player") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); Debug.LogWarning(collision.gameObject.name); } }
             else if (ReactTo == ReactToCharacters.PlayerAndEnemy)
-            { if (collision.tag == "Player" || collision.tag == "Enemy") { _hasBeenTriggered = true; } }
+            { if (collision.tag == "Player" || collision.tag == "Enemy") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); Debug.LogWarning(collision.gameObject.name); } }
             else if (ReactTo == ReactToCharacters.Enemy)
-            { if (collision.tag == "Enemy") { _hasBeenTriggered = true; } }
+            { if (collision.tag == "Enemy") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); Debug.LogWarning(collision.gameObject.name); } }
         }
     }
 
@@ -137,13 +144,16 @@ public class TrapTriggerScript : MonoBehaviour
             else pos = transform.position;
 
             if (Trap != null)
-            { _trap = Instantiate(Trap, pos, new Quaternion(), this.gameObject.transform); }
+            { _trap = Instantiate(Trap, pos, new Quaternion(), this.gameObject.transform); _animator.Play("SpikesRisingAnim"); }
             _hasBeenSpawned = true;
         }
     }
 
     private void DeleteTrap()
-    { if (_trap != null) 
-        { Destroy(_trap); _hasBeenSpawned = false; _allowedToCooldown = true;  } 
+    {
+        Destroy(_trap); _hasBeenSpawned = false; _allowedToCooldown = true;
+        _animator.Play("SpikesFallingAnim");
+        if (PostTrap) Instantiate(PostTrap, transform.position, new Quaternion(), this.gameObject.transform);
+        _trapDestroyed = true;
     }
 }
