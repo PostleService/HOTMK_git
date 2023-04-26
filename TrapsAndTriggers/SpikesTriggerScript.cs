@@ -117,11 +117,11 @@ public class SpikesTriggerScript : MonoBehaviour
         {
             
             if (ReactTo == ReactToCharacters.Player)
-            { if (collision.tag == "Player") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); Debug.LogWarning(collision.gameObject.name); } }
+            { if (collision.tag == "Player") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); } }
             else if (ReactTo == ReactToCharacters.PlayerAndEnemy)
-            { if (collision.tag == "Player" || collision.tag == "Enemy") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); Debug.LogWarning(collision.gameObject.name); } }
+            { if (collision.tag == "Player" || collision.tag == "Enemy") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); } }
             else if (ReactTo == ReactToCharacters.Enemy)
-            { if (collision.tag == "Enemy") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); Debug.LogWarning(collision.gameObject.name); } }
+            { if (collision.tag == "Enemy") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); } }
         }
     }
 

@@ -89,13 +89,12 @@ public class EnemyScript : MonoBehaviour
             {
                 IsAfraid = value;
                 _currentlyAggroed = false;
+                gameObject.GetComponent<Light2D>().lightOrder = 2;
             } }
     }
     public bool Stunned = false;
-    public float StunTimer = 3f;
     private float _currentStunTimer;
     public bool Slowed = false;
-    public float SlowTimer = 3f;
     private float _currentSlowTimer;
     bool _startedRushing = false;
     bool _startedFleeing = false;
@@ -156,12 +155,13 @@ public class EnemyScript : MonoBehaviour
     public float ThrowCooldown;
     [Tooltip("Throw cooldown when not waiting between consecutive throws")]
     public float ThrowCooldownPrepped = 0.5f;
-    [SerializeField]
     private float _currentThrowCooldown;
-    public bool SlowsEnemies = false;
-    public bool StunsEnemies = true;
-    public bool DamagesEnemies = true;
-    public bool ModifiersAffectPlayer = false;
+    public bool[] Slows = new bool[] { false, false };
+    public bool[] Stuns = new bool[] { false, false };
+    public bool[] Damages = new bool[] { false, false };
+    public float[] SlowFor = new float[] { 2.15f, 1.125f };
+    public float[] StunFor = new float[] { 2.15f, 1.75f };
+
     public float Speed;
     public float ProjectileLifetime;
     
@@ -199,8 +199,6 @@ public class EnemyScript : MonoBehaviour
     void Start()
     {
         AdaptLightingToState(false, false);
-        ResetStunTimer();
-        ResetSlowTimer();
         ResetRushCooldown();
         ResetThrowCooldownPrepped();
         ResetTeleportCountDown();
@@ -421,6 +419,7 @@ public class EnemyScript : MonoBehaviour
         ResetThrowCooldownPrepped();
 
         _currentlyAggroed = false;
+        if (!IsAfraid) gameObject.GetComponent<Light2D>().lightOrder = 4;
     }
 
     public void Aggro()
@@ -439,12 +438,12 @@ public class EnemyScript : MonoBehaviour
                         if (AlternativeAggro && _player != null)
                         {
                             if (Vector3.Distance(transform.position, _player.transform.position) <= RayCastDistance)
-                            { _currentlyAggroed = true; }
+                            { _currentlyAggroed = true; gameObject.GetComponent<Light2D>().lightOrder = 5; }
                         }
                         else if (!AlternativeAggro)
                         {
                             if (RayCast().Item1)
-                            { _currentlyAggroed = true; }
+                            { _currentlyAggroed = true; gameObject.GetComponent<Light2D>().lightOrder = 5; }
                         }
                     }
 
@@ -452,7 +451,7 @@ public class EnemyScript : MonoBehaviour
                     {
                         if (!_onCooldown && RayCast().Item1) // only allow aggro if not on cooldown
                         {
-                            _currentlyAggroed = true;
+                            _currentlyAggroed = true; gameObject.GetComponent<Light2D>().lightOrder = 5;
                             FindRushPoint(GetDirection(RayCast().Item2, RayCast().Item3));
                         }
                     }
@@ -460,7 +459,7 @@ public class EnemyScript : MonoBehaviour
                     else if (EnemyType == EnemyOfType.Thrower)
                     {
                         if (RayCast().Item1)
-                        {  _currentlyAggroed = true; }
+                        {  _currentlyAggroed = true; gameObject.GetComponent<Light2D>().lightOrder = 5; }
                     }
    
                 }
@@ -625,16 +624,17 @@ public class EnemyScript : MonoBehaviour
     {
         GameObject go = Instantiate(Projectile, new Vector3((transform.position.x + aPlayerPos.x), (transform.position.y + aPlayerPos.y), 0f), new Quaternion(), GameObject.Find("Lvl2EnemyHolder").transform);
         ProjectileScript ps = go.GetComponent<ProjectileScript>();
-        ps.SlowsEnemies = SlowsEnemies;
-        ps.StunsEnemies = StunsEnemies;
-        ps.DamagesEnemies = DamagesEnemies;
-        ps.ModifiersAffectPlayer = ModifiersAffectPlayer;
-        ps.Damage = DamagePerHit;
+        ps.Slows = Slows;
+        ps.Stuns = Stuns;
+        ps.Damages = Damages;
+        ps.DamagePerHit = DamagePerHit;
+        ps.SlowFor = SlowFor;
+        ps.StunFor = StunFor;
+
         ps.Direction = aPlayerPos;
         ps.Speed = Speed;
         ps.ProjectileLifetime = ProjectileLifetime;
         ps.ProjectileCollision = ProjectileCollision;
-
     }
 
     public void AssessTeleportDistance()
@@ -832,20 +832,21 @@ public class EnemyScript : MonoBehaviour
 
     #region ON CALL BEHAVIOURS
 
-    public void Die() 
+    public void Die(bool noCorpse) 
     {
         if (_currentFleeSpot != null) { Destroy(_currentFleeSpot); }
         if (_currentRushTarget != null) { Destroy(_currentRushTarget.gameObject); }
         Destroy(this.gameObject);
-        if (DeathObject != null) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
+        if (DeathObject != null && noCorpse == false) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
 
         OnDie?.Invoke(ItemStageLevel, this.gameObject);
     }
 
-    public void Stun()
+    public void Stun(float aLength)
     { 
         if (!Stunned) 
         {
+            ResetStunTimer(aLength);
             _startedRushing = _isRushing;
             if (CurrentlyAggroed && IsAfraid)
             { _startedFleeing = true; }
@@ -861,7 +862,7 @@ public class EnemyScript : MonoBehaviour
     }
 
     // Enemies that are already stunned won't slow not to mess up speed calc
-    public void Slow()
+    public void Slow(float aLength)
     {
         _startedRushing = _isRushing;
         if (CurrentlyAggroed && IsAfraid)
@@ -872,6 +873,7 @@ public class EnemyScript : MonoBehaviour
             if (Stunned) return;
             else 
             {
+                ResetSlowTimer(aLength);
                 Slowed = true;
                 _speedBeforeSlow = _agent.speed;
                 _agent.speed = _agent.speed * SlowToSpeed;
@@ -966,7 +968,6 @@ public class EnemyScript : MonoBehaviour
             if (_currentStunTimer >= 0) { _currentStunTimer -= Time.deltaTime; }
             else 
             { 
-                ResetStunTimer(); 
                 Stunned = false;
 
                 if (_startedRushing && !_isRushing)
@@ -988,7 +989,6 @@ public class EnemyScript : MonoBehaviour
             if (_currentSlowTimer >= 0) { _currentSlowTimer -= Time.deltaTime;}
             else 
             { 
-                ResetSlowTimer(); 
                 Slowed = false;
                 // only reset speed back to previous values if not stunned - otherwise, wait till stun expires so it sets speed
                 if (!Stunned) 
@@ -1041,8 +1041,8 @@ public class EnemyScript : MonoBehaviour
     #endregion TIMER DECREMENTS
 
     #region TIMER RESETS
-    public void ResetStunTimer() { _currentStunTimer = StunTimer; }
-    public void ResetSlowTimer() { _currentSlowTimer = SlowTimer; }
+    public void ResetStunTimer(float aLength) { _currentStunTimer = aLength; }
+    public void ResetSlowTimer(float aLength) { _currentSlowTimer = aLength; }
 
     public void ResetRushCooldown()
     {

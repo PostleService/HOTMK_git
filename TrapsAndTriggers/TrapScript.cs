@@ -6,12 +6,16 @@ public class TrapScript : MonoBehaviour
 
     [Tooltip("If it is a collapsable trap, it will update navmesh to take tile out of Walkable pool")]
     public bool Collapsable = false;
+    public bool NoCorpse = false;
 
     [Header("Interactions: Enemy, Player")]
     public bool[] Slows = new bool[] { false, false };
     public bool[] Stuns = new bool[] { false, false };
     public bool[] Damages = new bool[] { false, false };
     public int DamagePerHit = 1;
+
+    public float[] SlowFor = new float[] { 2.15f , 1.125f };
+    public float[] StunFor = new float[] { 2.15f , 1.75f };
 
     private bool _requestedTeleport = false;
 
@@ -28,13 +32,13 @@ public class TrapScript : MonoBehaviour
             if (Collapsable && es.EnemyLevel >= 3 && !_requestedTeleport) { es.TeleportToSpawn(); _requestedTeleport = true; }
 
             if (Damages[0])
-            { if (es.EnemyLevel < 3) es.Die(); }
+            { if (es.EnemyLevel < 3) es.Die(NoCorpse); }
 
             else
             {
-                if (Slows[0] && Stuns[0]) { es.Stun(); }
-                else if (Slows[0]) { es.Slow(); }
-                else if (Stuns[0]) { es.Stun(); }
+                if (Slows[0] && Stuns[0]) { es.Stun(StunFor[0]); }
+                else if (Slows[0]) { es.Slow(SlowFor[0]); }
+                else if (Stuns[0]) { es.Stun(StunFor[0]); }
             }
         }
 
@@ -42,9 +46,9 @@ public class TrapScript : MonoBehaviour
         {
             PlayerScript ps = collision.gameObject.GetComponent<PlayerScript>();
 
-            if (Slows[1] && Stuns[1]) { ps.Stun(); }
-            else if (Slows[1]) { ps.Slow(); }
-            else if (Stuns[1]) { ps.Stun(); }
+            if (Slows[1] && Stuns[1]) { ps.Stun(StunFor[1]); }
+            else if (Slows[1]) { ps.Slow(SlowFor[1]); }
+            else if (Stuns[1]) { ps.Stun(StunFor[1]); }
         }
     }
 

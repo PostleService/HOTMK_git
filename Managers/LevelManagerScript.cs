@@ -121,7 +121,7 @@ public class LevelManagerScript : MonoBehaviour
 
         else if (LevelStage == 3)
         { if (EnemyLvl3 != null) 
-            {  EnemyLvl3.GetComponent<EnemyScript>().Die(); } 
+            {  EnemyLvl3.GetComponent<EnemyScript>().Die(false); } 
         }
     }
 

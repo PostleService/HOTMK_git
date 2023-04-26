@@ -21,9 +21,7 @@ public class PlayerScript : MonoBehaviour
     private float _currentSlowedSpeedModifier = 1f;
     public float StunSpeedModifier = 0f;
     private float _currentStunSpeedModifier = 1f;
-    public float StunTimer = 3f;
     private float _currentStunTimer;
-    public float SlowTimer = 3f;
     private float _currentSlowTimer;
     private float _currentPostSpawnCannotMove = 0.1f;
 
@@ -106,8 +104,6 @@ public class PlayerScript : MonoBehaviour
         GameObject.Find("PlayerCamera").transform.SetParent(gameObject.transform);
         _animator = gameObject.GetComponent<Animator>();
 
-        ResetStunTimer();
-        ResetSlowTimer();
         FindMovementPoint();
     }
 
@@ -397,7 +393,7 @@ public class PlayerScript : MonoBehaviour
                     }
                 }
                 else if (PlayerLevel >= enemyScript.EnemyLevel)
-                { enemyScript.Die(); }
+                { enemyScript.Die(false); }
             }
         }
         else if (col.tag == "Trap")
@@ -414,17 +410,17 @@ public class PlayerScript : MonoBehaviour
             ProjectileScript projScript = col.gameObject.GetComponent<ProjectileScript>();
             if (!_isDamaged)
             {
-                if (projScript.Damage > 0) _isDamaged = true;
-                TakeDamage(projScript.Damage);
+                if (projScript.DamagePerHit > 0) _isDamaged = true;
+                TakeDamage(projScript.DamagePerHit);
             }
         }
     }
 
-    public void Slow()
-    { if (!Slowed) { Slowed = true; } }
+    public void Slow(float aLength)
+    { if (!Slowed) { Slowed = true; ResetSlowTimer(aLength); } }
 
-    public void Stun()
-    { if (!Stunned) { Stunned = true; } }
+    public void Stun(float aLength)
+    { if (!Stunned) { Stunned = true; ResetStunTimer(aLength); } }
 
     public void SyncronizeLevelUps(int aLevelStage)
     {
@@ -541,15 +537,15 @@ public class PlayerScript : MonoBehaviour
     private void ResetIFramesTimer()
     { _countdownIFramesCurrent = CountdownIFramesDefault; }
 
-    public void ResetStunTimer() { _currentStunTimer = StunTimer; }
-    public void ResetSlowTimer() { _currentSlowTimer = SlowTimer; }
+    public void ResetStunTimer(float aLength) { _currentStunTimer = aLength; }
+    public void ResetSlowTimer(float aLength) { _currentSlowTimer = aLength; }
 
     public void StunTimerDecrement()
     {
         if (Stunned)
         {
             if (_currentStunTimer >= 0) { _currentStunTimer -= Time.deltaTime; }
-            else { ResetStunTimer(); Stunned = false; xInput = 0; yInput = 0; _lastMovementDirection = Vector2.zero; _justLeftStun = true; }
+            else { Stunned = false; xInput = 0; yInput = 0; _lastMovementDirection = Vector2.zero; _justLeftStun = true; }
         }
     }
 
@@ -558,7 +554,7 @@ public class PlayerScript : MonoBehaviour
         if (Slowed)
         {
             if (_currentSlowTimer >= 0) { _currentSlowTimer -= Time.deltaTime; }
-            else { ResetSlowTimer(); Slowed = false; }
+            else { Slowed = false; }
         }
     }
 

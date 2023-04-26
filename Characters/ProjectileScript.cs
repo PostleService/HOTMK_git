@@ -4,17 +4,22 @@ using UnityEngine;
 
 public class ProjectileScript : MonoBehaviour
 {
-    public bool SlowsEnemies;
-    public bool StunsEnemies;
-    public bool DamagesEnemies;
-    public bool ModifiersAffectPlayer;
-    public int Damage;
+
     public Vector2Int Direction;
     public float Speed;
     public float ProjectileLifetime;
     private float _currentProjectileLifetime;
     [Tooltip("Basic projectile collision")]
     public LayerMask ProjectileCollision;
+
+    [Header("Interactions: Enemy, Player")]
+    public bool[] Slows = new bool[] { false, false };
+    public bool[] Stuns = new bool[] { false, false };
+    public bool[] Damages = new bool[] { false, false };
+    public int DamagePerHit = 1;
+
+    public float[] SlowFor = new float[] { };
+    public float[] StunFor = new float[] { };
 
     private void Start()
     {
@@ -26,7 +31,7 @@ public class ProjectileScript : MonoBehaviour
         else if (Direction.x == 0 && Direction.y == -1) { transform.rotation = Quaternion.Euler(0f, 0f, 180f); }
 
         // If damages enemies - add enemy layer to layer mask
-        if (SlowsEnemies || StunsEnemies || DamagesEnemies) { ProjectileCollision = ProjectileCollision | (1 << 7); }
+        if (Slows[0] || Stuns[0] || Damages[0]) { ProjectileCollision = ProjectileCollision | (1 << 7); }
     }
 
     // Update is called once per frame
@@ -42,24 +47,28 @@ public class ProjectileScript : MonoBehaviour
         // if layer of collision is contained within layers to interact with, react
         if ((ProjectileCollision & (1 << collision.gameObject.layer)) != 0)
         {
-            // Debug.LogWarning(collision.name);
             if (collision.tag == "Enemy")
             {
                 EnemyScript es = collision.gameObject.GetComponent<EnemyScript>();
-                
-                if (DamagesEnemies && es.EnemyLevel < 3) { es.Die(); }
 
-                if (SlowsEnemies && StunsEnemies) { es.Stun(); }
-                else if (SlowsEnemies) { es.Slow(); }
-                else if (StunsEnemies) { es.Stun(); }
+                if (Damages[0])
+                { if (es.EnemyLevel < 3) es.Die(false); }
+
+                else
+                {
+                    if (Slows[0] && Stuns[0]) { es.Stun(StunFor[0]); }
+                    else if (Slows[0]) { es.Slow(SlowFor[0]); }
+                    else if (Stuns[0]) { es.Stun(StunFor[0]); }
+                }
             }
-            if (ModifiersAffectPlayer && collision.tag == "Player")
+
+            if (collision.tag == "Player")
             {
                 PlayerScript ps = collision.gameObject.GetComponent<PlayerScript>();
 
-                if (SlowsEnemies && StunsEnemies) { ps.Stun(); }
-                else if (SlowsEnemies) { ps.Slow(); }
-                else if (StunsEnemies) { ps.Stun(); }
+                if (Slows[1] && Stuns[1]) { ps.Stun(StunFor[1]); }
+                else if (Slows[1]) { ps.Slow(SlowFor[1]); }
+                else if (Stuns[1]) { ps.Stun(StunFor[1]); }
             }
 
             DestroyProjectile();
