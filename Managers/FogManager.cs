@@ -26,9 +26,14 @@ public class FogManager : MonoBehaviour
     public float DimLightAtDistance = 6f;
     [Tooltip("Should not be lower than global light not to create 'negative' light")]
     public float LowestLightValue = 0.5f;
-    
+    public float lightDecaySpeed = 1.5f;
+    public float relightSpeed = 1f;
+
+
     private float _playerLightStartIntensity;
     private float _globalLightStartIntensity;
+    private bool _playerInsideFog;
+    private GameObject _fogWallObj;
 
     [Tooltip("Objects apart from player that will reveal fog of war")]
     [HideInInspector] public List<GameObject> ListOfDeconcealingObjects = new List<GameObject>();
@@ -83,6 +88,13 @@ public class FogManager : MonoBehaviour
     private void AssignLvl3(int aItemStageLevel, GameObject aEnemyObject)
     { if (aItemStageLevel == 3) _lvl3 = aEnemyObject; }
 
+    public void PlayerInFog(bool aValue, GameObject aFogWallObject)
+    {
+        if (aValue == true) _playerInsideFog = true;
+        else _playerInsideFog = false;
+        _fogWallObj = aFogWallObject;
+    }
+
     // After getting starting values of light global and light for player at Start()
     // Check if distance is smaller than DimLightAtDistance
     // If so - calculate how much smaller it is and apply coefficient to player light intensity
@@ -91,34 +103,65 @@ public class FogManager : MonoBehaviour
     {
         if (_player != null)
         {
-            if (_lvl3 != null)
+            void Dim(Vector2Int tarLoc, float dimAtDist, float lightDecaySpeed)
             {
-                if (Vector2.Distance(_playerPosition, _lvl3Position) < DimLightAtDistance)
+                if (Vector2.Distance(_playerPosition, tarLoc) < dimAtDist)
                 {
                     float LowestLightIntensity;
                     if (_globalLightStartIntensity > LowestLightValue) { LowestLightIntensity = _globalLightStartIntensity; }
                     else { LowestLightIntensity = LowestLightValue; }
 
                     float newLightIntensity;
-                    float coefficient = Vector2.Distance(_playerPosition, _lvl3Position) / DimLightAtDistance;
-                    float tempLightIntensity = _playerLightStartIntensity * coefficient;
-                    if (tempLightIntensity >= LowestLightIntensity)
-                    { newLightIntensity = tempLightIntensity; }
-                    else { newLightIntensity = LowestLightIntensity; }
-                    _player.GetComponent<Light2D>().intensity = newLightIntensity;
+                    float coefficient = Vector2.Distance(_playerPosition, tarLoc) / dimAtDist;
+                    float tempLightIntensityGoal = _playerLightStartIntensity * coefficient;
+
+                    if (tempLightIntensityGoal >= LowestLightIntensity)
+                    {
+                        if (_player.GetComponent<Light2D>().intensity > tempLightIntensityGoal && _player.GetComponent<Light2D>().intensity - (Time.fixedDeltaTime * lightDecaySpeed) > tempLightIntensityGoal)
+                        {
+                            newLightIntensity = _player.GetComponent<Light2D>().intensity - (Time.fixedDeltaTime * lightDecaySpeed);
+                            _player.GetComponent<Light2D>().intensity = newLightIntensity;
+                        }
+                        else if (_player.GetComponent<Light2D>().intensity <= tempLightIntensityGoal && _player.GetComponent<Light2D>().intensity + (Time.fixedDeltaTime * lightDecaySpeed) <= tempLightIntensityGoal)
+                        {
+                            newLightIntensity = _player.GetComponent<Light2D>().intensity + (Time.fixedDeltaTime * lightDecaySpeed);
+                            _player.GetComponent<Light2D>().intensity = newLightIntensity;
+                        }
+                    }
+                    else
+                    {
+                        newLightIntensity = LowestLightIntensity;
+                        _player.GetComponent<Light2D>().intensity = newLightIntensity; 
+                    }
                 }
             }
-            // Relight player after Lvl3 enemy is dead
-            else if (_lvl3Died)
+
+            // Relight player light if nothing interferes
+            if (_player.GetComponent<PlayerScript>() != null)
             {
-                if (_player.GetComponent<PlayerScript>() != null)
+                void Relight()
                 {
                     if (_player.GetComponent<Light2D>().intensity < _playerLightStartIntensity)
-                    { _player.GetComponent<Light2D>().intensity += Time.deltaTime; }
+                    { _player.GetComponent<Light2D>().intensity += (Time.deltaTime * relightSpeed); }
                     else if (_player.GetComponent<Light2D>().intensity > _playerLightStartIntensity)
                     { _player.GetComponent<Light2D>().intensity = _playerLightStartIntensity; }
                 }
+
+                if (_playerInsideFog == false && _lvl3 == null)
+                { Relight(); }
+                else if (_playerInsideFog == false && _lvl3 != null && (Vector2.Distance(_playerPosition, _lvl3Position) > DimLightAtDistance))
+                { Relight(); }
             }
+
+            if (_lvl3 != null)
+            { Dim(_lvl3Position, DimLightAtDistance, lightDecaySpeed); }
+
+            if (_playerInsideFog && _fogWallObj != null)
+            {
+                Vector2Int vec2Int = Vector2Int.RoundToInt(_fogWallObj.transform.position);
+                Dim(vec2Int, 1, lightDecaySpeed);
+            }
+
         }
     }
 

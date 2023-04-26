@@ -12,18 +12,27 @@ public class FogWallScript : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.tag == "Player" && _levelManager.LevelStage < 2 && !_chasersDeaggroed)
+        if (collision.tag == "Player")
         {
-            List<GameObject> goLis = new List<GameObject>();
-            EnemyScript[] goArr = GameObject.FindObjectsOfType<EnemyScript>();
-            
-            foreach (EnemyScript ES in goArr) 
+            if (_levelManager.LevelStage < 2 && !_chasersDeaggroed)
             {
-                if (ES.EnemyLevel == 2 && 
-                    ES.EnemyType == EnemyScript.EnemyOfType.Roamer && 
-                    ES.CurrentlyAggroed)
-                    ES.Deaggro();
+                List<GameObject> goLis = new List<GameObject>();
+                EnemyScript[] goArr = GameObject.FindObjectsOfType<EnemyScript>();
+
+                foreach (EnemyScript ES in goArr)
+                {
+                    if (ES.EnemyLevel == 2 &&
+                        ES.EnemyType == EnemyScript.EnemyOfType.Roamer &&
+                        ES.CurrentlyAggroed)
+                        ES.Deaggro();
+                }
             }
+            GameObject.Find("FogManager").GetComponent<FogManager>().PlayerInFog(true, gameObject);
         }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.tag == "Player") GameObject.Find("FogManager").GetComponent<FogManager>().PlayerInFog(false, gameObject);
     }
 }
