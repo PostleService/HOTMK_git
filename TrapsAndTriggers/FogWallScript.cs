@@ -8,7 +8,10 @@ public class FogWallScript : MonoBehaviour
     private bool _chasersDeaggroed = false;
 
     private void Start()
-    { _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>(); }
+    { 
+        _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
+        _levelManager.AllWalkableTiles.Remove(this.gameObject.transform.position);
+    }
 
     private void OnTriggerStay2D(Collider2D collision)
     {

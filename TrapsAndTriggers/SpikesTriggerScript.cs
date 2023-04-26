@@ -129,19 +129,7 @@ public class SpikesTriggerScript : MonoBehaviour
     {
         if (!_hasBeenSpawned)
         {
-            // for proper layering, pivot on collapsables set lower than needed. Correcting offset through lower y pos
-            Vector3 pos = Vector3.zero;
-
-            if (TypeOfTrap == TypesOfTraps.Collapsable)
-            {
-                _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
-                // Remove the tile from a list of AllWalkableTiles in the LevelManager
-                // No navmesh recalculation required - using Nav Mesh Obstacle to carve from calculated navmesh
-                _levelManager.AllWalkableTiles.Remove(this.gameObject.transform.position);
-
-                pos = new Vector3(transform.position.x, transform.position.y - 0.125f, 0);
-            }
-            else pos = transform.position;
+            Vector3 pos = transform.position;
 
             if (Trap != null)
             { _trap = Instantiate(Trap, pos, new Quaternion(), this.gameObject.transform); _animator.Play("SpikesRisingAnim"); }
