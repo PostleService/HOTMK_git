@@ -45,6 +45,7 @@ public class AnimationEndDetection_Boss : MonoBehaviour
     {
         EnemyScript es = gameObject.GetComponent<EnemyScript>();
         es.CurrentlyTeleporting = false;
+        gameObject.GetComponent<BoxCollider2D>().enabled = true;
     }
 
     public void OnAnimationFinishOut()

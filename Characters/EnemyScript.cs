@@ -209,6 +209,7 @@ public class EnemyScript : MonoBehaviour
         
         _currentEscapeAttempt = 1;
         _currentPatrolTarget = _patrolTransforms[_currentPatrolPoint];
+        SpawnOutDestination = SpawnPosition;
 
         _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
         
@@ -641,7 +642,7 @@ public class EnemyScript : MonoBehaviour
     {
         if (AllowedToTeleport)
         {
-            if (_remainingDistance > DistanceToTeleport) { _consideringTeleport = true; }
+            if (_remainingDistance > DistanceToTeleport || Vector3.Distance(gameObject.transform.position, _player.transform.position) > DistanceToTeleport + 2) { _consideringTeleport = true; }
             else { _consideringTeleport = false; }
         }
     }
@@ -909,54 +910,66 @@ public class EnemyScript : MonoBehaviour
         _agent.pathStatus != NavMeshPathStatus.PathInvalid &&
         _agent.path.corners.Length != 0)
         {
-            float distanceWithNext = 0.0f;
-            float distanceFromCurrent = 0.0f;
-            float distanceTemp = 0.0f;
-            Vector3 tempBetterTeleportPoint = Vector3.zero;
+            float distanceBeforeCalc = 0.0f;
+            float NextStretch = 0.0f;
+            float totalDistanceSoFar = 0.0f;
+
+            Vector3 TempDestination = transform.position;
 
             // start calculating distance from end of path (player), till start of path (boss)
             // if distance exceeds value TeleportToPointPastDistanceOf: 
             // go through as many loops as needed to find midpoint between current point and next point that would be close to desired distance
-            for (int i = _agent.path.corners.Length-1; i > 1; --i)
+
+            for (int i = _agent.path.corners.Length - 1; i > 0; --i)
             {
-                distanceFromCurrent = distanceWithNext;
-                distanceWithNext += Vector3.Distance(_agent.path.corners[i], _agent.path.corners[i - 1]);
-                distanceTemp = distanceWithNext;
+                NextStretch = Vector3.Distance(_agent.path.corners[i], _agent.path.corners[i - 1]);
+                distanceBeforeCalc = totalDistanceSoFar;
+                totalDistanceSoFar += NextStretch;
 
-                if (distanceWithNext > TeleportToPointPastDistanceOf)
+                if (totalDistanceSoFar <= TeleportToPointPastDistanceOf) continue;
+
+                else
                 {
-                    int AttemptNum = 0;
-                    Vector3 TempDestination = _agent.path.corners[i - 1];
-
-                    while (distanceTemp > (TeleportToPointPastDistanceOf+TeleportToPointPastDistanceOfUpper))
+                    // Debug.LogWarning("With corner " + (i-1) + " distance " + totalDistanceSoFar + " will exceed desired: " + TeleportToPointPastDistanceOf);
+                    if (totalDistanceSoFar <= (TeleportToPointPastDistanceOf + TeleportToPointPastDistanceOfUpper))
                     {
-                        // find X, Y midpoints, shifting closer to the next point than current point (closer to player)
-                        tempBetterTeleportPoint = Vector3.Lerp(_agent.path.corners[i], TempDestination, 0.75f);
-                        distanceTemp = distanceFromCurrent + Vector3.Distance(_agent.path.corners[i], tempBetterTeleportPoint);
-
-                        // assign new Vector to the previously found "better teleport point" in case of further iteration
-                        TempDestination = tempBetterTeleportPoint;
-                        AttemptNum += 1;
+                        // Debug.LogWarning("Point " + TempDestination + " is within range of distance and distance upper. Teleporting");
+                        TempDestination = _agent.path.corners[i - 1];
+                        SpawnOutDestination = new Vector3(TempDestination.x, TempDestination.y, 0);
+                        break;
                     }
-
-                    /*
-                    // Leaving useful debugging in, just in case
-                    Debug.LogWarning("Instead of teleporting to " + _agent.path.corners[i - 1] + ", will be teleporting to " + TempDestination);
-                    Debug.LogWarning("Instead of teleporting to distance of " + distanceWithNext + ", will be teleporting to " + distanceTemp);
-                    Debug.LogWarning("Approximations taken to recalculate teleport point: " + AttemptNum);
-                    */
-                    if (EnemyType == EnemyOfType.Roamer && EnemyLevel == 3)
+                    else
                     {
-                        CurrentlyTeleporting = true;
-                        gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnOut();
+                        //Debug.LogWarning("Point exceeds range of distance and distance upper. Further actions needed");
+
+                        float distanceTemp = totalDistanceSoFar;
+                        int AttemptNum = 0;
+                        TempDestination = _agent.path.corners[i - 1];
+                        Vector3 BetterTeleportPosition = Vector3.zero;
+
+                        while (distanceTemp > (TeleportToPointPastDistanceOf + TeleportToPointPastDistanceOfUpper) && AttemptNum < 25)
+                        {
+                            // take V3 of currently examined vector and the next considered corner (closer to boss) and find midpoint skewed towards next point
+                            BetterTeleportPosition = Vector3.Lerp(_agent.path.corners[i], TempDestination, 0.9f);
+                            distanceTemp = distanceBeforeCalc + Vector3.Distance(_agent.path.corners[i], TempDestination);
+
+                            if (distanceTemp <= (TeleportToPointPastDistanceOf + TeleportToPointPastDistanceOfUpper))
+                            { /* Debug.LogWarning("Success. " + BetterTeleportPosition + " will be a new point after " + AttemptNum + " attempts. Teleporting"); */ }
+
+                            TempDestination = BetterTeleportPosition;
+                            AttemptNum++;
+                        }
                         SpawnOutDestination = new Vector3(TempDestination.x, TempDestination.y, 0);
                     }
-                    else _agent.Warp(new Vector3(TempDestination.x, TempDestination.y,0)); // in case we still want to teleport someone and it's not a boss
+                    CurrentlyTeleporting = true;
+                    gameObject.GetComponent<BoxCollider2D>().enabled = false;
+                    gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnOut();
                     break;
                 }
             }
         }
     }
+
 
     #endregion // ON CALL BEHAVIOURS
 
