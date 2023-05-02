@@ -22,11 +22,13 @@ public class TrapTriggerScript : MonoBehaviour
 
     [Tooltip("GameObject with animation")]
     public GameObject Trap;
+    public float SpawnOffset = 0.125f;
     [Tooltip("How soon after triggering does the trap start damaging")]
     public float ActivationTimer = 3f;
     private float _activationTimerCurrent;
     [Tooltip("How soon after triggering does the animation and collider despawn. -1 for never")]
     public float DestroyAfter;
+    public bool DestroySelfAfterSpawn = false;
     private float _destroyTimerCurrent;
     [Tooltip("if not single use, make sure destruction is not infinity")]
     public bool SingleUse = true;
@@ -74,7 +76,7 @@ public class TrapTriggerScript : MonoBehaviour
             }
         }
     }
-
+    
     private void CooldownTimer()
     {
         if (!SingleUse)
@@ -132,13 +134,19 @@ public class TrapTriggerScript : MonoBehaviour
                 // No navmesh recalculation required - using Nav Mesh Obstacle to carve from calculated navmesh
                 _levelManager.AllWalkableTiles.Remove(this.gameObject.transform.position);
 
-                pos = new Vector3(transform.position.x, transform.position.y - 0.125f, 0);
+                pos = new Vector3(transform.position.x, transform.position.y - SpawnOffset, 0);
             }
             else pos = transform.position;
 
             if (Trap != null)
             { _trap = Instantiate(Trap, pos, new Quaternion(), this.gameObject.transform); }
             _hasBeenSpawned = true;
+            if (DestroySelfAfterSpawn == true)
+            {
+                foreach (Transform chTr in transform)
+                { chTr.parent = GameObject.Find("TrapsAndTriggers").transform; }
+                Destroy(gameObject);
+            }
         }
     }
 
