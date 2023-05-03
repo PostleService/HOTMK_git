@@ -18,6 +18,12 @@ public class MenuManagerScript : MonoBehaviour
     public bool ConcealCursorInGame = true;
     public Texture2D CursorSkin;
 
+    // Input controls
+    private InputControl _inputControl;
+    private bool _menuCall = false;
+    private bool _menuCancelCall = false;
+    private bool _submenuCancelCall = false;
+
     [Header("Menu objects")]
     public GameObject _menuObject;
     private bool _menuCalled = false;
@@ -119,10 +125,30 @@ public class MenuManagerScript : MonoBehaviour
     public static event Action OnUntoggleTutorials;
 
     private void OnEnable()
-    { AnimationEndDetection_PlayerDeath.OnDie += ReactToPlayerDeath; }
+    { 
+        AnimationEndDetection_PlayerDeath.OnDie += ReactToPlayerDeath;
+        _inputControl.MenuInputMonitor.Enable();
+    }
 
     private void OnDisable()
-    { AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath; }
+    { 
+        AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath;
+        _inputControl.MenuInputMonitor.Disable();
+    }
+
+    private void Awake()
+    {
+        _inputControl = new InputControl();
+
+        _inputControl.MenuInputMonitor.MenuCall.started += (value) => _menuCall = true;
+        _inputControl.MenuInputMonitor.MenuCall.canceled += (value) => _menuCall = false;
+
+        _inputControl.MenuInputMonitor.MenuCallCancel.started += (value) => _menuCancelCall = true;
+        _inputControl.MenuInputMonitor.MenuCallCancel.canceled += (value) => _menuCancelCall = false;
+
+        _inputControl.MenuInputMonitor.SubmenuCallCancel.started += (value) => _submenuCancelCall = true;
+        _inputControl.MenuInputMonitor.SubmenuCallCancel.canceled += (value) => _submenuCancelCall = false;
+    }
 
     private void Start()
     {
@@ -263,26 +289,26 @@ public class MenuManagerScript : MonoBehaviour
     private void MonitorForMenuCall()
     {
         if (!_menuCalled && !_submenuCalled && !_tutorialWindowCalled)
-        { if (Input.GetKeyDown("escape")) { OpenMenu(); } }
+        { if (_menuCall) { OpenMenu(); } }
         else if (_menuCalled)
-        { if (Input.GetKeyDown("escape")) { CloseMenu(); } }
+        { if (_menuCancelCall) { CloseMenu(); } }
     }
 
     private void MonitorSubmenuEscape()
     {
         if (_resetProgressMenuCalled || _restartMenuCalled || _chooseLevelMenuCalled || _quitToMainMenuMenuCalled || _quitToOSMenuCalled)
         {
-            if (Input.GetKeyDown("escape"))
+            if (_submenuCancelCall)
             { CloseSubmenu(); }
         }
         else if (_optionsMenuGraphicsCalled || _optionsMenuAudioCalled)
         {
-            if (Input.GetKeyDown("escape"))
+            if (_submenuCancelCall)
             { OptionsButton(); }
         }
         else if (_optionsMenuCalled)
         {
-            if (Input.GetKeyDown("escape"))
+            if (_submenuCancelCall)
             {
                 if (_optionsMenuCalled)
                 { OptionsButton_Back(); }
@@ -290,19 +316,19 @@ public class MenuManagerScript : MonoBehaviour
         }
         else if (_acceptChangesOrLeaveMenuCalled)
         {
-            if (Input.GetKeyDown("escape"))
+            if (_submenuCancelCall)
                 OptionsButton_BackLeave();
         }
         else if (_defeatScreenCalled || _victoryScreenCalled)
         {
-            if (Input.GetKeyDown("escape"))
+            if (_submenuCancelCall)
             {
                 ExitToMainMenuButton_Yes();
             }
         }
         else if (_tutorialWindowCalled)
         {
-            if (Input.GetKeyDown("escape"))
+            if (_submenuCancelCall)
             {
                 SpawnTutorialWindowConfirm();
             }
@@ -349,6 +375,10 @@ public class MenuManagerScript : MonoBehaviour
 
         _menuObject.SetActive(true);
         Time.timeScale = 0;
+
+        _menuCall = false;
+        _menuCancelCall = false;
+        _submenuCancelCall = false;
     }
 
     private void CloseMenu()
@@ -362,6 +392,9 @@ public class MenuManagerScript : MonoBehaviour
             Time.timeScale = 1;
             AudioListener.pause = false;
         }
+        _menuCall = false;
+        _menuCancelCall = false;
+        _submenuCancelCall = false;
     }
 
     private void ShowDefeatScreen()
@@ -446,6 +479,10 @@ public class MenuManagerScript : MonoBehaviour
         _submenuCalled = false;
 
         OpenMenu();
+
+        _menuCall = false;
+        _menuCancelCall = false;
+        _submenuCancelCall = false;
     }
 
     // LEVEL PROGRESSION
@@ -831,7 +868,7 @@ public class MenuManagerScript : MonoBehaviour
             _acceptChangesOrLeaveMenuCalled = true;
 
             EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_optionsMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
+            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_acceptChangesOrLeaveMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
         }
     }
 
