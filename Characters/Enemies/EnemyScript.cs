@@ -221,6 +221,8 @@ public class EnemyScript : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        if (!_agent.isOnNavMesh) _agent.Warp(SpawnPosition); // I'm sure I won't regret this
+
         GetRemainingDistance();
         Aggro();
         Patrolling();

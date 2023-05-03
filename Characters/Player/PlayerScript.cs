@@ -36,6 +36,14 @@ public class PlayerScript : MonoBehaviour
     public float ColliderSearchRadius = 0.2f;
 
     // This is the actual object controlled by keyboard input. The parent object will attempt to move towards it.
+    private InputControl _inputControl;
+
+    private float _inputValueXRight = 0f;
+    private float _inputValueXLeft = 0f;
+    private float _inputValueYUp = 0f;
+    private float _inputValueYDown = 0f;
+    public Vector2 _joystickValue = Vector2.zero;
+
     private Transform _movementPoint;
     [HideInInspector] public int xInput;
     [HideInInspector] public int yInput;
@@ -83,13 +91,39 @@ public class PlayerScript : MonoBehaviour
     public static event Action OnEnemiesDeconceal;
 
     private void OnEnable()
-    { LevelManagerScript.OnLevelStageChange += LevelUp; }
+    { 
+        LevelManagerScript.OnLevelStageChange += LevelUp;
+        _inputControl.PlayerControls.Enable();
+    }
 
     private void OnDisable()
-    { LevelManagerScript.OnLevelStageChange -= LevelUp; }
+    { 
+        LevelManagerScript.OnLevelStageChange -= LevelUp;
+        _inputControl.PlayerControls.Disable();
+    }
 
     private void Awake()
     {
+        #region InputSubscriptions
+        _inputControl = new InputControl();
+
+        _inputControl.PlayerControls.PlayerInput_Right.performed += (value) => _inputValueXRight = 1;
+        _inputControl.PlayerControls.PlayerInput_Right.canceled += (value) => _inputValueXRight = 0f;
+
+        _inputControl.PlayerControls.PlayerInput_Left.performed += (value) => _inputValueXLeft = -1;
+        _inputControl.PlayerControls.PlayerInput_Left.canceled += (value) => _inputValueXLeft = 0f;
+
+        _inputControl.PlayerControls.PlayerInput_Up.performed += (value) => _inputValueYUp = 1;
+        _inputControl.PlayerControls.PlayerInput_Up.canceled += (value) => _inputValueYUp = 0f;
+
+        _inputControl.PlayerControls.PlayerInput_Down.performed += (value) => _inputValueYDown = -1;
+        _inputControl.PlayerControls.PlayerInput_Down.canceled += (value) => _inputValueYDown = 0f;
+
+        _inputControl.PlayerControls.PlayerInput_Joystick.performed += (value) => _joystickValue = value.ReadValue<Vector2>();
+        _inputControl.PlayerControls.PlayerInput_Joystick.canceled += (value) => _joystickValue = Vector2.zero;
+
+        #endregion InputSubscriptions
+
         ResetMovementTimer();
         ResetIFramesTimer();
     }
@@ -112,7 +146,7 @@ public class PlayerScript : MonoBehaviour
     {
         if (_currentPostSpawnCannotMove >= 0) { _currentPostSpawnCannotMove -= Time.fixedDeltaTime; }
 
-        CheckMovementInput();
+        ProcessInput();
         PeformMove();
 
         StunTimerDecrement();
@@ -146,10 +180,80 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    private void CheckMovementInput()
+    private void ProcessInput()
     {
-        xInput = (int)(Input.GetAxisRaw("Horizontal"));
-        yInput = (int)(Input.GetAxisRaw("Vertical"));
+        bool UpArrowPressed = false;
+        bool DownArrowPressed = false;
+        bool RightArrowPressed = false;
+        bool LeftArrowPressed = false;
+
+        #region JoystickInput
+
+        Vector2 JoystickAxis = Vector2.zero;
+
+        if (Mathf.Abs(_joystickValue.x) > Mathf.Abs(_joystickValue.y))
+        {
+            if (_joystickValue.x < 0)
+            {
+                JoystickAxis.x = -1;
+                LeftArrowPressed = true;
+            }
+
+            else if (_joystickValue.x > 0)
+            {
+                JoystickAxis.x = 1;
+                RightArrowPressed = true;
+            }
+        }
+        else if (Mathf.Abs(_joystickValue.y) > Mathf.Abs(_joystickValue.x))
+        {
+            if (_joystickValue.y < 0)
+            {
+                JoystickAxis.y = -1;
+                DownArrowPressed = true;
+            }
+            else if (_joystickValue.y > 0)
+            {
+                JoystickAxis.y = 1;
+                UpArrowPressed = true;
+            }
+        }
+
+        #endregion JoystickInput
+
+        #region AnalogKeyInput
+
+        float axisX = 0f; float axisY = 0f;
+        Vector2 AnalogKeyAxis = Vector2.zero;
+
+        axisX = _inputValueXLeft + _inputValueXRight;
+        axisY = _inputValueYDown + _inputValueYUp;
+
+        AnalogKeyAxis = new Vector2(axisX, axisY);
+
+        if (_inputValueXLeft != 0) LeftArrowPressed = true;
+        if (_inputValueXRight != 0) RightArrowPressed = true;
+        if (_inputValueYDown != 0) DownArrowPressed = true;
+        if (_inputValueYUp != 0) UpArrowPressed = true;
+
+        #endregion KeyboardInput
+
+        #region UnifiedInput
+
+        float xAxisUnified = 0f; float yAxisUnified = 0f;
+
+        xAxisUnified = JoystickAxis.x + AnalogKeyAxis.x;
+        yAxisUnified = JoystickAxis.y + AnalogKeyAxis.y;
+
+        if (xAxisUnified < 0) xInput = -1;
+        else if (xAxisUnified > 0) xInput = 1;
+        else xInput = 0;
+
+        if (yAxisUnified < 0) yInput = -1;
+        else if (yAxisUnified > 0) yInput = 1;
+        else yInput = 0;
+
+        #endregion UnifiedInput
 
         void UpdateAnimatorHandlerValues(float aPlayerSpeed, float aHorizontalDirection = 0, float aVerticalDirection = 0)
         {
@@ -171,13 +275,7 @@ public class PlayerScript : MonoBehaviour
             bool xInputChanged = false; bool yInputChanged = false;
 
             bool directionPressed = false;
-            if (
-                    (Input.GetKey(KeyCode.UpArrow) || (Input.GetKey(KeyCode.W))) ||
-                    (Input.GetKey(KeyCode.DownArrow) || (Input.GetKey(KeyCode.S)))
-                    ||
-                    (Input.GetKey(KeyCode.LeftArrow) || (Input.GetKey(KeyCode.A))) ||
-                    (Input.GetKey(KeyCode.RightArrow) || (Input.GetKey(KeyCode.D)))
-               )
+            if ( UpArrowPressed || DownArrowPressed || LeftArrowPressed || RightArrowPressed )
             { directionPressed = true; }
 
             // overall check for input change
@@ -186,40 +284,26 @@ public class PlayerScript : MonoBehaviour
                 SpeedAfterCalc = MovementSpeedDefault * _currentDamageAcceleration * _currentStunSpeedModifier * _currentSlowedSpeedModifier;
 
                 // resolving input conflict to avoid dead stops on one of the axes due to combining up and down input:
-                if
-                    (
-                    xInput == 0 && _lastMovementInput.x != 0 &&
-                    (
-                    (Input.GetKey(KeyCode.LeftArrow) || (Input.GetKey(KeyCode.A))) &&
-                    (Input.GetKey(KeyCode.RightArrow) || (Input.GetKey(KeyCode.D)))
-                    )
-                    )
+                if ( xInput == 0 && _lastMovementInput.x != 0 && ( LeftArrowPressed && RightArrowPressed ) )
                 {
                     if (!_resolvingConflictX)
                     {
-                        if (_lastMovementInput.x == -1 && (Input.GetKey(KeyCode.RightArrow) || (Input.GetKey(KeyCode.D))))
+                        if (_lastMovementInput.x == -1 && RightArrowPressed)
                         { xInput = 1; _resolvingConflictX = true; }
-                        else if (_lastMovementInput.x == 1 && (Input.GetKey(KeyCode.LeftArrow) || (Input.GetKey(KeyCode.A))))
+                        else if (_lastMovementInput.x == 1 && LeftArrowPressed)
                         { xInput = -1; _resolvingConflictX = true; }
                     }
                     else { xInput = (int)_lastMovementInput.x; }
                 }
                 else { _resolvingConflictX = false; }
 
-                if
-                    (
-                    yInput == 0 && _lastMovementInput.y != 0 &&
-                    (
-                    (Input.GetKey(KeyCode.UpArrow) || (Input.GetKey(KeyCode.W))) &&
-                    (Input.GetKey(KeyCode.DownArrow) || (Input.GetKey(KeyCode.S)))
-                    )
-                    )
+                if ( yInput == 0 && _lastMovementInput.y != 0 && ( UpArrowPressed && DownArrowPressed ) )
                 {
                     if (!_resolvingConflictY)
                     {
-                        if (_lastMovementInput.y == -1 && (Input.GetKey(KeyCode.UpArrow) || (Input.GetKey(KeyCode.W))))
+                        if (_lastMovementInput.y == -1 && UpArrowPressed)
                         { yInput = 1; _resolvingConflictY = true; }
-                        else if (_lastMovementInput.y == 1 && (Input.GetKey(KeyCode.DownArrow) || (Input.GetKey(KeyCode.S))))
+                        else if (_lastMovementInput.y == 1 && DownArrowPressed)
                         { yInput = -1; _resolvingConflictY = true; }
                     }
                     else { yInput = (int)_lastMovementInput.y; }
