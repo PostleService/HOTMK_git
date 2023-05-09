@@ -17,6 +17,7 @@ public class CollapsableCeilingTriggerAnim : MonoBehaviour
             {
                 _animator = this.gameObject.GetComponent<Animator>();
                 _animator.Play("TriggeredAnimation");
+                gameObject.GetComponent<SoundBiteScript>().PlayOnCall();
                 _hasTriggered = true;
             }
         }   

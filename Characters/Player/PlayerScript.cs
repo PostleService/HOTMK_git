@@ -543,7 +543,11 @@ public class PlayerScript : MonoBehaviour
         {
             if (aDamage < 0) { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartHeal"); }
             else if (aDamage == 0) { return; }
-            else { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartDamage"); }
+            else 
+            { 
+                OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartDamage");
+                gameObject.GetComponent<PlayerSoundScript>().PlayDamageSound();
+            }
         }
     }
 

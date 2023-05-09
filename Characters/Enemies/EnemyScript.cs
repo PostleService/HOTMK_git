@@ -13,6 +13,7 @@ using UnityEngine.Rendering.Universal;
 public class EnemyScript : MonoBehaviour
 {
     private LevelManagerScript _levelManager;
+    private FogManager _fogManager;
 
     [HideInInspector]
     public GameObject _player;
@@ -57,8 +58,6 @@ public class EnemyScript : MonoBehaviour
     public GameObject NavMeshBoundPoint;
     [Tooltip("If true - will consider raycast and aggro range. Otherwise - if not by default aggroed - patrolling, if aggroed - always chasing")]
     public bool CanAggrDeaggr = true;
-    [Tooltip("Instead of aggroing by raycast and deaggroing by pathfinding distance, aggro and deaggro by raw Vector3 distance")]
-    public bool AlternativeAggro = false;
     [Tooltip("Distance at which the enemy will notice player with raycast. In alternative aggro - raw distance to aggro")]
     public float RayCastDistance;
     private float _raycastModifier = 0f; // for when enemy is stunned
@@ -212,7 +211,9 @@ public class EnemyScript : MonoBehaviour
         SpawnOutDestination = SpawnPosition;
 
         _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
-        
+        _fogManager = GameObject.Find("FogManager").GetComponent<FogManager>();
+
+
         OnSpawn?.Invoke(ItemStageLevel, this.gameObject);
         if (ItemStageLevel == 3) { OnPositionChange?.Invoke(this.gameObject, transform.position); }
         AssignPlayer(GameObject.Find("Player"));
@@ -427,65 +428,53 @@ public class EnemyScript : MonoBehaviour
 
     public void Aggro()
     {
+
+        void CommonAggroSettings()
+        { 
+            _currentlyAggroed = true; 
+            gameObject.GetComponent<Light2D>().lightOrder = 5;
+        }
+
         if (CanAggrDeaggr)
         {
             
             if (_player == null) { Deaggro(); }
-            
+
             else if (!CurrentlyAggroed)
             {
                 if (!IsAfraid) 
                 {
                     if (EnemyType == EnemyOfType.Roamer)
                     {
-                        if (AlternativeAggro && _player != null)
+                        if (RayCast().Item1 && _fogManager._playerInsideFog != true)
                         {
-                            if (Vector3.Distance(transform.position, _player.transform.position) <= RayCastDistance)
-                            { _currentlyAggroed = true; gameObject.GetComponent<Light2D>().lightOrder = 5; }
-                        }
-                        else if (!AlternativeAggro)
-                        {
-                            if (RayCast().Item1)
-                            { _currentlyAggroed = true; gameObject.GetComponent<Light2D>().lightOrder = 5; }
+                            CommonAggroSettings();
+                            gameObject.GetComponent<EnemySoundScript>().PlayAggroSound();
                         }
                     }
 
                     else if (EnemyType == EnemyOfType.Rusher)
                     {
-                        if (!_onCooldown && RayCast().Item1) // only allow aggro if not on cooldown
+                        if (!_onCooldown && RayCast().Item1 && _fogManager._playerInsideFog != true) // only allow aggro if not on cooldown
                         {
-                            _currentlyAggroed = true; gameObject.GetComponent<Light2D>().lightOrder = 5;
+                            CommonAggroSettings();
                             FindRushPoint(GetDirection(RayCast().Item2, RayCast().Item3));
                         }
                     }
 
                     else if (EnemyType == EnemyOfType.Thrower)
-                    {
-                        if (RayCast().Item1)
-                        {  _currentlyAggroed = true; gameObject.GetComponent<Light2D>().lightOrder = 5; }
-                    }
+                    { if (RayCast().Item1 && _fogManager._playerInsideFog != true) CommonAggroSettings(); }
    
                 }
 
                 else if (IsAfraid)
                 {
-                    if (AlternativeAggro)
+                    if (RayCast().Item1 && _fogManager._playerInsideFog != true)
                     {
-                        if (Vector3.Distance(transform.position, _player.transform.position) <= RayCastDistance)
-                        {
-                            FindFleeSpot(GetDirection(_player.transform.position, transform.position));
-                            _speedBeforeFleeing = _agent.speed;
-                            _agent.speed = _speedBeforeFleeing * FleeSpeedModifier;
-                        }
-                    }
-                    else if (!AlternativeAggro)
-                    {
-                        if (RayCast().Item1)
-                        {
-                            FindFleeSpot(GetDirection(RayCast().Item2, RayCast().Item3));
-                            _speedBeforeFleeing = _agent.speed;
-                            _agent.speed = _speedBeforeFleeing * FleeSpeedModifier;
-                        }
+                        FindFleeSpot(GetDirection(RayCast().Item2, RayCast().Item3));
+                        _speedBeforeFleeing = _agent.speed;
+                        _agent.speed = _speedBeforeFleeing * FleeSpeedModifier;
+                        gameObject.GetComponent<EnemySoundScript>().PlayFearSound();
                     }
                 }
             }
@@ -498,20 +487,13 @@ public class EnemyScript : MonoBehaviour
                 {
                     if (EnemyType == EnemyOfType.Roamer)
                     {
-                        if (AlternativeAggro && Vector3.Distance(transform.position, _player.transform.position) > RayCastDistance && Vector3.Distance(transform.position, _player.transform.position) != Mathf.Infinity)
-                        { Deaggro(); }
-
-                        // Have to account for infinity because of navmesh rebuilding. While it's rebuilding, distance to target becomes incalculable
-                        else if (!AlternativeAggro && _remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
+                        if (_remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
                         { Deaggro(); }
                     }
                     else if (EnemyType == EnemyOfType.Rusher)
                     {
-                        if (!_isRushing && AlternativeAggro && Vector3.Distance(transform.position, _player.transform.position) > RayCastDistance && Vector3.Distance(transform.position, _player.transform.position) != Mathf.Infinity)
-                        { Deaggro(); }
-
                         // Have to account for infinity because of navmesh rebuilding. While it's rebuilding, distance to target becomes incalculable
-                        else if (!_isRushing && !AlternativeAggro && _remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
+                        if (!_isRushing && _remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
                         { Deaggro(); }
                     }
                     else if (EnemyType == EnemyOfType.Thrower)
@@ -522,16 +504,8 @@ public class EnemyScript : MonoBehaviour
                 }
                 else if (IsAfraid)
                 {
-                    if (AlternativeAggro && Vector3.Distance(transform.position, _player.transform.position) > RayCastDistance && Vector3.Distance(transform.position, _player.transform.position) != Mathf.Infinity)
-                    { 
-                        Deaggro();
-                        if (Stunned) { _agent.speed = 0; }
-                        else if (Slowed) { _agent.speed = _speedBeforeFleeing * SlowToSpeed; }
-                        else { _agent.speed = _speedBeforeFleeing; }
-                    }
-
                     // Have to account for infinity because of navmesh rebuilding. While it's rebuilding, distance to target becomes incalculable
-                    else if (!AlternativeAggro && _remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
+                    if (_remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
                     { 
                         Deaggro();
                         if (Stunned) { _agent.speed = 0; }

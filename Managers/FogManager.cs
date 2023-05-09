@@ -32,7 +32,7 @@ public class FogManager : MonoBehaviour
 
     private float _playerLightStartIntensity;
     private float _globalLightStartIntensity;
-    private bool _playerInsideFog;
+    [HideInInspector]public bool _playerInsideFog;
     private GameObject _fogWallObj;
 
     [Tooltip("Objects apart from player that will reveal fog of war")]

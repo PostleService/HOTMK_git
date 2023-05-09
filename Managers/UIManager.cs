@@ -55,7 +55,7 @@ public class UIManager : MonoBehaviour
         DarkObeliskScript.OnDie -= DecrementItemsCount;
     }
 
-    private void Start()
+    private void Awake()
     {
         _lm = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
     }

@@ -12,6 +12,8 @@ public class ProjectileScript : MonoBehaviour
     [Tooltip("Basic projectile collision")]
     public LayerMask ProjectileCollision;
 
+    public GameObject CollisionSoundObject;
+
     [Header("Interactions: Enemy, Player")]
     public bool[] Slows = new bool[] { false, false };
     public bool[] Stuns = new bool[] { false, false };
@@ -88,6 +90,9 @@ public class ProjectileScript : MonoBehaviour
 
     // if need arises to expand destruction with animations and sound
     private void DestroyProjectile()
-    { Destroy(gameObject); }
+    {
+        if (CollisionSoundObject != null) Instantiate(CollisionSoundObject, transform.position, new Quaternion(), null);
+        Destroy(gameObject); 
+    }
 
 }
