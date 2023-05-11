@@ -12,8 +12,18 @@ public class EnemySoundScript : MonoBehaviour
     public EventReference FearSound = new EventReference();
 
     public void PlayAggroSound()
-    { FMODUnity.RuntimeManager.PlayOneShotAttached(AggressionSound, gameObject); }
+    {
+        SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
+        sbs.DestroyInstance = true;
+        sbs.DestroyInstanceTimer = 5f;
+        sbs.SoundToPlay = AggressionSound;
+    }
 
     public void PlayFearSound()
-    {  FMODUnity.RuntimeManager.PlayOneShotAttached(FearSound, gameObject);  }
+    {
+        SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
+        sbs.DestroyInstance = true;
+        sbs.DestroyInstanceTimer = 5f;
+        sbs.SoundToPlay = FearSound;
+    }
 }

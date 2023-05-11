@@ -11,7 +11,9 @@ public class SoundBiteScript : MonoBehaviour
     
     [Tooltip("In case this is a local audiosource that is supposed to play once the original object is destroyed")]
     public bool DestroySource = false;
+    public bool DestroyInstance = false;
     public float DestroyTimer = -1f;
+    public float DestroyInstanceTimer = -1f;
     public EventReference SoundToPlay = new EventReference();
 
     // Start is called before the first frame update
@@ -19,7 +21,10 @@ public class SoundBiteScript : MonoBehaviour
     { if (PlayedOnCall == false) PlayOnCall(); }
 
     private void FixedUpdate()
-    { DestroyTimerDecrement();  }
+    { 
+        DestroyTimerDecrement();
+        DestroyInstanceTimerDecrement();
+    }
 
     private void DestroyTimerDecrement()
     {
@@ -30,16 +35,48 @@ public class SoundBiteScript : MonoBehaviour
         }
     }
 
+    private void DestroyInstanceTimerDecrement()
+    {
+        if (DestroyInstance && DestroyInstanceTimer != -1)
+        {
+            if (DestroyInstanceTimer >= 0) DestroyInstanceTimer -= Time.fixedDeltaTime;
+            else Destroy(this);
+        }
+    }
+
     public void PlayOnCall()
     {
-        SoundBiteInstance sbi = new SoundBiteInstance();
-        
-        FMOD.Studio.EventInstance evInst = FMODUnity.RuntimeManager.CreateInstance(SoundToPlay);
-        evInst.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(gameObject.transform));
+        // We create a separate class instance to be able to manipulate its lifetime and value updates
+        SoundBiteInstance sbi = gameObject.AddComponent(typeof(SoundBiteInstance)) as SoundBiteInstance;
+        sbi.evInst = FMODUnity.RuntimeManager.CreateInstance(SoundToPlay);
+        sbi.callingGO = this.gameObject;
+    }
 
-        int visible;
-        if (DetermineVisibility() == true) visible = 1;
-        else visible = 0;
+}
+
+public class SoundBiteInstance : MonoBehaviour
+{
+    public FMOD.Studio.EventInstance evInst;
+    public GameObject callingGO;
+    private float soundClipTimer = 0;
+    private bool Started = false;
+
+    private void Start()
+    {
+        OnEventInstCreation();
+    }
+
+    private void FixedUpdate()
+    {
+        if (Started == true)
+        {
+            UpdateValuesWhileSoundBiteLasts();
+        }
+    }
+
+    public void OnEventInstCreation()
+    {
+        evInst.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(callingGO));
 
         FMOD.Studio.EventDescription evDescr;
         evInst.getDescription(out evDescr);
@@ -47,14 +84,11 @@ public class SoundBiteScript : MonoBehaviour
         int lengthsOfClipMill = 0;
         evDescr.getLength(out lengthsOfClipMill);
 
-        float lengthOfClipSec = (float)lengthsOfClipMill * 0.001f;
-        UnityEngine.Debug.LogWarning(lengthOfClipSec);
-
-        evInst.setParameterByName("Visible", visible);
-        evInst.start();
-        evInst.release();
-
+        soundClipTimer = (float)lengthsOfClipMill * 0.001f;
+        evInst.start(); Started = true;
+        
     }
+
 
     public bool DetermineVisibility()
     {
@@ -93,9 +127,22 @@ public class SoundBiteScript : MonoBehaviour
         return direction;
     }
 
-}
+    private void UpdateValuesWhileSoundBiteLasts()
+    {
+        if (soundClipTimer >= 0)
+        {
+            soundClipTimer -= Time.fixedDeltaTime;
+            int visible;
+            if (DetermineVisibility() == true) visible = 1;
+            else visible = 0;
 
-public class SoundBiteInstance : MonoBehaviour
-{
-    public FMOD.Studio.EventInstance evInst;
+            evInst.setParameterByName("Visible", visible);
+        }
+        else
+        { 
+            evInst.release();
+            Destroy(this);
+        }
+        
+    }
 }
