@@ -182,6 +182,7 @@ public class EnemyScript : MonoBehaviour
 
     [Header("Victory")]
     public GameObject DeathObject;
+    public GameObject DeathObjectNoCorpse;
 
     public delegate void MyHandler(int aItemStageLevel, GameObject aEnemyObject);
     public static event MyHandler OnDie;
@@ -815,6 +816,7 @@ public class EnemyScript : MonoBehaviour
         if (_currentRushTarget != null) { Destroy(_currentRushTarget.gameObject); }
         Destroy(this.gameObject);
         if (DeathObject != null && noCorpse == false) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
+        else if (DeathObjectNoCorpse != null && noCorpse == true) { Instantiate(DeathObjectNoCorpse, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
 
         OnDie?.Invoke(ItemStageLevel, this.gameObject);
     }
