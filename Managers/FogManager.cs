@@ -9,7 +9,6 @@ public class FogManager : MonoBehaviour
 {
     private GameObject _player;
     private GameObject _lvl3;
-    private bool _lvl3Died = false;
     private GridLayout _gridLayout;
 
     public Tilemap FogTilemap;
@@ -460,7 +459,6 @@ public class FogManager : MonoBehaviour
         if (aLevelStage == 3)
         {
             _lvl3 = null;
-            _lvl3Died = true;
 
             Tilemap[] tilemapsArray = GameObject.FindObjectsOfType<Tilemap>();
             Tilemap tilemap = null;

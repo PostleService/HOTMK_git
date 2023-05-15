@@ -434,6 +434,7 @@ public class EnemyScript : MonoBehaviour
         { 
             _currentlyAggroed = true; 
             gameObject.GetComponent<Light2D>().lightOrder = 5;
+            gameObject.GetComponent<EnemySoundScript>().PlayAggroSound();
         }
 
         if (CanAggrDeaggr)
@@ -450,7 +451,6 @@ public class EnemyScript : MonoBehaviour
                         if (RayCast().Item1 && _fogManager._playerInsideFog != true)
                         {
                             CommonAggroSettings();
-                            gameObject.GetComponent<EnemySoundScript>().PlayAggroSound();
                         }
                     }
 
@@ -832,7 +832,9 @@ public class EnemyScript : MonoBehaviour
             else { _startedFleeing = true; }
 
             Stunned = true;
-            
+            gameObject.GetComponent<EnemySoundScript>().PlayDamagedSound();
+
+
             if (Slowed) _speedBeforeStun = _speedBeforeSlow;
             else if (!Slowed) _speedBeforeStun = _agent.speed;
 
@@ -854,6 +856,8 @@ public class EnemyScript : MonoBehaviour
             {
                 ResetSlowTimer(aLength);
                 Slowed = true;
+                if (gameObject.GetComponent<EnemySoundScript>() != null) gameObject.GetComponent<EnemySoundScript>().PlayDamagedSound();
+
                 _speedBeforeSlow = _agent.speed;
                 _agent.speed = _agent.speed * SlowToSpeed;
             } 
