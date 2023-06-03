@@ -9,6 +9,8 @@ public class LevelStageMonitor_SimplifiedTutorialTeleporter : MonoBehaviour
     public int ReactToLevelStage = 0;
     public GameObject TutorialMessageTrigger;
 
+    private float _delayTillTeleport = 0.65f;
+
     // Start is called before the first frame update
     void Start()
     { _levelManagerScript = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>(); }
@@ -21,10 +23,15 @@ public class LevelStageMonitor_SimplifiedTutorialTeleporter : MonoBehaviour
     {
         if (_levelManagerScript.LevelStage == ReactToLevelStage)
         {
-            GameObject Player = GameObject.Find("Player");
-            if (TutorialMessageTrigger != null && Player != null)
-            { TutorialMessageTrigger.transform.position = Player.transform.position; }
-            Destroy(this.gameObject);
+            _delayTillTeleport -= Time.fixedDeltaTime;
+
+            if (_delayTillTeleport <= 0)
+            {
+                GameObject Player = GameObject.Find("Player");
+                if (TutorialMessageTrigger != null && Player != null)
+                { TutorialMessageTrigger.transform.position = Player.transform.position; }
+                Destroy(this.gameObject);
+            }
         }
     }
 }

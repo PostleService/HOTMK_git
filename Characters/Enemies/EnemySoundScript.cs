@@ -9,6 +9,11 @@ public class EnemySoundScript : MonoBehaviour
 {
     [Tooltip("PlaySteps, PlayAggro, PlayFear, PlayDamagedGrunt")]
     public bool[] PlaySounds = new bool[] {false, false, false, false};
+    [Tooltip("How likely are aggro and fear voicelines to play")]
+    public int PercentageChanceAggroSound = 15;
+    public int PercentageChanceFearSound = 15;
+    [Tooltip("If haven't played aggression or fear, first time has percentage modified by value of")]
+    public int FirstTimePercentageModifier = 50;
     public EventReference StepSound = new EventReference();
     public EventReference AggressionSound = new EventReference();
     public EventReference FearSound = new EventReference();
@@ -20,6 +25,9 @@ public class EnemySoundScript : MonoBehaviour
     private float _currentFearTimer;
     private bool _aggressionSoundOnCooldown = false;
     private bool _fearSoundOnCooldown = false;
+
+    private bool _revealedAggression = false;
+    private bool _revealedFear = false;
 
     private void Awake()
     {
@@ -69,12 +77,23 @@ public class EnemySoundScript : MonoBehaviour
     {
         if (PlaySounds[1] == true && _aggressionSoundOnCooldown == false)
         {
-            SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
-            sbs.DestroyInstance = true;
-            sbs.DestroyInstanceTimer = 1f;
-            sbs.SoundToPlay = AggressionSound;
+            int RandNumber = new System.Random().Next(1, 101);
+            int CompareAgainst = PercentageChanceAggroSound;
+            if (_revealedAggression == false)
+            {
+                CompareAgainst = PercentageChanceAggroSound + FirstTimePercentageModifier;
+                if (CompareAgainst > 100) CompareAgainst = 100;
+            }
+            if (RandNumber < CompareAgainst)
+            {
+                SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
+                sbs.DestroyInstance = true;
+                sbs.DestroyInstanceTimer = 1f;
+                sbs.SoundToPlay = AggressionSound;
 
-            _aggressionSoundOnCooldown = true;
+                if (_revealedAggression == false) _revealedAggression = true;
+                _aggressionSoundOnCooldown = true;
+            }
         }
     }
 
@@ -82,12 +101,23 @@ public class EnemySoundScript : MonoBehaviour
     {
         if (PlaySounds[2] == true && _fearSoundOnCooldown == false)
         {
-            SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
-            sbs.DestroyInstance = true;
-            sbs.DestroyInstanceTimer = 1f;
-            sbs.SoundToPlay = FearSound;
+            int RandNumber = new System.Random().Next(1, 101);
+            int CompareAgainst = PercentageChanceAggroSound;
+            if (_revealedFear == false)
+            {
+                CompareAgainst = PercentageChanceAggroSound + FirstTimePercentageModifier;
+                if (CompareAgainst > 100) CompareAgainst = 100;
+            }
+            if (RandNumber < CompareAgainst)
+            {
+                SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
+                sbs.DestroyInstance = true;
+                sbs.DestroyInstanceTimer = 1f;
+                sbs.SoundToPlay = FearSound;
 
-            _fearSoundOnCooldown = true;
+                if (_revealedFear == false) _revealedFear = true;
+                _fearSoundOnCooldown = true;
+            }
         }
     }
 

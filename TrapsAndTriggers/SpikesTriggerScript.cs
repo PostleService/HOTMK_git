@@ -115,13 +115,15 @@ public class SpikesTriggerScript : MonoBehaviour
     {
         if (!_hasBeenTriggered)
         {
-            
-            if (ReactTo == ReactToCharacters.Player)
-            { if (collision.tag == "Player") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); } }
-            else if (ReactTo == ReactToCharacters.PlayerAndEnemy)
-            { if (collision.tag == "Player" || collision.tag == "Enemy") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); } }
-            else if (ReactTo == ReactToCharacters.Enemy)
-            { if (collision.tag == "Enemy") { _hasBeenTriggered = true; _animator.Play("SpikesPressedAnim"); } }
+            void ReactToTrigger()
+            {
+                _hasBeenTriggered = true; 
+                _animator.Play("SpikesPressedAnim"); 
+                gameObject.GetComponent<SpikesSoundScript>().PlaySpikesDepressedSound();
+            }
+            if (ReactTo == ReactToCharacters.Player) { if (collision.tag == "Player") ReactToTrigger(); }
+            else if (ReactTo == ReactToCharacters.PlayerAndEnemy) { if (collision.tag == "Player" || collision.tag == "Enemy") ReactToTrigger(); }
+            else if (ReactTo == ReactToCharacters.Enemy) { if (collision.tag == "Enemy") ReactToTrigger(); }
         }
     }
 

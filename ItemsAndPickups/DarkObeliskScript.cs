@@ -35,7 +35,7 @@ public class DarkObeliskScript : MonoBehaviour
             if (!_incremented)
             {
                 Destroy(this.gameObject);
-                if (DeathObject != null) { Instantiate(DeathObject, gameObject.transform.position, new Quaternion(), GameObject.Find("EnemyCorpseHolder").transform); }
+                if (DeathObject != null) { Instantiate(DeathObject, gameObject.transform.position, new Quaternion(), GameObject.Find("ItemEndStateHolder").transform); }
                 OnDie?.Invoke(ItemStageLevel, this.gameObject);
                 _incremented = true;
             }
@@ -47,7 +47,7 @@ public class DarkObeliskScript : MonoBehaviour
                 if (!_incremented)
                 {
                     Destroy(this.gameObject);
-                    if (DeathObject != null) { Instantiate(DeathObject, gameObject.transform.position, new Quaternion(), GameObject.Find("EnemyCorpseHolder").transform); }
+                    if (DeathObject != null) { Instantiate(DeathObject, gameObject.transform.position, new Quaternion(), GameObject.Find("ItemEndStateHolder").transform); }
 
                     OnDie?.Invoke(ItemStageLevel, this.gameObject);
                     _incremented = true;

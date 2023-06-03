@@ -10,14 +10,15 @@ public class TransitionObeliskScript : MonoBehaviour
     private float _animLength = 0f;
     private Light2D _lightElem;
 
+    public string AnimationClipName = "Obelisk_TransitionAnim";
+
 
     private void Start()
     {
         _lightElem = gameObject.GetComponent<Light2D>();
         AnimationClip[] animClips = gameObject.GetComponent<Animator>().runtimeAnimatorController.animationClips;
         foreach (AnimationClip clip in animClips) 
-        { if (clip.name == "Obelisk_TransitionAnim") _animLength = clip.length; }
-
+        { if (clip.name == AnimationClipName) _animLength = clip.length; }
     }
 
     // Update is called once per frame

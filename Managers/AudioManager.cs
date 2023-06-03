@@ -32,7 +32,8 @@ public class AudioManager : MonoBehaviour
     { LevelManagerScript.OnLevelStageChange -= ReactToLvlChange; }
 
     private void Start()
-    {   
+    {
+        MuffleMusicMenuOpen(0);
 
         _musicSource = GameObject.Find("PlayerCamera").GetComponent<StudioEventEmitter>();
         if (GameObject.Find("LevelManager") != null) 
@@ -112,6 +113,11 @@ public class AudioManager : MonoBehaviour
             SoundEffectsVolume = aVol;
             FMODUnity.RuntimeManager.StudioSystem.setParameterByName("SoundEffectsVolume", SoundEffectsVolume, true);
         }
+    }
+
+    public void MuffleMusicMenuOpen(int aValue)
+    {
+        FMODUnity.RuntimeManager.StudioSystem.setParameterByName("MenuOpen", aValue, true);
     }
 
     #endregion ON CALL FUNCTIONS

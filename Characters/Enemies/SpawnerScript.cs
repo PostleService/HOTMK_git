@@ -18,6 +18,7 @@ public class SpawnerScript : MonoBehaviour
     public bool Activated = false;
     public bool DestroyAfterSpawn = true;
     private float _delayDecremented;
+    private bool _instantiated = false;
 
     public bool AllowLvl3Spawn = false;
 
@@ -26,7 +27,7 @@ public class SpawnerScript : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (Activated) { Countdown(); }
+        if (Activated && _instantiated != true) { Countdown(); }
     }
 
     public void StartSpawnCountdown()
@@ -38,7 +39,7 @@ public class SpawnerScript : MonoBehaviour
          * if object is an enemy, its spawn position will have to be set prior to instantiation
          * because pathfinding will warp him to default coordinates otherwise
         */
-        if (ObjectToSpawn != null)
+        if (ObjectToSpawn != null && _instantiated == false)
         {
             if (EnemyOrPlayer == EnemyVsPlayer.Enemy && AllowLvl3Spawn)
             {
@@ -53,7 +54,7 @@ public class SpawnerScript : MonoBehaviour
 
                 go.name = ObjectToSpawn.name;
                 
-
+                _instantiated = true;
                 if (DestroyAfterSpawn) { Destroy(gameObject); }
             }
             // otherwise, if a player - just instantiate with spawner position
@@ -62,6 +63,7 @@ public class SpawnerScript : MonoBehaviour
                 GameObject go = Instantiate(ObjectToSpawn, Coordinates, new Quaternion());
                 go.name = ObjectToSpawn.name;
 
+                _instantiated = true;
                 if (DestroyAfterSpawn) { Destroy(gameObject); }
             }
         }

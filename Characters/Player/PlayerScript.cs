@@ -59,6 +59,7 @@ public class PlayerScript : MonoBehaviour
 
     [Header("Player Stats")]
     public bool AllowLevelUp = true;
+    public GameObject LevelUpObject;
     public int PlayerLevel = 0;
     public int MaxPlayerLives = 3;
     public int CurrentLives;
@@ -523,6 +524,7 @@ public class PlayerScript : MonoBehaviour
         if (aLevelStage < 3 && AllowLevelUp)
         {
             PlayerLevel = aLevelStage;
+            if (LevelUpObject != null) Instantiate(LevelUpObject, transform.position, new Quaternion(), gameObject.transform);
             if (PlayerLevel == RememberFogAtLevelStage) { RememberFog(); }
             if (PlayerLevel == CanSeeThroughWallsAtStage) { DeconcealEnemies(); }
             OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartLevelUp");

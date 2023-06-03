@@ -85,7 +85,7 @@ public class UIManager : MonoBehaviour
             currTxt.text = currValue;
 
             // initiate icon for current stage
-            float iconScaleDownValue = 3f;
+            float iconScaleDownValue = 3;
 
             ItemPanel[3].GetComponent<Image>().sprite = LevelStageIcons[aLevelStage];
             RectTransform imageObjRT = ItemPanel[3].GetComponent<RectTransform>();

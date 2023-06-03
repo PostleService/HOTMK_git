@@ -7,10 +7,10 @@ using UnityEngine;
 class AnimationEndDetection_EnemiesDeath : AnimationEndDetection
 {
     public GameObject DeathObject;
-
+    public string PlaceObjectIntoHolder = "EnemyCorpseHolder";
     public override void OnAnimationFinish()
     { 
-        GameObject go = Instantiate(DeathObject, transform.position, new Quaternion(), GameObject.Find("EnemyCorpseHolder").transform);
+        GameObject go = Instantiate(DeathObject, transform.position, new Quaternion(), GameObject.Find(PlaceObjectIntoHolder).transform);
         Destroy(gameObject);
     }
 

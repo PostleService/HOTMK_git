@@ -10,6 +10,8 @@ public class VictoryTriggerScript : MonoBehaviour
     [Tooltip("How far away from NavMesh can the agent be to be snapped back")]
     public float DistanceOutOfNavMesh = 5f;
 
+    public GameObject PlayerDespawnAnimation;
+
     private void Start()
     {
         NavMeshHit myNavHit;
@@ -26,10 +28,10 @@ public class VictoryTriggerScript : MonoBehaviour
         if (collision.name == "Player")
         {
             // change it back when more levels are ready
-            if (SceneManager.GetActiveScene().buildIndex < 2)
+            if (SceneManager.GetActiveScene().buildIndex < 3)
             { _nextSceneToUnlock = (SceneManager.GetActiveScene().buildIndex + 1); }
-            else if (SceneManager.GetActiveScene().buildIndex >= 2)
-            { _nextSceneToUnlock = 2; }
+            else if (SceneManager.GetActiveScene().buildIndex >= 3)
+            { _nextSceneToUnlock = 3; }
 
             // substitute mm part with subscription when win conditions are assigned to a player despawn animation object
             MenuManagerScript mm = GameObject.Find("MenuManager").GetComponent<MenuManagerScript>();
@@ -45,7 +47,8 @@ public class VictoryTriggerScript : MonoBehaviour
             { if (tr.GetComponent<Camera>() != null) { tr.SetParent(null); } }
             Destroy(collision.gameObject);
 
-            mm.ReactToVictory(); 
+            if (PlayerDespawnAnimation != null) { Instantiate(PlayerDespawnAnimation, gameObject.transform.position, new Quaternion(), null); }
+            Destroy(gameObject);
         }
     }
 

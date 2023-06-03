@@ -8,6 +8,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 using TMPro;
+using FMODUnityResonance;
+using FMODUnity;
+using FMOD;
 
 public class MenuManagerScript : MonoBehaviour
 {
@@ -54,7 +57,9 @@ public class MenuManagerScript : MonoBehaviour
     private bool _tutorialWindowCalled = false;
 
     public float DeathToDefeatScreenSec = 1.3f;
+    public float ToVictoryScreenSec = 1.3f;
     private bool _playerDead = false;
+    private bool _playerWon = false;
     private bool _defeatShown = false;
 
     [Header("Menu navigation")]
@@ -63,13 +68,13 @@ public class MenuManagerScript : MonoBehaviour
 
     [Header("OptionsMenu")]
     [Header("Volume")]
-    public AudioMixer MainMixer;
     public GameObject VolumeMusicSlider;
     public GameObject VolumeMusicText;
     public GameObject VolumeAmbientSlider;
     public GameObject VolumeAmbientText;
     public GameObject VolumeSoundEffectsSlider;
     public GameObject VolumeSoundEffectsText;
+
 
     [Header("Tutorials")]
     public GameObject CurrentTutorialObject;
@@ -176,6 +181,7 @@ public class MenuManagerScript : MonoBehaviour
         MonitorSubmenuEscape();
         MonitorForCurrentlySelectedButton();
 
+        CountDownToVictoryScreen();
         CountDownToDefeatScreen();
     }
 
@@ -375,6 +381,8 @@ public class MenuManagerScript : MonoBehaviour
 
         _menuObject.SetActive(true);
         Time.timeScale = 0;
+        if (SceneManager.GetActiveScene().name != "MainMenu") _audioManager.MuffleMusicMenuOpen(1);
+        else _audioManager.MuffleMusicMenuOpen(0);
 
         _menuCall = false;
         _menuCancelCall = false;
@@ -385,12 +393,13 @@ public class MenuManagerScript : MonoBehaviour
     {
         if (!_playerDead && SceneManager.GetActiveScene().name != "MainMenu")
         {
-            if (ConcealCursorInGame) CursorVisibility(false);
+            if (ConcealCursorInGame && GameObject.FindGameObjectWithTag("TutorialMessageFading") == null) CursorVisibility(false);
             _menuCalled = false;
 
             _menuObject.SetActive(false);
             Time.timeScale = 1;
-            AudioListener.pause = false;
+            _audioManager.MuffleMusicMenuOpen(0);
+
         }
         _menuCall = false;
         _menuCancelCall = false;
@@ -415,23 +424,26 @@ public class MenuManagerScript : MonoBehaviour
 
     private void ShowVictoryScreen()
     {
-        EnterSubmenu();
-        _victoryScreenCalled = true;
-        _submenuCalled = true;
+        if (!_victoryScreenCalled)
+        {
+            EnterSubmenu();
+            _victoryScreenCalled = true;
+            _submenuCalled = true;
 
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
-        EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_victoryScreenObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
+            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
+            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_victoryScreenObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
-        _victoryScreenObject.SetActive(true);
+            _victoryScreenObject.SetActive(true);
+        }
     }
 
     public void VictoryScreen_NextLevel()
     {
         // change back to if (SceneManager.GetActiveScene().buildIndex < LevelProgress.Count) after more levels are ready
         // if the level is last level, quit to main menu
-        if (SceneManager.GetActiveScene().buildIndex < 2)
+        if (SceneManager.GetActiveScene().buildIndex < 3)
         { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1); }
-        else SceneManager.LoadScene(3);
+        else SceneManager.LoadScene(4);
     }
 
     // reassign the script to be subscribed to event triggered by death animation when animations are finished
@@ -442,12 +454,16 @@ public class MenuManagerScript : MonoBehaviour
     {
         if (_playerDead && DeathToDefeatScreenSec > 0) { DeathToDefeatScreenSec -= Time.deltaTime; }
         if (DeathToDefeatScreenSec <= 0) { ShowDefeatScreen(); }
+    }
+
+    private void CountDownToVictoryScreen()
+    {
+        if (_playerWon && ToVictoryScreenSec > 0) { ToVictoryScreenSec -= Time.deltaTime; }
+        if (ToVictoryScreenSec <= 0) { ShowVictoryScreen(); }
 
     }
 
-    // reassign the script to be subscribed to event triggered by despawn animation when animations are finished
-    public void ReactToVictory()
-    { ShowVictoryScreen(); }
+    public void ReactToVictory() { _playerWon = true; }
 
     // set main menu as inactive while in submenu
     private void EnterSubmenu()
@@ -487,13 +503,7 @@ public class MenuManagerScript : MonoBehaviour
 
     // LEVEL PROGRESSION
 
-    public void ResumeButton()
-    {
-        _menuCalled = false;
-
-        _menuObject.SetActive(false);
-        Time.timeScale = 1;
-    }
+    public void ResumeButton() { CloseMenu(); }
 
     public void ContinueButton()
     {
@@ -558,7 +568,6 @@ public class MenuManagerScript : MonoBehaviour
         Time.timeScale = 1;
         // if loading scene fails, load main menu
         SceneManager.LoadScene(aButton.GetComponent<LevelChoiceButton>().LevelIndexToLoad);
-
     }
 
     public void ChooseLevel_Back()
@@ -606,6 +615,8 @@ public class MenuManagerScript : MonoBehaviour
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_optionsMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
         _optionsMenuObject.SetActive(true);
+        _menuCancelCall = false;
+        _submenuCancelCall = false;
     }
 
     public void OptionsGraphicsButton()
@@ -710,6 +721,18 @@ public class MenuManagerScript : MonoBehaviour
             bool ToggleValue = ToggleTutorials.GetComponent<Toggle>().isOn;
             TempTutorialSetting = ToggleValue;
             if (!ToggleValue) { DerenderTutorials(); }
+            
+            // Adjust toggle value for any fade-in tutorial windows
+            if (GameObject.FindGameObjectWithTag("TutorialMessageFading") != null)
+            { 
+                GameObject tutorialPanel = GameObject.FindGameObjectWithTag("TutorialMessageFading");
+                foreach (Transform chtr in tutorialPanel.transform)
+                {
+                    if (chtr.gameObject.name == "ShowTutorials")
+                    { chtr.gameObject.GetComponent<Toggle>().isOn = ToggleValue; }
+                }
+            }
+
         }
     }
 
@@ -869,6 +892,9 @@ public class MenuManagerScript : MonoBehaviour
 
             EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
             EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_acceptChangesOrLeaveMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
+
+            _menuCancelCall = false;
+            _submenuCancelCall = false;
         }
     }
 
@@ -961,7 +987,7 @@ public class MenuManagerScript : MonoBehaviour
     { CloseSubmenu(); }
 
     public void LoadCreditsScene()
-    { SceneManager.LoadScene(3); }
+    { SceneManager.LoadScene(4); }
 
     // QUIT TO OS
     public void ExitToOSButton()

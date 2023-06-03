@@ -8,6 +8,8 @@ public class AnimationEndDetection_Boss : MonoBehaviour
     public string AnimationNameOut;
     private Animator _thisObjectAnimator;
 
+    private bool _tpOutPerformed = false;
+
     /// <summary>
     /// THIS SCRIPT WILL RELY ON DEFAULT ANIMATION STATE TRANSITIONING INTO A
     /// "DONE" STATE. AS SOON AS THE CONFIRMATION THAT THE STATE NAME == "DONE"
@@ -46,13 +48,21 @@ public class AnimationEndDetection_Boss : MonoBehaviour
         EnemyScript es = gameObject.GetComponent<EnemyScript>();
         es.CurrentlyTeleporting = false;
         gameObject.GetComponent<BoxCollider2D>().enabled = true;
+
+        _tpOutPerformed = false;
     }
 
     public void OnAnimationFinishOut()
     {
-        EnemyScript es = gameObject.GetComponent<EnemyScript>();
-        es._agent.Warp(new Vector3(es.SpawnOutDestination.x, es.SpawnOutDestination.y, 0));
-        gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnIn();
+        if (_tpOutPerformed == false)
+        {
+            EnemyScript es = gameObject.GetComponent<EnemyScript>();
+            es._agent.Warp(new Vector3(es.SpawnOutDestination.x, es.SpawnOutDestination.y, 0));
+            es._currentTPVoidZone.GetComponent<TeleportVoidZone>().RequestDestruction();
+            gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnIn();
+
+            _tpOutPerformed = true;
+        }
     }
 
 }

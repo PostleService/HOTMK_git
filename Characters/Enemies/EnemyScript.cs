@@ -110,6 +110,8 @@ public class EnemyScript : MonoBehaviour
     public LayerMask Layers;
 
     [Header("Boss behaviour")]
+    public GameObject TeleportVoidZone;
+    [HideInInspector] public GameObject _currentTPVoidZone;
     public bool CurrentlyTeleporting = true;
     public bool AllowedToTeleport = false;
     [Tooltip("Distance in path length at which boss starts counting down to teleport")]
@@ -869,6 +871,9 @@ public class EnemyScript : MonoBehaviour
         CurrentlyTeleporting = true;
         gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnOut();
         SpawnOutDestination = new Vector3(SpawnPosition.x, SpawnPosition.y, 0);
+
+        if (_currentTPVoidZone != null) Destroy(_currentTPVoidZone.gameObject);
+        _currentTPVoidZone = Instantiate(TeleportVoidZone, SpawnOutDestination, new Quaternion(), null);
     }
 
     public void AdaptLightingToState(bool aAggression, bool aFear)
@@ -942,6 +947,11 @@ public class EnemyScript : MonoBehaviour
                             AttemptNum++;
                         }
                         SpawnOutDestination = new Vector3(TempDestination.x, TempDestination.y, 0);
+                        if (TeleportVoidZone != null)
+                        {
+                            if (_currentTPVoidZone != null) Destroy(_currentTPVoidZone.gameObject);
+                            _currentTPVoidZone = Instantiate(TeleportVoidZone, SpawnOutDestination, new Quaternion(), null);
+                        }
                     }
                     CurrentlyTeleporting = true;
                     gameObject.GetComponent<BoxCollider2D>().enabled = false;
