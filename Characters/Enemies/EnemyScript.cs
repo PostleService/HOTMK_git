@@ -619,7 +619,7 @@ public class EnemyScript : MonoBehaviour
 
     public void AssessTeleportDistance()
     {
-        if (AllowedToTeleport)
+        if (AllowedToTeleport && _player != null)
         {
             if (_remainingDistance > DistanceToTeleport || Vector3.Distance(gameObject.transform.position, _player.transform.position) > DistanceToTeleport + 2) { _consideringTeleport = true; }
             else { _consideringTeleport = false; }

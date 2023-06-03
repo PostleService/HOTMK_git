@@ -46,6 +46,15 @@ public class UIManager : MonoBehaviour
     }
 
     private void OnDisable()
+    { Unsubscribe(); }
+
+    private void Awake()
+    { _lm = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>(); }
+
+    private void FixedUpdate()
+    { if (_itemPulseInitiated && LevelStageEndPointer != null) StageIconPulse(); }
+
+    public void Unsubscribe()
     {
         PlayerScript.OnHealthUpdate -= UpdateHearts;
         LevelManagerScript.OnLevelStageChange -= UpdateItems;
@@ -54,14 +63,6 @@ public class UIManager : MonoBehaviour
         DarkObeliskScript.OnDie -= InitiateLevelStageIconPulse;
         DarkObeliskScript.OnDie -= DecrementItemsCount;
     }
-
-    private void Awake()
-    {
-        _lm = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
-    }
-
-    private void FixedUpdate()
-    { if (_itemPulseInitiated && LevelStageEndPointer != null) StageIconPulse(); }
 
     #region ITEMS
 

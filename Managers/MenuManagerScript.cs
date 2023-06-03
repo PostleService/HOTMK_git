@@ -136,10 +136,7 @@ public class MenuManagerScript : MonoBehaviour
     }
 
     private void OnDisable()
-    { 
-        AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath;
-        _inputControl.MenuInputMonitor.Disable();
-    }
+    { Unsubscribe(); }
 
     private void Awake()
     {
@@ -183,6 +180,19 @@ public class MenuManagerScript : MonoBehaviour
 
         CountDownToVictoryScreen();
         CountDownToDefeatScreen();
+    }
+
+    public void Unsubscribe()
+    {
+        AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath;
+        _inputControl.MenuInputMonitor.Disable();
+    }
+
+    public void UnsubscribeAll()
+    {
+        if (GameObject.Find("LevelManager") != null) { GameObject.Find("LevelManager").GetComponent<LevelManagerScript>().Unsubscribe(); }
+        if (GameObject.Find("UIManager") != null) { GameObject.Find("UIManager").GetComponent<UIManager>().Unsubscribe(); }
+        Unsubscribe();
     }
 
     public void CursorVisibility(bool aValue)
@@ -442,8 +452,15 @@ public class MenuManagerScript : MonoBehaviour
         // change back to if (SceneManager.GetActiveScene().buildIndex < LevelProgress.Count) after more levels are ready
         // if the level is last level, quit to main menu
         if (SceneManager.GetActiveScene().buildIndex < 3)
-        { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1); }
-        else SceneManager.LoadScene(4);
+        {
+            UnsubscribeAll();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        }
+        else
+        {
+            UnsubscribeAll();
+            SceneManager.LoadScene(4); 
+        }
     }
 
     // reassign the script to be subscribed to event triggered by death animation when animations are finished
@@ -514,6 +531,8 @@ public class MenuManagerScript : MonoBehaviour
             else break;
         }
         Time.timeScale = 1;
+        
+        UnsubscribeAll();
         SceneManager.LoadScene(lastActiveLevel);
     }
 
@@ -536,6 +555,7 @@ public class MenuManagerScript : MonoBehaviour
         _menuObject.SetActive(false);
         Time.timeScale = 1;
 
+        UnsubscribeAll();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
     }
@@ -566,7 +586,9 @@ public class MenuManagerScript : MonoBehaviour
         CloseMenu();
         CloseSubmenu();
         Time.timeScale = 1;
+
         // if loading scene fails, load main menu
+        UnsubscribeAll();
         SceneManager.LoadScene(aButton.GetComponent<LevelChoiceButton>().LevelIndexToLoad);
     }
 
@@ -980,6 +1002,7 @@ public class MenuManagerScript : MonoBehaviour
     public void ExitToMainMenuButton_Yes()
     {
         Time.timeScale = 1;
+        UnsubscribeAll();
         SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
     }
 
@@ -987,7 +1010,10 @@ public class MenuManagerScript : MonoBehaviour
     { CloseSubmenu(); }
 
     public void LoadCreditsScene()
-    { SceneManager.LoadScene(4); }
+    {
+        UnsubscribeAll();
+        SceneManager.LoadScene(4); 
+    }
 
     // QUIT TO OS
     public void ExitToOSButton()

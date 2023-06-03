@@ -68,14 +68,7 @@ public class LevelManagerScript : MonoBehaviour
     }
 
     private void OnDisable()
-    {
-        PlayerScript.OnSpawn -= SynchronizePlayerLevel;
-        PlayerScript.OnEnemiesDeconceal -= StopConcealingEnemies;
-        AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
-        EnemyScript.OnSpawn -= ReactToEnemySpawn;
-        EnemyScript.OnDie -= ReactToDeath;
-        DarkObeliskScript.OnDie -= ReactToDeath;
-    }
+    { Unsubscribe(); }
 
     // Start is called before the first frame update
     void Start()
@@ -89,6 +82,16 @@ public class LevelManagerScript : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     { MonitorItems(); }
+
+    public void Unsubscribe()
+    {
+        PlayerScript.OnSpawn -= SynchronizePlayerLevel;
+        PlayerScript.OnEnemiesDeconceal -= StopConcealingEnemies;
+        AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
+        EnemyScript.OnSpawn -= ReactToEnemySpawn;
+        EnemyScript.OnDie -= ReactToDeath;
+        DarkObeliskScript.OnDie -= ReactToDeath;
+    }
 
     private void SynchronizePlayerLevel(GameObject aGameObject)
     { aGameObject?.GetComponent<PlayerScript>().SyncronizeLevelUps(LevelStage); }
