@@ -57,7 +57,7 @@ public class TutorialFadingScript : MonoBehaviour
         if (collision.tag == "Player" && 
             _currentlyShownTutorialWindow != null)
         { _currentlyShownTutorialWindow.GetComponent<TutorialFadingPanelScript>().ChangeFadeInValue(false); }
-        if (DestroyTriggerOnExit) Destroy(gameObject);
+        if (collision.tag == "Player" && DestroyTriggerOnExit) Destroy(gameObject);
     }
 
 }
