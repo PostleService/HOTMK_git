@@ -102,9 +102,9 @@ public class TutorialFadingPanelScript : MonoBehaviour
         _gameManager.SaveGame();
     }
 
-    public void CloseTutorialButton(Button aButton)
+    public void CloseTutorialButton()
     {
-        Destroy(CallingTrigger);
+        if (CallingTrigger != null) Destroy(CallingTrigger);
         ChangeFadeInValue(false);
     }
 

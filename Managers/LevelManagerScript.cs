@@ -56,6 +56,8 @@ public class LevelManagerScript : MonoBehaviour
 
     public delegate void MyHandler(int aLevelStage, int aCurrentItems, int aDefaultItems);
     public static event MyHandler OnLevelStageChange;
+    public delegate void Decrementer (int aLevelStage, int aCurrentItems, int aDefaultItems);
+    public static event Decrementer OnObjectiveDecrement;
 
     private void OnEnable()
     {
@@ -107,7 +109,10 @@ public class LevelManagerScript : MonoBehaviour
     }
 
     private void ReactToDeath(int aStageLevel, GameObject aGameObject) 
-    { _currentItemsCount[aStageLevel] -= 1; }
+    { 
+        _currentItemsCount[aStageLevel] -= 1;
+        OnObjectiveDecrement?.Invoke(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage]);
+    }
 
     // UPDATE FUNCTIONS
 

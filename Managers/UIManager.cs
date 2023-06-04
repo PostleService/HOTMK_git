@@ -39,10 +39,9 @@ public class UIManager : MonoBehaviour
     {
         PlayerScript.OnHealthUpdate += UpdateHearts;
         LevelManagerScript.OnLevelStageChange += UpdateItems;
-        EnemyScript.OnDie += InitiateLevelStageIconPulse;
-        EnemyScript.OnDie += DecrementItemsCount;
-        DarkObeliskScript.OnDie += InitiateLevelStageIconPulse;
-        DarkObeliskScript.OnDie += DecrementItemsCount;
+        LevelManagerScript.OnObjectiveDecrement += InitiateLevelStageIconPulse;
+        LevelManagerScript.OnObjectiveDecrement += DecrementItemsCount;
+
     }
 
     private void OnDisable()
@@ -58,10 +57,8 @@ public class UIManager : MonoBehaviour
     {
         PlayerScript.OnHealthUpdate -= UpdateHearts;
         LevelManagerScript.OnLevelStageChange -= UpdateItems;
-        EnemyScript.OnDie -= InitiateLevelStageIconPulse;
-        EnemyScript.OnDie -= DecrementItemsCount;
-        DarkObeliskScript.OnDie -= InitiateLevelStageIconPulse;
-        DarkObeliskScript.OnDie -= DecrementItemsCount;
+        LevelManagerScript.OnObjectiveDecrement -= InitiateLevelStageIconPulse;
+        LevelManagerScript.OnObjectiveDecrement -= DecrementItemsCount;
     }
 
     #region ITEMS
@@ -94,14 +91,14 @@ public class UIManager : MonoBehaviour
             Vector2 imageObjSize = new Vector2(imageObjImg.sprite.rect.width, imageObjImg.sprite.rect.height);
             imageObjRT.sizeDelta = new Vector2(imageObjSize.x * iconScaleDownValue, imageObjSize.y * iconScaleDownValue);
 
-            InitiateLevelStageIconPulse(aLevelStage, null);
+            InitiateLevelStageIconPulse(aLevelStage, aCurrentItems, aDefaultItems);
 
-            LevelStagePointersDecision(aLevelStage, 0);
+            LevelStagePointersDecision(aLevelStage, aCurrentItems, aDefaultItems);
         }
         else { foreach (GameObject go in ItemPanel) { go.SetActive(false); } }
     }
 
-    private void InitiateLevelStageIconPulse(int aLevelStage, GameObject aGameObject)
+    private void InitiateLevelStageIconPulse(int aLevelStage, int aCurrentItems, int aDefaultItems)
     {
         if (aLevelStage == _lm.LevelStage) { _itemPulseInitiated = true; }
     }
@@ -130,7 +127,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void DecrementItemsCount(int aLevelStage, GameObject aGameObject)
+    private void DecrementItemsCount(int aLevelStage, int aCurrentItems, int aDefaultItems)
     {
         if (aLevelStage < 3 && aLevelStage == _lm.LevelStage)
         {
@@ -142,12 +139,12 @@ public class UIManager : MonoBehaviour
 
             TextMeshProUGUI currTxt = CounterElement.GetComponent<TextMeshProUGUI>();
             string currValue;
-            if (aLevelStage == 0) { currValue = (_lm.DefaultItemsCount[aLevelStage] - _lm._currentItemsCount[aLevelStage] + 1).ToString(); }
-            else { currValue = (_lm._currentItemsCount[aLevelStage] - 1).ToString(); }
+            if (aLevelStage == 0) { currValue = (_lm.DefaultItemsCount[aLevelStage] - aCurrentItems).ToString(); }
+            else { currValue = (aCurrentItems).ToString(); }
             
             currTxt.text = currValue;
 
-            LevelStagePointersDecision(aLevelStage, 1);
+            LevelStagePointersDecision(aLevelStage, aCurrentItems, aDefaultItems);
         }
     }
 
@@ -179,11 +176,10 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void LevelStagePointersDecision(int aLevelStage, int aDecrement)
+    private void LevelStagePointersDecision(int aLevelStage, int aCurrentItemCount, int aDefaultItems)
     {
-        if (_lm != null && !_levelStagePointersSpawned &&
-            (_lm._currentItemsCount[aLevelStage] - aDecrement <= _lm.DefaultItemsCount[aLevelStage] * ShowPointersAtPercentage || 
-            _lm._currentItemsCount[aLevelStage] - aDecrement == FailsafeObjectCount) )
+        if (aCurrentItemCount <= aDefaultItems * ShowPointersAtPercentage ||
+            aCurrentItemCount == FailsafeObjectCount)
         {
             
             List<GameObject> goLis = new List<GameObject>();
