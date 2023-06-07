@@ -7,9 +7,9 @@ using UnityEngine;
 class AnimationEndDetection_WallBreakEffect : MonoBehaviour
 {
     public string AnimationName;
-    public float ActivationTimer = 0.5f;
-    private bool _spriteRendererActivated = false;
     private Animator _thisObjectAnimator;
+    private SpriteRenderer _srParent;
+    private SpriteRenderer _srThisObj;
 
     private void Awake()
     { transform.localPosition = Vector3.zero; }
@@ -18,28 +18,23 @@ class AnimationEndDetection_WallBreakEffect : MonoBehaviour
     {
         if (gameObject.GetComponent<Animator>() != null)
         { _thisObjectAnimator = gameObject.GetComponent<Animator>(); }
+        _srParent = gameObject.transform.parent.GetComponent<SpriteRenderer>();
+        _srThisObj = gameObject.GetComponent<SpriteRenderer>();
     }
 
     private void FixedUpdate()
     {
-
-        if (ActivationTimer > 0) ActivationTimer -= Time.fixedDeltaTime;
-        else if (ActivationTimer <= 0 && _spriteRendererActivated == false)
-        {
-            _spriteRendererActivated = true;
-            gameObject.GetComponent<SpriteRenderer>().enabled = true;
-            gameObject.GetComponent<Animator>().enabled = true;
-        }
         CheckAnimationEnd();
-
+        if (_srParent.enabled == true) _srThisObj.enabled = true;
+        else _srThisObj.enabled = false; 
     }
+
+    public void OnAnimationFinish()
+    { Destroy(gameObject); }
 
     public void CheckAnimationEnd()
     {
         if (_thisObjectAnimator.GetCurrentAnimatorStateInfo(0).IsName(AnimationName))
         { OnAnimationFinish(); }
     }
-
-    public void OnAnimationFinish()
-    { Destroy(gameObject); }
 }

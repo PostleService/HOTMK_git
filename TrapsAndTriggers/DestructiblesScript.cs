@@ -12,7 +12,6 @@ public class DestructiblesScript : MonoBehaviour
     [Tooltip("For when we have to instantiate effects of destruction. First prefab get assigned a copy of tilechanger. So in objects with just one element - assign only this one")]
     public GameObject DestructionPrefab1;
     public GameObject DestructionPrefab2;
-    public GameObject DestructionAnimation;
     private NavMeshSurface _navMesh;
     private LevelManagerScript _levelManager;
 
@@ -23,15 +22,14 @@ public class DestructiblesScript : MonoBehaviour
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
-    { if (collision.tag == "Enemy") Crumble(collision.gameObject.transform);  }
+    { if (collision.tag == "Enemy") Crumble(collision.gameObject);  }
 
     // placeholder to spawn additional animation upon death
-    private void Crumble(Transform aTransform)
+    private void Crumble(GameObject aGameObject)
     {
-        if (DestructionAnimation != null) Instantiate(DestructionAnimation, aTransform);
-
         // Spawn destruction animation, add a tilechanger script with the exact same settings to not have to make destruction prefabs
         GameObject destructPrefab = Instantiate(DestructionPrefab1, new Vector3(transform.position.x, transform.position.y, 0), new Quaternion(), GameObject.Find("DestructiblesHolder").transform);
+        destructPrefab.GetComponent<DestructibleWallAnimationEffectSpawner>().EnemyCausingDestruction = aGameObject;
         if (DestructionPrefab2 != null)
         { Instantiate(DestructionPrefab2, new Vector3(transform.position.x, transform.position.y+1, 0), new Quaternion(), GameObject.Find("DestructiblesHolder").transform); }
         

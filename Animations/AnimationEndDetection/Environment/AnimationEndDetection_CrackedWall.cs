@@ -12,5 +12,4 @@ class AnimationEndDetection_CrackedWall : AnimationEndDetection
         { gameObject.GetComponent<TileChangerScript>().UpdateTiles(); }
         Destroy(gameObject);
     }
-
 }
