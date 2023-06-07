@@ -6,7 +6,7 @@ public class ProjectileScript : MonoBehaviour
 {
 
     public Vector2Int Direction;
-    public float Speed;
+    public float ProjectileSpeed;
     public float ProjectileLifetime;
     private float _currentProjectileLifetime;
     [Tooltip("Basic projectile collision")]
@@ -79,7 +79,7 @@ public class ProjectileScript : MonoBehaviour
 
     private void MoveProjectile()
     {
-        transform.position += new Vector3((Direction.x * Speed * Time.deltaTime), (Direction.y * Speed * Time.deltaTime), 0);
+        transform.position += new Vector3((Direction.x * ProjectileSpeed * Time.deltaTime), (Direction.y * ProjectileSpeed * Time.deltaTime), 0);
     }
 
     private void DecrementLifetime()

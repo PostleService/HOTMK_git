@@ -88,6 +88,8 @@ public class EnemyScript : MonoBehaviour
             {
                 IsAfraid = value;
                 _currentlyAggroed = false;
+                _isRushing = false;
+                if (_currentRushTarget != null) Destroy(_currentRushTarget.gameObject);
                 gameObject.GetComponent<Light2D>().lightOrder = 2;
             } }
     }
@@ -95,19 +97,29 @@ public class EnemyScript : MonoBehaviour
     private float _currentStunTimer;
     public bool Slowed = false;
     private float _currentSlowTimer;
-    bool _startedRushing = false;
-    bool _startedFleeing = false;
 
     public float FleeDistanceMin = 1f;
     public float FleeDistanceMax = 5f;
     public float FleeSpeedModifier = 1.5f;
-    private float _speedBeforeFleeing;
     public int EscapeAttempts = 3;
     [Tooltip("Measures distance in units on the navmesh rather than straight line")]
     public float DistanceToDeaggro;
     
     [Tooltip("Layers which will stop rushing behaviour and item spawn")]
     public LayerMask Layers;
+
+    [Header("Speed")]
+    [Tooltip("Speed with no modifiers applied")] public float DefaultSpeed = 3;
+    [Tooltip("Speed modifier when scared")] public float SpeedModifier_Flee = 1.15f;
+    [Tooltip("Speed modifier when rushing (only rusher)")] public float SpeedModifier_Rush = 1.5f;
+    [Tooltip("Speed modifier when slowed")] public float SpeedModifier_Slow = 0.33f;
+    [Tooltip("Speed modifier when stunned")] public float SpeedModifier_Stun = 0f;
+
+    private float _currSpeed;
+    private float _currSpeedModifier_Flee = 1;
+    private float _currSpeedModifier_Rush = 1;
+    private float _currSpeedModifier_Slow = 1;
+    private float _currSpeedModifier_Stun = 1;
 
     [Header("Boss behaviour")]
     public GameObject TeleportVoidZone;
@@ -140,11 +152,9 @@ public class EnemyScript : MonoBehaviour
 
     [Header("Rusher behaviour")]
     public int RushDistange = 15;
-    [Tooltip("Increase to speed when rushing")]
-    public float SpeedModifier = 2f;
+
     private bool _rushTargetInSight;
     private Vector2 _playerDir;
-    private float _originalSpeed; // receives value from _agent settings
     public float RushCooldown;
     public float _currentRushCooldown;
     [HideInInspector]
@@ -163,15 +173,13 @@ public class EnemyScript : MonoBehaviour
     public float[] SlowFor = new float[] { 2.15f, 1.125f };
     public float[] StunFor = new float[] { 2.15f, 1.75f };
 
-    public float Speed;
+    public float ProjectileSpeed;
     public float ProjectileLifetime;
     
     [Tooltip("Basic projectile collision without enemy layer. If interacts with enemies in any way, projectile will add enemy layer on its own")]
     public LayerMask ProjectileCollision;
     [Tooltip("If hit by slow, slow down to X of speed")]
     public float SlowToSpeed = 0.5f;
-    private float _speedBeforeStun;
-    private float _speedBeforeSlow;
     
     public bool _performingThrow = false;
 
@@ -246,14 +254,13 @@ public class EnemyScript : MonoBehaviour
             )
         { ThrowCooldownDecrement(); }
 
-        if (Stunned) _raycastModifier = 0f;
-        else if (!Stunned) _raycastModifier = 1f;
+        if (_agent != null) _agent.speed = MonitorSpeed();
 
-        if (_player != null) 
-        { if (_player.GetComponent<PlayerScript>().PlayerLevel >= EnemyLevel) { _isAfraid = true;} }
+        if (Stunned) _raycastModifier = 0f; else _raycastModifier = 1f;
 
-        if (ItemStageLevel == 3) { OnPositionChange?.Invoke(this.gameObject, transform.position); }
-        DrawPath();
+        if (_player != null) if (_player.GetComponent<PlayerScript>().PlayerLevel >= EnemyLevel) { _isAfraid = true;}
+
+        if (ItemStageLevel == 3) OnPositionChange?.Invoke(this.gameObject, transform.position);
     }
 
     #region START FUNCTIONS
@@ -297,10 +304,27 @@ public class EnemyScript : MonoBehaviour
         _agent.radius = 0.005f;
         _agent.Warp(SpawnPosition);
 
+        _currSpeed = DefaultSpeed;
+        _agent.speed = _currSpeed;
     }
     #endregion START FUNCTIONS
 
     #region BEHAVIOURS
+
+    public float MonitorSpeed()
+    {
+        if (IsAfraid && CurrentlyAggroed) _currSpeedModifier_Flee = SpeedModifier_Flee;
+        else _currSpeedModifier_Flee = 1;
+        if (_isRushing) _currSpeedModifier_Rush = SpeedModifier_Rush;
+        else _currSpeedModifier_Rush = 1;
+        if (Slowed) _currSpeedModifier_Slow = SpeedModifier_Slow;
+        else _currSpeedModifier_Slow = 1;
+        if (Stunned) _currSpeedModifier_Stun = SpeedModifier_Stun;
+        else _currSpeedModifier_Stun = 1;
+
+        _currSpeed = DefaultSpeed * _currSpeedModifier_Flee * _currSpeedModifier_Rush * _currSpeedModifier_Slow * _currSpeedModifier_Stun;
+        return _currSpeed;
+    }
 
     public void FollowTarget()
     {
@@ -475,8 +499,6 @@ public class EnemyScript : MonoBehaviour
                     if (RayCast().Item1 && _fogManager._playerInsideFog != true)
                     {
                         FindFleeSpot(GetDirection(RayCast().Item2, RayCast().Item3));
-                        _speedBeforeFleeing = _agent.speed;
-                        _agent.speed = _speedBeforeFleeing * FleeSpeedModifier;
                         gameObject.GetComponent<EnemySoundScript>().PlayFearSound();
                     }
                 }
@@ -509,12 +531,7 @@ public class EnemyScript : MonoBehaviour
                 {
                     // Have to account for infinity because of navmesh rebuilding. While it's rebuilding, distance to target becomes incalculable
                     if (_remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
-                    { 
-                        Deaggro();
-                        if (Stunned) { _agent.speed = 0; }
-                        else if (Slowed) { _agent.speed = _speedBeforeFleeing * SlowToSpeed; }
-                        else { _agent.speed = _speedBeforeFleeing; }
-                    }
+                    { Deaggro(); }
                 }
 
             }
@@ -543,9 +560,6 @@ public class EnemyScript : MonoBehaviour
                     {
                         _currentEscapeAttempt = 1;
                         _currentlyAggroed = false;
-                        if (Stunned) { _agent.speed = 0; }
-                        else if (Slowed) { _agent.speed = _speedBeforeFleeing * SlowToSpeed; }
-                        else { _agent.speed = _speedBeforeFleeing; }
                     }
                 }
             }
@@ -577,10 +591,6 @@ public class EnemyScript : MonoBehaviour
         {
             void Deaggro()
             {
-                if (Stunned) { _agent.speed = 0; }
-                else if (Slowed) { _agent.speed = _originalSpeed * SlowToSpeed; }
-                else { _agent.speed = _originalSpeed; }
-                
                 Destroy(_currentRushTarget.gameObject);
                 _currentlyAggroed = false;
                 _isRushing = false;
@@ -612,7 +622,7 @@ public class EnemyScript : MonoBehaviour
         ps.StunFor = StunFor;
 
         ps.Direction = aPlayerPos;
-        ps.Speed = Speed;
+        ps.ProjectileSpeed = ProjectileSpeed;
         ps.ProjectileLifetime = ProjectileLifetime;
         ps.ProjectileCollision = ProjectileCollision;
     }
@@ -679,8 +689,7 @@ public class EnemyScript : MonoBehaviour
         col2D.isTrigger = true; col2D.size = new Vector2(1f,1f);
         _currentRushTarget = rushObject.transform;
         _rushTargetInSight = true;
-        _originalSpeed = _agent.speed;
-        _agent.speed = _originalSpeed * SpeedModifier;
+
     }
 
     /// <summary>
@@ -708,27 +717,6 @@ public class EnemyScript : MonoBehaviour
             distance = _agent.remainingDistance;
         }
         _remainingDistance = distance;
-    }
-
-    public void DrawPath()
-    {
-        if (DebugPath)
-        { 
-            Vector3[] corners = _agent.path.corners;
-            if (corners.Length > 0)
-            {
-                float colorR = 1;
-                for (int i = 1; i < corners.Length; i++)
-                {
-                    Color col = new Color(colorR, 0, 1, 1);
-
-                    if (i < corners.Length - 1)
-                    { Debug.DrawLine(_agent.path.corners[i], _agent.path.corners[i + 1], col, 0.2f,true); }
-                    if (colorR == 1f) { colorR = 0f; }
-                    else { colorR = 1f; }
-                }
-            }
-        }
     }
 
     public void FindFleeSpot(Vector2Int aPlayerPos)
@@ -828,30 +816,15 @@ public class EnemyScript : MonoBehaviour
         if (!Stunned) 
         {
             ResetStunTimer(aLength);
-            _startedRushing = _isRushing;
-            if (CurrentlyAggroed && IsAfraid)
-            { _startedFleeing = true; }
-            else { _startedFleeing = true; }
 
             Stunned = true;
             gameObject.GetComponent<EnemySoundScript>().PlayDamagedSound();
-
-
-            if (Slowed) _speedBeforeStun = _speedBeforeSlow;
-            else if (!Slowed) _speedBeforeStun = _agent.speed;
-
-            _agent.speed = 0f;
         } 
     }
 
     // Enemies that are already stunned won't slow not to mess up speed calc
     public void Slow(float aLength)
     {
-        _startedRushing = _isRushing;
-        if (CurrentlyAggroed && IsAfraid)
-        { _startedFleeing = true; }
-        else { _startedFleeing = true; }
-
         if (!Slowed) {
             if (Stunned) return;
             else 
@@ -859,9 +832,6 @@ public class EnemyScript : MonoBehaviour
                 ResetSlowTimer(aLength);
                 Slowed = true;
                 if (gameObject.GetComponent<EnemySoundScript>() != null) gameObject.GetComponent<EnemySoundScript>().PlayDamagedSound();
-
-                _speedBeforeSlow = _agent.speed;
-                _agent.speed = _agent.speed * SlowToSpeed;
             } 
         }
     }
@@ -971,19 +941,7 @@ public class EnemyScript : MonoBehaviour
         if (Stunned) 
         {
             if (_currentStunTimer >= 0) { _currentStunTimer -= Time.deltaTime; }
-            else 
-            { 
-                Stunned = false;
-
-                if (_startedRushing && !_isRushing)
-                { _agent.speed = _speedBeforeStun / SpeedModifier; _startedRushing = false; }
-                else { _agent.speed = _speedBeforeStun; }
-
-                if (_startedFleeing && !CurrentlyAggroed && IsAfraid)
-                { _agent.speed = _speedBeforeStun / FleeSpeedModifier; _startedFleeing = false; }
-                else { _agent.speed = _speedBeforeStun; }
-
-            }
+            else Stunned = false;
         }
     }
 
@@ -992,21 +950,7 @@ public class EnemyScript : MonoBehaviour
         if (Slowed)
         {
             if (_currentSlowTimer >= 0) { _currentSlowTimer -= Time.deltaTime;}
-            else 
-            { 
-                Slowed = false;
-                // only reset speed back to previous values if not stunned - otherwise, wait till stun expires so it sets speed
-                if (!Stunned) 
-                {
-                    if (_startedRushing && !_isRushing)
-                    { _agent.speed = _speedBeforeSlow / SpeedModifier; _startedRushing = false; }
-                    else { _agent.speed = _speedBeforeSlow; }
-
-                    if (_startedFleeing && !CurrentlyAggroed && IsAfraid)
-                    { _agent.speed = _speedBeforeSlow / FleeSpeedModifier; _startedFleeing = false; }
-                    else { _agent.speed = _speedBeforeSlow; }
-                } 
-            }
+            else Slowed = false;
         }
     }
 
