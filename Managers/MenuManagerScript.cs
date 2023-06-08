@@ -127,7 +127,10 @@ public class MenuManagerScript : MonoBehaviour
         };
     public bool SettingsLoaded = false;
 
+    public delegate void SFXStopper(bool aBool);
+    public static event SFXStopper OnMenuOpen;
     public static event Action OnUntoggleTutorials;
+    
 
     private void OnEnable()
     { 
@@ -397,6 +400,7 @@ public class MenuManagerScript : MonoBehaviour
         _menuCall = false;
         _menuCancelCall = false;
         _submenuCancelCall = false;
+        OnMenuOpenClose(true);
     }
 
     private void CloseMenu()
@@ -414,7 +418,11 @@ public class MenuManagerScript : MonoBehaviour
         _menuCall = false;
         _menuCancelCall = false;
         _submenuCancelCall = false;
+        OnMenuOpenClose(false);
     }
+
+    public void OnMenuOpenClose(bool aBool)
+    { OnMenuOpen?.Invoke(aBool); }
 
     private void ShowDefeatScreen()
     {

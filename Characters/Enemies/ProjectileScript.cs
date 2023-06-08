@@ -13,6 +13,7 @@ public class ProjectileScript : MonoBehaviour
     public LayerMask ProjectileCollision;
 
     public GameObject CollisionSoundObject;
+    public GameObject CollisionAnimationObject;
 
     [Header("Interactions: Enemy, Player")]
     public bool[] Slows = new bool[] { false, false };
@@ -23,14 +24,21 @@ public class ProjectileScript : MonoBehaviour
     public float[] SlowFor = new float[] { };
     public float[] StunFor = new float[] { };
 
+    private Animator _animator;
+    private BoxCollider2D _collider;
+
     private void Start()
     {
-        _currentProjectileLifetime = ProjectileLifetime;
+        _animator = gameObject.GetComponent<Animator>();
+        _collider = gameObject.GetComponent<BoxCollider2D>();
+        
+        _animator.SetFloat("Horizontal", Direction.x); _animator.SetFloat("Vertical", Direction.y);
 
-        if (Direction.x == -1 && Direction.y == 0) { transform.rotation = Quaternion.Euler(0f, 0f, 90f); }
-        else if (Direction.x == 0 && Direction.y == 1) { transform.rotation = Quaternion.Euler(0f, 0f, 0f); }
-        else if (Direction.x == 1 && Direction.y == 0) { transform.rotation = Quaternion.Euler(0f, 0f, -90f); }
-        else if (Direction.x == 0 && Direction.y == -1) { transform.rotation = Quaternion.Euler(0f, 0f, 180f); }
+
+        if ((Direction.x == -1 && Direction.y == 0) || (Direction.x == 1 && Direction.y == 0)) { _collider.size = new Vector2(0.5f, 0.1f); }
+        else if ((Direction.x == 0 && Direction.y == -1) || (Direction.x == 0 && Direction.y == 1)) { _collider.size = new Vector2(0.1f, 0.5f); }
+
+        _currentProjectileLifetime = ProjectileLifetime;
 
         // If damages enemies - add enemy layer to layer mask
         if (Slows[0] || Stuns[0] || Damages[0]) { ProjectileCollision = ProjectileCollision | (1 << 7); }
@@ -91,7 +99,16 @@ public class ProjectileScript : MonoBehaviour
     // if need arises to expand destruction with animations and sound
     private void DestroyProjectile()
     {
-        if (CollisionSoundObject != null) Instantiate(CollisionSoundObject, transform.position, new Quaternion(), null);
+        Transform holder = GameObject.Find("Lvl2EnemyHolder").transform;
+        GameObject collisionAnim = null;
+
+        if (CollisionSoundObject != null) Instantiate(CollisionSoundObject, transform.position, new Quaternion(), holder);
+        if (CollisionAnimationObject != null) {
+            collisionAnim = Instantiate(CollisionAnimationObject, transform.position, new Quaternion(), holder);
+            Animator collisionAnimAnimator = collisionAnim.GetComponent<Animator>();
+            collisionAnimAnimator.SetFloat("Horizontal", Direction.x); collisionAnimAnimator.SetFloat("Vertical", Direction.y);
+        }
+
         Destroy(gameObject); 
     }
 

@@ -60,6 +60,12 @@ public class SoundBiteInstance : MonoBehaviour
     public GameObject callingGO;
     private float soundClipTimer = 0;
     private bool Started = false;
+    private bool _menuOpen = false;
+
+    private void OnEnable()
+    { MenuManagerScript.OnMenuOpen += ReactToMenuOpenClose; }
+    private void OnDisable()
+    { MenuManagerScript.OnMenuOpen -= ReactToMenuOpenClose; }
 
     private void Start()
     {
@@ -68,10 +74,8 @@ public class SoundBiteInstance : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (Started == true)
-        {
-            UpdateValuesWhileSoundBiteLasts();
-        }
+        if (Started == true && _menuOpen == false)
+        { UpdateValuesWhileSoundBiteLasts(); }
     }
 
     public void OnEventInstCreation()
@@ -89,6 +93,11 @@ public class SoundBiteInstance : MonoBehaviour
         
     }
 
+    private void ReactToMenuOpenClose(bool aBool) 
+    { 
+        _menuOpen = aBool;
+        evInst.setPaused(aBool);
+    }
 
     public bool DetermineVisibility()
     {

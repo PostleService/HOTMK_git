@@ -11,10 +11,7 @@ public class TeleportVoidZone : MonoBehaviour
     { IncrementLifetimeCounter(); }
 
     public void RequestDestruction()
-    {
-        Destroy(this.gameObject);
-        Debug.LogWarning("From placing the void zone marker till spawn in animation: " + _lifetimeCounter + " seconds");
-    }
+    { Destroy(this.gameObject); }
 
     private void IncrementLifetimeCounter()
     { _lifetimeCounter += Time.fixedDeltaTime; }
