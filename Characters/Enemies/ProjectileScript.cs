@@ -12,7 +12,6 @@ public class ProjectileScript : MonoBehaviour
     [Tooltip("Basic projectile collision")]
     public LayerMask ProjectileCollision;
 
-    public GameObject CollisionSoundObject;
     public GameObject CollisionAnimationObject;
 
     [Header("Interactions: Enemy, Player")]
@@ -102,7 +101,6 @@ public class ProjectileScript : MonoBehaviour
         Transform holder = GameObject.Find("Lvl2EnemyHolder").transform;
         GameObject collisionAnim = null;
 
-        if (CollisionSoundObject != null) Instantiate(CollisionSoundObject, transform.position, new Quaternion(), holder);
         if (CollisionAnimationObject != null) {
             collisionAnim = Instantiate(CollisionAnimationObject, transform.position, new Quaternion(), holder);
             Animator collisionAnimAnimator = collisionAnim.GetComponent<Animator>();

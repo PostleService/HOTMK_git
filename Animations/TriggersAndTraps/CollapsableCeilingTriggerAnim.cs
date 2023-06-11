@@ -7,7 +7,6 @@ public class CollapsableCeilingTriggerAnim : MonoBehaviour
     private bool _hasTriggered = false;
     private Animator _animator;
     public TrapTriggerScript ParentTrapScript;
-    
 
     private void FixedUpdate()
     {
@@ -17,7 +16,9 @@ public class CollapsableCeilingTriggerAnim : MonoBehaviour
             {
                 _animator = this.gameObject.GetComponent<Animator>();
                 _animator.Play("TriggeredAnimation");
-                gameObject.GetComponent<SoundBiteScript>().PlayOnCall();
+                if (gameObject.GetComponent<SoundBiteScript>() != null)
+                gameObject.GetComponent<SoundBiteScript>().PlayOnCall(gameObject,(name + "_CollapsableCeilingTriggerSound"));
+                
                 _hasTriggered = true;
             }
         }   

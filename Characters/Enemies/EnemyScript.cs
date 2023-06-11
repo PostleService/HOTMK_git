@@ -802,12 +802,22 @@ public class EnemyScript : MonoBehaviour
 
     public void Die(bool noCorpse) 
     {
-        if (_currentFleeSpot != null) { Destroy(_currentFleeSpot); }
-        if (_currentRushTarget != null) { Destroy(_currentRushTarget.gameObject); }
+        // destroy all elements
+        if (_currentFleeSpot != null) Destroy(_currentFleeSpot);
+        if (_currentRushTarget != null) Destroy(_currentRushTarget.gameObject);
+        if (_currentTPVoidZone != null) Destroy(_currentTPVoidZone);
+
+        List<SoundBiteInstance> sbis = new List<SoundBiteInstance>();
+        foreach (Transform chtr in transform)
+        { if (chtr.GetComponent<SoundBiteInstance>() != null) chtr.GetComponent<SoundBiteInstance>().StopImmediately(); }
+
         Destroy(this.gameObject);
+
+        // instantiate elements
         if (DeathObject != null && noCorpse == false) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
         else if (DeathObjectNoCorpse != null && noCorpse == true) { Instantiate(DeathObjectNoCorpse, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
 
+        // invoke events
         OnDie?.Invoke(ItemStageLevel, this.gameObject);
     }
 

@@ -7,49 +7,37 @@ using FMOD;
 
 public class SoundBiteScript : MonoBehaviour
 {
-    public bool PlayedOnCall = false;
-    
-    [Tooltip("In case this is a local audiosource that is supposed to play once the original object is destroyed")]
-    public bool DestroySource = false;
-    public bool DestroyInstance = false;
-    public float DestroyTimer = -1f;
-    public float DestroyInstanceTimer = -1f;
+    public bool AssignToHolder = false;
+    public bool PlayOnStart = true;
+    public string SoundName = "GenericName";
+
     public EventReference SoundToPlay = new EventReference();
 
     // Start is called before the first frame update
     void Start()
-    { if (PlayedOnCall == false) PlayOnCall(); }
-
-    private void FixedUpdate()
-    { 
-        DestroyTimerDecrement();
-        DestroyInstanceTimerDecrement();
-    }
-
-    private void DestroyTimerDecrement()
     {
-        if (DestroySource && DestroyTimer != -1)
+        if (PlayOnStart == true)
         {
-            if (DestroyTimer >= 0) DestroyTimer -= Time.fixedDeltaTime;
-            else Destroy(gameObject);
-        }
+            if (AssignToHolder == true) PlayOnCall(GameObject.Find("SoundBitesHolder"), SoundName);
+            else PlayOnCall(this.gameObject, SoundName);
+        } 
     }
 
-    private void DestroyInstanceTimerDecrement()
+    public void PlayOnCall(GameObject aGO, string aName)
     {
-        if (DestroyInstance && DestroyInstanceTimer != -1)
-        {
-            if (DestroyInstanceTimer >= 0) DestroyInstanceTimer -= Time.fixedDeltaTime;
-            else Destroy(this);
-        }
-    }
+        Transform parentTrsftm = null;
+        if (AssignToHolder == true) parentTrsftm = GameObject.Find("SoundBitesHolder").transform;
+        else parentTrsftm = aGO.transform;
 
-    public void PlayOnCall()
-    {
+        GameObject sbsGO = new GameObject();
+        sbsGO.name = aName; sbsGO.transform.parent = parentTrsftm;
+
         // We create a separate class instance to be able to manipulate its lifetime and value updates
-        SoundBiteInstance sbi = gameObject.AddComponent(typeof(SoundBiteInstance)) as SoundBiteInstance;
+        SoundBiteInstance sbi = sbsGO.AddComponent(typeof(SoundBiteInstance)) as SoundBiteInstance;
         sbi.evInst = FMODUnity.RuntimeManager.CreateInstance(SoundToPlay);
         sbi.callingGO = this.gameObject;
+
+        Destroy(this);
     }
 
 }
@@ -81,6 +69,7 @@ public class SoundBiteInstance : MonoBehaviour
     public void OnEventInstCreation()
     {
         evInst.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(callingGO));
+        
 
         FMOD.Studio.EventDescription evDescr;
         evInst.getDescription(out evDescr);
@@ -112,12 +101,17 @@ public class SoundBiteInstance : MonoBehaviour
         if (_player != null) _playerDir = GetDirection(_player.transform.position, transform.position);
 
         RaycastHit2D colliderHit = Physics2D.Raycast(transform.position, _playerDir, Vector3.Distance(transform.position, _playerPos), layerMask);
+        
         if (colliderHit.collider != null)
         {
             if (colliderHit.collider.tag == "Player") returnValue = true;
-            else returnValue = false;
-        }
 
+            else
+            {
+                UnityEngine.Debug.DrawRay(transform.position, _playerDir * (Vector3.Distance(transform.position, _playerPos)), Color.cyan);
+                returnValue = false; 
+            }
+        }
         return returnValue;
     }
 
@@ -148,10 +142,14 @@ public class SoundBiteInstance : MonoBehaviour
             evInst.setParameterByName("Visible", visible);
         }
         else
-        { 
-            evInst.release();
-            Destroy(this);
-        }
+        { StopImmediately(); }
         
+    }
+
+    public void StopImmediately()
+    {
+        evInst.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+        evInst.release();
+        Destroy(gameObject);
     }
 }

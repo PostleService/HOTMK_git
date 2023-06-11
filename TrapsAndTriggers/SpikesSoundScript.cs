@@ -12,10 +12,8 @@ public class SpikesSoundScript : MonoBehaviour
 
     public void PlaySpikesDepressedSound()
     {
-
         SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
-        sbs.DestroyInstance = true;
-        sbs.DestroyInstanceTimer = 1f;
+        sbs.SoundName = (name + "_SpikesPlateDepressedSound");
         sbs.SoundToPlay = SpikesDepressedSound;
     }
 

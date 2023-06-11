@@ -87,8 +87,7 @@ public class EnemySoundScript : MonoBehaviour
             if (RandNumber < CompareAgainst)
             {
                 SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
-                sbs.DestroyInstance = true;
-                sbs.DestroyInstanceTimer = 1f;
+                sbs.SoundName = (name + "_AggressionSound");
                 sbs.SoundToPlay = AggressionSound;
 
                 if (_revealedAggression == false) _revealedAggression = true;
@@ -111,8 +110,7 @@ public class EnemySoundScript : MonoBehaviour
             if (RandNumber < CompareAgainst)
             {
                 SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
-                sbs.DestroyInstance = true;
-                sbs.DestroyInstanceTimer = 1f;
+                sbs.SoundName = (name + "_FearSound");
                 sbs.SoundToPlay = FearSound;
 
                 if (_revealedFear == false) _revealedFear = true;
@@ -126,8 +124,7 @@ public class EnemySoundScript : MonoBehaviour
         if (PlaySounds[3] == true)
         {
             SoundBiteScript sbs = gameObject.AddComponent(typeof(SoundBiteScript)) as SoundBiteScript;
-            sbs.DestroyInstance = true;
-            sbs.DestroyInstanceTimer = 1f;
+            sbs.SoundName = (name + "_DamageSound");
             sbs.SoundToPlay = DamagedSound;
         }
     }
