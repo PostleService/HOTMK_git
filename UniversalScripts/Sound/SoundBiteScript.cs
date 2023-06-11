@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using FMODUnityResonance;
 using FMODUnity;
@@ -10,6 +11,7 @@ public class SoundBiteScript : MonoBehaviour
     public bool AssignToHolder = false;
     public bool PlayOnStart = true;
     public string SoundName = "GenericName";
+    public List<string> TagsToIgnore = new List<string>();
 
     public EventReference SoundToPlay = new EventReference();
 
@@ -30,12 +32,13 @@ public class SoundBiteScript : MonoBehaviour
         else parentTrsftm = aGO.transform;
 
         GameObject sbsGO = new GameObject();
-        sbsGO.name = aName; sbsGO.transform.parent = parentTrsftm;
+        sbsGO.name = aName; sbsGO.transform.parent = parentTrsftm; sbsGO.transform.position = this.gameObject.transform.position;
 
         // We create a separate class instance to be able to manipulate its lifetime and value updates
         SoundBiteInstance sbi = sbsGO.AddComponent(typeof(SoundBiteInstance)) as SoundBiteInstance;
         sbi.evInst = FMODUnity.RuntimeManager.CreateInstance(SoundToPlay);
         sbi.callingGO = this.gameObject;
+        sbi.TagsToIgnore = TagsToIgnore;
 
         Destroy(this);
     }
@@ -44,11 +47,16 @@ public class SoundBiteScript : MonoBehaviour
 
 public class SoundBiteInstance : MonoBehaviour
 {
+
     public FMOD.Studio.EventInstance evInst;
     public GameObject callingGO;
+    public List<string> TagsToIgnore = new List<string>();
+    private float _visibilityIncrementMultiplier = 6.5f;
     private float soundClipTimer = 0;
     private bool Started = false;
     private bool _menuOpen = false;
+    public bool _isVisible = true;
+    [Range(0,1)]public float _visibility = 1f;
 
     private void OnEnable()
     { MenuManagerScript.OnMenuOpen += ReactToMenuOpenClose; }
@@ -56,20 +64,21 @@ public class SoundBiteInstance : MonoBehaviour
     { MenuManagerScript.OnMenuOpen -= ReactToMenuOpenClose; }
 
     private void Start()
-    {
-        OnEventInstCreation();
-    }
+    { OnEventInstCreation(); }
 
     private void FixedUpdate()
     {
         if (Started == true && _menuOpen == false)
-        { UpdateValuesWhileSoundBiteLasts(); }
+        {
+            DetermineVisibility();
+            UpdateVisibilityValue();
+            UpdateValuesWhileSoundBiteLasts();
+        }
     }
 
     public void OnEventInstCreation()
     {
         evInst.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(callingGO));
-        
 
         FMOD.Studio.EventDescription evDescr;
         evInst.getDescription(out evDescr);
@@ -77,9 +86,11 @@ public class SoundBiteInstance : MonoBehaviour
         int lengthsOfClipMill = 0;
         evDescr.getLength(out lengthsOfClipMill);
 
+        DetermineVisibility();
+        if (_isVisible) _visibility = 1f; else _visibility = 0f;
+
         soundClipTimer = (float)lengthsOfClipMill * 0.001f;
         evInst.start(); Started = true;
-        
     }
 
     private void ReactToMenuOpenClose(bool aBool) 
@@ -88,10 +99,8 @@ public class SoundBiteInstance : MonoBehaviour
         evInst.setPaused(aBool);
     }
 
-    public bool DetermineVisibility()
+    public void DetermineVisibility()
     {
-        bool returnValue = false;
-
         LayerMask layerMask = (1 << 6) | (1 << 8) | (1 << 10) | (1 << 15);
 
         GameObject _player = GameObject.Find("Player");
@@ -100,19 +109,14 @@ public class SoundBiteInstance : MonoBehaviour
         if (_player != null) _playerPos = _player.transform.position;
         if (_player != null) _playerDir = GetDirection(_player.transform.position, transform.position);
 
-        RaycastHit2D colliderHit = Physics2D.Raycast(transform.position, _playerDir, Vector3.Distance(transform.position, _playerPos), layerMask);
-        
-        if (colliderHit.collider != null)
-        {
-            if (colliderHit.collider.tag == "Player") returnValue = true;
+        RaycastHit2D[] collidersHit = Physics2D.RaycastAll(transform.position, _playerDir, Vector3.Distance(transform.position, _playerPos), layerMask);
 
-            else
-            {
-                UnityEngine.Debug.DrawRay(transform.position, _playerDir * (Vector3.Distance(transform.position, _playerPos)), Color.cyan);
-                returnValue = false; 
-            }
+        if (collidersHit.Any())
+        {
+            if (collidersHit[0].collider.tag == "Player") _isVisible = true;
+            else if (collidersHit.Length > 1 && TagsToIgnore.Contains(collidersHit[0].collider.tag) && collidersHit[1].collider.tag == "Player") { _isVisible = true; }
+            else { _isVisible = false; }
         }
-        return returnValue;
     }
 
     public Vector2Int GetDirection(Vector3 aPlayerPos, Vector3 aSoundPos)
@@ -135,15 +139,25 @@ public class SoundBiteInstance : MonoBehaviour
         if (soundClipTimer >= 0)
         {
             soundClipTimer -= Time.fixedDeltaTime;
-            int visible;
-            if (DetermineVisibility() == true) visible = 1;
-            else visible = 0;
-
-            evInst.setParameterByName("Visible", visible);
+            evInst.setParameterByName("Visible", _visibility);
         }
-        else
-        { StopImmediately(); }
-        
+        else { StopImmediately(); }
+    }
+
+    private void UpdateVisibilityValue()
+    {
+        if (_isVisible == true && _visibility < 1)
+        {
+            if (_visibility + Time.fixedDeltaTime * _visibilityIncrementMultiplier <= 1)
+            { _visibility += Time.fixedDeltaTime * _visibilityIncrementMultiplier; }
+            else _visibility = 1f;
+        }
+        else if (_isVisible != true && _visibility > 0)
+        {
+            if (_visibility - Time.fixedDeltaTime * _visibilityIncrementMultiplier >= 0)
+            { _visibility -= Time.fixedDeltaTime * _visibilityIncrementMultiplier; }
+            else _visibility = 0f;
+        }
     }
 
     public void StopImmediately()
