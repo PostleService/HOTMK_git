@@ -5,26 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public int SceneIndex
-    {
-        get { return _sceneIndex; }
-        set {
-            if (_sceneIndex != value)
-            {
-                _sceneIndex = value;
-                _sceneHasChanged = true;
-                _counter = 0;
-            }
-            else
-            { 
-                _sceneHasChanged = false;
-                _counter += 1;
-            }
-        }
-    }
-    private int _sceneIndex;
-    private bool _sceneHasChanged = true;
-    [HideInInspector] public int _counter = 0;
+    private int _lastSceneIndex = 0;
+    public int _counter = 0;
 
     public static GameManager Instance { get; private set; }
 
@@ -99,5 +81,14 @@ public class GameManager : MonoBehaviour
     }
 
     public void UpdateSceneIndex(int aSceneIndex)
-    { SceneIndex = aSceneIndex; }
+    {
+        if (aSceneIndex != _lastSceneIndex)
+        { 
+            _lastSceneIndex = aSceneIndex;
+            _counter = 0;
+        }
+    }
+
+    public void UpdateCounter(int aSceneIndex)
+    { _counter += 1; }
 }

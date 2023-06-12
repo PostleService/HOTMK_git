@@ -208,6 +208,7 @@ public class MenuManagerScript : MonoBehaviour
     {
         _gameManager.LoadGame();
         _gameManager.UpdateSceneIndex(SceneManager.GetActiveScene().buildIndex);
+
         CurrentBrightnessSetting = _gameManager.BrightnessSetting;
         CurrentScreenResolution = new Vector2(_gameManager.ScreenResolution.x, _gameManager.ScreenResolution.y);
         CurrentVSyncSetting = _gameManager.VSyncSetting;
@@ -483,7 +484,10 @@ public class MenuManagerScript : MonoBehaviour
 
     // reassign the script to be subscribed to event triggered by death animation when animations are finished
     private void ReactToPlayerDeath()
-    { _playerDead = true; }
+    { 
+        _playerDead = true;
+        _gameManager.UpdateCounter(SceneManager.GetActiveScene().buildIndex);
+    }
 
     private void CountDownToDefeatScreen()
     {
