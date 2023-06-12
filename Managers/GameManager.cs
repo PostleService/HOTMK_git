@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     private int _lastSceneIndex = 0;
-    public int _counter = 0;
+    public int _deathCounter = 0;
 
     public static GameManager Instance { get; private set; }
 
@@ -85,10 +85,10 @@ public class GameManager : MonoBehaviour
         if (aSceneIndex != _lastSceneIndex)
         { 
             _lastSceneIndex = aSceneIndex;
-            _counter = 0;
+            _deathCounter = 0;
         }
     }
 
     public void UpdateCounter(int aSceneIndex)
-    { _counter += 1; }
+    { _deathCounter += 1; }
 }

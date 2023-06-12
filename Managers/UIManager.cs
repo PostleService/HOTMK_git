@@ -29,7 +29,6 @@ public class UIManager : MonoBehaviour
     public float ShowPointersAtPercentage = 0.2f;
     [Tooltip("Failsafe number of items/enemies in case percentage does not land on full value")]
     public int FailsafeObjectCount = 1;
-    private bool _levelStagePointersSpawned = false;
 
     // THIS BIT IS FOR ITEM PULSING
     private bool _itemPulseInitiated = false;        
@@ -65,7 +64,6 @@ public class UIManager : MonoBehaviour
 
     private void UpdateItems(int aLevelStage, int aCurrentItems, int aDefaultItems)
     {
-        _levelStagePointersSpawned = false;
         if (aLevelStage < 3)
         {
             // Enable item counter and image of current objective at the start of the level
@@ -199,7 +197,6 @@ public class UIManager : MonoBehaviour
                 arrow.transform.SetParent(GameObject.Find("LevelStageEndPointers").transform, false); // necessary to set worldPositionStays to false to retain proper scaling
                 arrow.GetComponent<LevelStageEndPointer>().Target = go;
             }
-            _levelStagePointersSpawned = true;
         }
     }
 

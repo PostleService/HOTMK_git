@@ -26,12 +26,12 @@ public class VictoryDefeatScreenTaunt : MonoBehaviour
         {
             if (TypeOfScreen == VictoryOrDefeat.victory)
             {
-                if (_gm._counter < 4) { TextObj.text = VictoryPhrases[0]; }
+                if (_gm._deathCounter < 4) { TextObj.text = VictoryPhrases[0]; }
                 else { TextObj.text = VictoryPhrases[1]; }
             }
             else if (TypeOfScreen == VictoryOrDefeat.defeat)
             {
-                if (_gm._counter < 4) { TextObj.text = DefeatPhrases[0]; }
+                if (_gm._deathCounter < 4) { TextObj.text = DefeatPhrases[0]; }
                 else { TextObj.text = DefeatPhrases[1]; }
             }
 

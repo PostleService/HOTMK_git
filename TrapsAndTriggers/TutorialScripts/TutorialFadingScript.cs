@@ -41,7 +41,9 @@ public class TutorialFadingScript : MonoBehaviour
                 // spawn new tutorial window if none exists so far and none is present on the scene
                 if (_currentlyShownTutorialWindow == null && TutorialWindow != null)
                 {
-                    _currentlyShownTutorialWindow = Instantiate(TutorialWindow, GameObject.Find("Canvas_UserInterface(BackGround)").transform);
+                    Transform parentTr = GameObject.Find("Canvas_UserInterface(BackGround)").transform;
+                    _currentlyShownTutorialWindow = Instantiate(TutorialWindow, parentTr);
+                    _currentlyShownTutorialWindow.transform.SetSiblingIndex(0);
                     _currentlyShownTutorialWindow.GetComponent<TutorialFadingPanelScript>().CallingTrigger = gameObject;
                     _currentlyShownTutorialWindow.GetComponent<TutorialFadingPanelScript>().MenuManager = _menuManager;
                 }
