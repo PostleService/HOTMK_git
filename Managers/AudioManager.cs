@@ -16,6 +16,8 @@ public class AudioManager : MonoBehaviour
     private float _levelStageCurrent = 0f;
     [Tooltip("multiplier of level stage value shift")]
     public float LevelStageValueChangeSpeed = 1.25f;
+    [Range(0, 100)]
+    public float MasterVolume = 0f;
     [Range(0,100)]
     public float MusicVolume = 0f;
     [Range(0, 100)]
@@ -87,6 +89,15 @@ public class AudioManager : MonoBehaviour
     }
 
     #region ON CALL FUNCTIONS
+
+    public void ChangeMasterVolume(float aVol)
+    {
+        if (MasterVolume != aVol)
+        {
+            MasterVolume = aVol;
+            FMODUnity.RuntimeManager.StudioSystem.setParameterByName("MasterVolume", MasterVolume, true);
+        }
+    }
 
     public void ChangeMusicVolume(float aVol)
     {

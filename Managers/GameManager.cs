@@ -5,6 +5,27 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public int SceneIndex
+    {
+        get { return _sceneIndex; }
+        set {
+            if (_sceneIndex != value)
+            {
+                _sceneIndex = value;
+                _sceneHasChanged = true;
+                _counter = 0;
+            }
+            else
+            { 
+                _sceneHasChanged = false;
+                _counter += 1;
+            }
+        }
+    }
+    private int _sceneIndex;
+    private bool _sceneHasChanged = true;
+    [HideInInspector] public int _counter = 0;
+
     public static GameManager Instance { get; private set; }
 
     public Vector2 ScreenResolution;
@@ -12,6 +33,7 @@ public class GameManager : MonoBehaviour
     public bool FullScreenSetting;
     public float BrightnessSetting;
     public bool TutorialSetting;
+    public float MasterVolumeSetting;
     public float MusicVolumeSetting;
     public float AmbientVolumeSetting;
     public float SoundEffectsVolumeSetting;
@@ -57,6 +79,7 @@ public class GameManager : MonoBehaviour
         FullScreenSetting = saveData.FullScreenSetting;
         BrightnessSetting = saveData.BrightnessSetting;
         TutorialSetting = saveData.TutorialSetting;
+        MasterVolumeSetting = saveData.MasterVolumeSetting;
         MusicVolumeSetting = saveData.MusicVolumeSetting;
         AmbientVolumeSetting = saveData.AmbientVolumeSetting;
         SoundEffectsVolumeSetting = saveData.SoundEffectsVolumeSetting;
@@ -73,6 +96,8 @@ public class GameManager : MonoBehaviour
         LevelProgress[10] = saveData.LevelState_lvl10;
         LevelProgress[11] = saveData.LevelState_lvl11;
         LevelProgress[12] = saveData.LevelState_lvl12;
-
     }
+
+    public void UpdateSceneIndex(int aSceneIndex)
+    { SceneIndex = aSceneIndex; }
 }

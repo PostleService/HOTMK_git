@@ -11,6 +11,7 @@ public class SaveData
     public bool FullScreenSetting;
     public float BrightnessSetting;
     public bool TutorialSetting;
+    public float MasterVolumeSetting;
     public float MusicVolumeSetting;
     public float AmbientVolumeSetting;
     public float SoundEffectsVolumeSetting;
@@ -38,6 +39,7 @@ public class SaveData
         FullScreenSetting = true;
         BrightnessSetting = 0;
         TutorialSetting = true;
+        MasterVolumeSetting = 1;
         MusicVolumeSetting = 1;
         AmbientVolumeSetting = 1;
         SoundEffectsVolumeSetting = 1;
@@ -65,6 +67,7 @@ public class SaveData
         FullScreenSetting = aGameManager.FullScreenSetting;
         BrightnessSetting = aGameManager.BrightnessSetting;
         TutorialSetting = aGameManager.TutorialSetting;
+        MasterVolumeSetting = aGameManager.MasterVolumeSetting;
         MusicVolumeSetting = aGameManager.MusicVolumeSetting;
         AmbientVolumeSetting = aGameManager.AmbientVolumeSetting;
         SoundEffectsVolumeSetting = aGameManager.SoundEffectsVolumeSetting;

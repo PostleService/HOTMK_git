@@ -10,7 +10,6 @@ public class HealthPickupScript : MonoBehaviour
     private bool _hasHealed = false;
 
     public GameObject DeathObject;
-    public GameObject CollisionSoundObject;
 
     private void Start()
     {
@@ -30,15 +29,12 @@ public class HealthPickupScript : MonoBehaviour
                 collision.GetComponent<PlayerScript>().TakeDamage(-HealsBy);
                 _hasHealed = true; // prevents from executing more than once
                 DestroyItem();
-                if (DeathObject != null) Instantiate(DeathObject, transform.position, new Quaternion(), null);
+                if (DeathObject != null) Instantiate(DeathObject, transform.position, new Quaternion(), GameObject.Find("ItemHolder").transform);
             }
         }
     }
 
     // Callable from outside in case a wall collapses on top of it
     public void DestroyItem()
-    { 
-        Destroy(this.gameObject);
-        if (CollisionSoundObject != null) Instantiate(CollisionSoundObject, transform.position, new Quaternion(), null);
-    }
+    { Destroy(this.gameObject); }
 }

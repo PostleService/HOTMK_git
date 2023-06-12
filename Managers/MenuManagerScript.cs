@@ -68,13 +68,14 @@ public class MenuManagerScript : MonoBehaviour
 
     [Header("OptionsMenu")]
     [Header("Volume")]
+    public GameObject VolumeMasterSlider;
+    public GameObject VolumeMasterText;
     public GameObject VolumeMusicSlider;
     public GameObject VolumeMusicText;
     public GameObject VolumeAmbientSlider;
     public GameObject VolumeAmbientText;
     public GameObject VolumeSoundEffectsSlider;
     public GameObject VolumeSoundEffectsText;
-
 
     [Header("Tutorials")]
     public GameObject CurrentTutorialObject;
@@ -96,6 +97,7 @@ public class MenuManagerScript : MonoBehaviour
     public bool CurrentVSyncSetting;
     public bool CurrentFullScreenSetting;
     public bool CurrentTutorialSetting;
+    public float CurrentMasterVolumeSetting;
     public float CurrentMusicVolumeSetting;
     public float CurrentAmbientVolumeSetting;
     public float CurrentSoundEffectsVolumeSetting;
@@ -105,6 +107,7 @@ public class MenuManagerScript : MonoBehaviour
     public bool TempVSyncSetting;
     public bool TempFullScreenSetting;
     public bool TempTutorialSetting;
+    public float TempMasterVolumeSetting;
     public float TempMusicVolumeSetting;
     public float TempAmbientVolumeSetting;
     public float TempSoundEffectsVolumeSetting;
@@ -204,11 +207,13 @@ public class MenuManagerScript : MonoBehaviour
     private void LoadSettings()
     {
         _gameManager.LoadGame();
+        _gameManager.UpdateSceneIndex(SceneManager.GetActiveScene().buildIndex);
         CurrentBrightnessSetting = _gameManager.BrightnessSetting;
         CurrentScreenResolution = new Vector2(_gameManager.ScreenResolution.x, _gameManager.ScreenResolution.y);
         CurrentVSyncSetting = _gameManager.VSyncSetting;
         CurrentFullScreenSetting = _gameManager.FullScreenSetting;
         CurrentTutorialSetting = _gameManager.TutorialSetting;
+        CurrentMasterVolumeSetting = _gameManager.MasterVolumeSetting;
         CurrentMusicVolumeSetting = _gameManager.MusicVolumeSetting;
         CurrentAmbientVolumeSetting = _gameManager.AmbientVolumeSetting;
         CurrentSoundEffectsVolumeSetting = _gameManager.SoundEffectsVolumeSetting;
@@ -218,6 +223,7 @@ public class MenuManagerScript : MonoBehaviour
         TempVSyncSetting = CurrentVSyncSetting;
         TempFullScreenSetting = CurrentFullScreenSetting;
         TempTutorialSetting = CurrentTutorialSetting;
+        TempMasterVolumeSetting = CurrentMasterVolumeSetting;
         TempMusicVolumeSetting = CurrentMusicVolumeSetting;
         TempAmbientVolumeSetting = CurrentAmbientVolumeSetting;
         TempSoundEffectsVolumeSetting = CurrentSoundEffectsVolumeSetting;
@@ -236,6 +242,10 @@ public class MenuManagerScript : MonoBehaviour
         LevelProgress[12] = _gameManager.LevelProgress[12];
 
         // Set all menu values apart from resolution, which is done in GatherResolutions()
+        _audioManager.ChangeMasterVolume(CurrentMasterVolumeSetting * 100);
+        VolumeMasterSlider.GetComponent<Slider>().value = CurrentMasterVolumeSetting;
+        float ResultingValueMaster = CurrentMasterVolumeSetting * 100;
+        VolumeMasterText.GetComponent<TextMeshProUGUI>().text = ((int)ResultingValueMaster).ToString();
 
         _audioManager.ChangeMusicVolume(CurrentMusicVolumeSetting * 100);
         VolumeMusicSlider.GetComponent<Slider>().value = CurrentMusicVolumeSetting;
@@ -671,6 +681,17 @@ public class MenuManagerScript : MonoBehaviour
         _optionsMenuAudioObject.SetActive(true);
     }
 
+    public void SetVolume_Master(Slider aSlider)
+    {
+        if (SettingsLoaded)
+        {
+            TempMasterVolumeSetting = aSlider.value;
+            _audioManager.ChangeMasterVolume(TempMasterVolumeSetting * 100);
+            float ResultingValueMaster = TempMasterVolumeSetting * 100;
+            VolumeMasterText.GetComponent<TextMeshProUGUI>().text = ((int)ResultingValueMaster).ToString();
+        }
+    }
+
     public void SetVolume_Music(Slider aSlider)
     {
         if (SettingsLoaded)
@@ -855,6 +876,10 @@ public class MenuManagerScript : MonoBehaviour
 
     public void OptionsButton_AcceptChanges()
     {
+        _audioManager.ChangeMasterVolume(TempMasterVolumeSetting * 100);
+        float ResultingValueMaster = TempMasterVolumeSetting * 100;
+        VolumeMasterText.GetComponent<TextMeshProUGUI>().text = ((int)ResultingValueMaster).ToString();
+
         _audioManager.ChangeMusicVolume(TempMusicVolumeSetting * 100);
         float ResultingValueMus = TempMusicVolumeSetting * 100;
         VolumeMusicText.GetComponent<TextMeshProUGUI>().text = ((int)ResultingValueMus).ToString();
@@ -887,6 +912,7 @@ public class MenuManagerScript : MonoBehaviour
         CurrentVSyncSetting = TempVSyncSetting;
         CurrentFullScreenSetting = TempFullScreenSetting;
         CurrentTutorialSetting = TempTutorialSetting;
+        CurrentMasterVolumeSetting = TempMasterVolumeSetting;
         CurrentMusicVolumeSetting = TempMusicVolumeSetting;
         CurrentAmbientVolumeSetting = TempAmbientVolumeSetting;
         CurrentSoundEffectsVolumeSetting = TempSoundEffectsVolumeSetting;
@@ -896,6 +922,7 @@ public class MenuManagerScript : MonoBehaviour
         _gameManager.VSyncSetting = TempVSyncSetting;
         _gameManager.FullScreenSetting = TempFullScreenSetting;
         _gameManager.TutorialSetting = TempTutorialSetting;
+        _gameManager.MasterVolumeSetting = TempMasterVolumeSetting;
         _gameManager.MusicVolumeSetting = TempMusicVolumeSetting;
         _gameManager.AmbientVolumeSetting = TempAmbientVolumeSetting;
         _gameManager.SoundEffectsVolumeSetting = TempSoundEffectsVolumeSetting;
@@ -909,6 +936,7 @@ public class MenuManagerScript : MonoBehaviour
         CurrentVSyncSetting == TempVSyncSetting &&
         CurrentFullScreenSetting == TempFullScreenSetting &&
         CurrentTutorialSetting == TempTutorialSetting &&
+        CurrentMasterVolumeSetting == TempMasterVolumeSetting &&
         CurrentMusicVolumeSetting == TempMusicVolumeSetting &&
         CurrentAmbientVolumeSetting == TempAmbientVolumeSetting &&
         CurrentSoundEffectsVolumeSetting == TempSoundEffectsVolumeSetting)
@@ -943,11 +971,17 @@ public class MenuManagerScript : MonoBehaviour
         TempVSyncSetting = CurrentVSyncSetting;
         TempFullScreenSetting = CurrentFullScreenSetting;
         TempTutorialSetting = CurrentTutorialSetting;
+        TempMasterVolumeSetting = CurrentMasterVolumeSetting;
         TempMusicVolumeSetting = CurrentMusicVolumeSetting;
         TempAmbientVolumeSetting = CurrentAmbientVolumeSetting;
         TempSoundEffectsVolumeSetting = CurrentSoundEffectsVolumeSetting;
 
         // reset option menu toggles, sliders and dropdown
+        _audioManager.ChangeMasterVolume(CurrentMasterVolumeSetting * 100);
+        float ResultingValueMaster = CurrentMasterVolumeSetting * 100;
+        VolumeMasterSlider.GetComponent<Slider>().value = CurrentMasterVolumeSetting;
+        VolumeMasterText.GetComponent<TextMeshProUGUI>().text = ((int)ResultingValueMaster).ToString();
+
         _audioManager.ChangeMusicVolume(CurrentMusicVolumeSetting * 100);
         float ResultingValueMus = CurrentMusicVolumeSetting * 100;
         VolumeMusicSlider.GetComponent<Slider>().value = CurrentMusicVolumeSetting;
