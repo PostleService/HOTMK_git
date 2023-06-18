@@ -15,10 +15,8 @@ public class EnemyScript : MonoBehaviour
     private LevelManagerScript _levelManager;
     private FogManager _fogManager;
 
-    [HideInInspector]
-    public GameObject _player;
-    [HideInInspector]
-    public NavMeshAgent _agent;
+    [HideInInspector] public GameObject _player;
+    [HideInInspector] public NavMeshAgent _agent;
     private float _remainingDistance;
     private Transform _currentPatrolTarget;
     private Transform _currentRushTarget;
@@ -32,10 +30,7 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("List of vectors that will create a patrol path for the npc")]
     public PatrolPathVector[] PatrolPath = new PatrolPathVector[5];
     [System.Serializable]
-    public class PatrolPathVector
-    {
-        public Vector2 vec = new Vector2(0, 0);
-    }
+    public class PatrolPathVector { public Vector2 vec = new Vector2(0, 0); }
     private List<Transform> _patrolTransforms = new List<Transform>();
     private Dictionary<string, int> _areaDict = new Dictionary<string, int>();
 
@@ -58,6 +53,7 @@ public class EnemyScript : MonoBehaviour
     public GameObject NavMeshBoundPoint;
     [Tooltip("If true - will consider raycast and aggro range. Otherwise - if not by default aggroed - patrolling, if aggroed - always chasing")]
     public bool CanAggrDeaggr = true;
+    public bool CanBeScared = true;
     [Tooltip("Distance at which the enemy will notice player with raycast. In alternative aggro - raw distance to aggro")]
     public float RayCastDistance;
     private float _raycastModifier = 0f; // for when enemy is stunned
@@ -84,7 +80,7 @@ public class EnemyScript : MonoBehaviour
     // for deaggroing the enemy once his state changes, so he can instantly find flee point
     private bool _isAfraid
     { set {
-            if (IsAfraid != value)
+            if (IsAfraid != value && CanBeScared == true)
             {
                 IsAfraid = value;
                 _currentlyAggroed = false;

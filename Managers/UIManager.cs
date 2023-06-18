@@ -29,10 +29,12 @@ public class UIManager : MonoBehaviour
     public float ShowPointersAtPercentage = 0.2f;
     [Tooltip("Failsafe number of items/enemies in case percentage does not land on full value")]
     public int FailsafeObjectCount = 1;
+    private bool _stagePointersSpawned = false;
 
     // THIS BIT IS FOR ITEM PULSING
     private bool _itemPulseInitiated = false;        
     private bool _pulseBottomReached = false;
+
 
     private void OnEnable()
     {
@@ -64,6 +66,7 @@ public class UIManager : MonoBehaviour
 
     private void UpdateItems(int aLevelStage, int aCurrentItems, int aDefaultItems)
     {
+        _stagePointersSpawned = false;
         if (aLevelStage < 3)
         {
             // Enable item counter and image of current objective at the start of the level
@@ -89,16 +92,16 @@ public class UIManager : MonoBehaviour
             Vector2 imageObjSize = new Vector2(imageObjImg.sprite.rect.width, imageObjImg.sprite.rect.height);
             imageObjRT.sizeDelta = new Vector2(imageObjSize.x * iconScaleDownValue, imageObjSize.y * iconScaleDownValue);
 
-            InitiateLevelStageIconPulse(aLevelStage, aCurrentItems, aDefaultItems);
+            InitiateLevelStageIconPulse(aLevelStage, aCurrentItems, aDefaultItems, aLevelStage);
 
             LevelStagePointersDecision(aLevelStage, aCurrentItems, aDefaultItems);
         }
         else { foreach (GameObject go in ItemPanel) { go.SetActive(false); } }
     }
 
-    private void InitiateLevelStageIconPulse(int aLevelStage, int aCurrentItems, int aDefaultItems)
+    private void InitiateLevelStageIconPulse(int aLevelStage, int aCurrentItems, int aDefaultItems, int aLevelStageItem)
     {
-        if (aLevelStage == _lm.LevelStage) { _itemPulseInitiated = true; }
+        if (aLevelStageItem == _lm.LevelStage) { _itemPulseInitiated = true; }
     }
 
     private void StageIconPulse()
@@ -125,7 +128,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void DecrementItemsCount(int aLevelStage, int aCurrentItems, int aDefaultItems)
+    private void DecrementItemsCount(int aLevelStage, int aCurrentItems, int aDefaultItems, int aLevelStageItem)
     {
         if (aLevelStage < 3 && aLevelStage == _lm.LevelStage)
         {
@@ -176,27 +179,24 @@ public class UIManager : MonoBehaviour
 
     private void LevelStagePointersDecision(int aLevelStage, int aCurrentItemCount, int aDefaultItems)
     {
-        if (aCurrentItemCount <= aDefaultItems * ShowPointersAtPercentage ||
-            aCurrentItemCount == FailsafeObjectCount)
+        if ((aCurrentItemCount <= aDefaultItems * ShowPointersAtPercentage ||
+            aCurrentItemCount <= FailsafeObjectCount) && _stagePointersSpawned == false)
         {
             
             List<GameObject> goLis = new List<GameObject>();
-            if (aLevelStage == 0) 
-            {
-                DarkObeliskScript[] goArr = GameObject.FindObjectsOfType<DarkObeliskScript>();
-                foreach (DarkObeliskScript doS in goArr) { goLis.Add(doS.gameObject); }
-            }
-            else 
-            {
-                EnemyScript[] goArr = GameObject.FindObjectsOfType<EnemyScript>();
-                foreach (EnemyScript ES in goArr) { if (ES.EnemyLevel == aLevelStage) goLis.Add(ES.gameObject); }
-            }
+
+            DarkObeliskScript[] goArr1 = GameObject.FindObjectsOfType<DarkObeliskScript>();
+            EnemyScript[] goArr2 = GameObject.FindObjectsOfType<EnemyScript>();
+            foreach (DarkObeliskScript doS in goArr1) { if (doS.ItemStageLevel == aLevelStage) goLis.Add(doS.gameObject); }
+            foreach (EnemyScript ES in goArr2) { if (ES.ItemStageLevel == aLevelStage) goLis.Add(ES.gameObject); }
+
             foreach (GameObject go in goLis) 
             {
                 GameObject arrow = Instantiate(LevelStageEndPointer);
                 arrow.transform.SetParent(GameObject.Find("LevelStageEndPointers").transform, false); // necessary to set worldPositionStays to false to retain proper scaling
                 arrow.GetComponent<LevelStageEndPointer>().Target = go;
             }
+            _stagePointersSpawned = true;
         }
     }
 

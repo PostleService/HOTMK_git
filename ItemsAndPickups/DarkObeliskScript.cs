@@ -24,6 +24,7 @@ public class DarkObeliskScript : MonoBehaviour
 
     private void Start()
     {
+        if (_levelManager == null) _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
         if (!_levelManager._playerCanSeeThroughWalls) { this.gameObject.GetComponent<SpriteRenderer>().enabled = false; }
         OnSpawn?.Invoke(ItemStageLevel, this.gameObject);
     }

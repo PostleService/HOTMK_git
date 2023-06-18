@@ -22,7 +22,7 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
     private bool _slowed; private bool _stunned;
 
     // 0 - idle; 1 - walk; 2 - aggro
-    private float _state;
+    protected float _state;
     private float _animationSpeedModifier;
 
     // Start is called before the first frame update

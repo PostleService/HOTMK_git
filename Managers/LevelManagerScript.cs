@@ -56,7 +56,7 @@ public class LevelManagerScript : MonoBehaviour
 
     public delegate void MyHandler(int aLevelStage, int aCurrentItems, int aDefaultItems);
     public static event MyHandler OnLevelStageChange;
-    public delegate void Decrementer (int aLevelStage, int aCurrentItems, int aDefaultItems);
+    public delegate void Decrementer (int aLevelStage, int aCurrentItems, int aDefaultItems, int aLevelStageItem);
     public static event Decrementer OnObjectiveDecrement;
 
     private void OnEnable()
@@ -66,6 +66,7 @@ public class LevelManagerScript : MonoBehaviour
         AllowLvl3SpawnScript.OnLvl3TriggerAllow += AllowLvl3ToSpawn;
         EnemyScript.OnSpawn += ReactToEnemySpawn;
         EnemyScript.OnDie += ReactToDeath;
+        DarkObeliskScript.OnSpawn += ReactToEnemySpawn;
         DarkObeliskScript.OnDie += ReactToDeath;
     }
 
@@ -92,6 +93,7 @@ public class LevelManagerScript : MonoBehaviour
         AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
         EnemyScript.OnSpawn -= ReactToEnemySpawn;
         EnemyScript.OnDie -= ReactToDeath;
+        DarkObeliskScript.OnSpawn -= ReactToEnemySpawn;
         DarkObeliskScript.OnDie -= ReactToDeath;
     }
 
@@ -104,14 +106,17 @@ public class LevelManagerScript : MonoBehaviour
     public void ReactToEnemySpawn(int aStageLevel, GameObject aEnemyObject)
     {
         if (aStageLevel == 3) { EnemyLvl3 = aEnemyObject; }
-        _currentItemsCount[aStageLevel] += 1;
-        DefaultItemsCount[aStageLevel] += 1;
+        if (aStageLevel > -1 && aStageLevel < _currentItemsCount.Count) _currentItemsCount[aStageLevel] += 1;
+        if (aStageLevel > -1 && aStageLevel < DefaultItemsCount.Count) DefaultItemsCount[aStageLevel] += 1;
     }
 
     private void ReactToDeath(int aStageLevel, GameObject aGameObject) 
-    { 
-        _currentItemsCount[aStageLevel] -= 1;
-        OnObjectiveDecrement?.Invoke(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage]);
+    {
+        if (aStageLevel > -1 && aStageLevel < DefaultItemsCount.Count)
+        {
+            _currentItemsCount[aStageLevel] -= 1;
+            OnObjectiveDecrement?.Invoke(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage], aStageLevel);
+        }
     }
 
     // UPDATE FUNCTIONS
