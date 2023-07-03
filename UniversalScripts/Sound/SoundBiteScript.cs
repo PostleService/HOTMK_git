@@ -42,12 +42,10 @@ public class SoundBiteScript : MonoBehaviour
 
         Destroy(this);
     }
-
 }
 
 public class SoundBiteInstance : MonoBehaviour
 {
-
     public FMOD.Studio.EventInstance evInst;
     public GameObject callingGO;
     public List<string> TagsToIgnore = new List<string>();

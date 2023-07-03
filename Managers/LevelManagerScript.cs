@@ -206,6 +206,7 @@ public class LevelManagerScript : MonoBehaviour
                 itemSpawnLocation = Lvl1ItemLocations[i];
 
                 GameObject itemToSpawn = Instantiate(ObeliskPrefab, itemSpawnLocation, new Quaternion(), GameObject.Find("ItemHolder").transform);
+                itemToSpawn.GetComponent<DarkObeliskScript>().SendSpawnIncrementInfo = false;
                 _currentItemsCount[0] += 1;
                 itemToSpawn.GetComponent<DarkObeliskScript>()._levelManager = this.gameObject.GetComponent<LevelManagerScript>();
             }
@@ -240,6 +241,7 @@ public class LevelManagerScript : MonoBehaviour
                     itemSpawnLocation = tempV3List[randomNumber];
                 }
                 GameObject itemToSpawn = Instantiate(ObeliskPrefab, itemSpawnLocation, new Quaternion(), GameObject.Find("ItemHolder").transform);
+                itemToSpawn.GetComponent<DarkObeliskScript>().SendSpawnIncrementInfo = false;
                 _currentItemsCount[0] += 1;
                 itemToSpawn.GetComponent<DarkObeliskScript>()._levelManager = this.gameObject.GetComponent<LevelManagerScript>();
             }

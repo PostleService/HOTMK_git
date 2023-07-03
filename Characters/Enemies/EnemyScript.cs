@@ -168,6 +168,7 @@ public class EnemyScript : MonoBehaviour
     public bool[] Damages = new bool[] { false, false };
     public float[] SlowFor = new float[] { 2.15f, 1.125f };
     public float[] StunFor = new float[] { 2.15f, 1.75f };
+    public int DamagesFor = 1;
 
     public float ProjectileSpeed;
     public float ProjectileLifetime;
@@ -297,7 +298,7 @@ public class EnemyScript : MonoBehaviour
         _agent = this.gameObject.GetComponent<NavMeshAgent>();
         _agent.updateRotation = false;
         _agent.updateUpAxis = false;
-        _agent.radius = 0.005f;
+        _agent.radius = 0.002f;
         _agent.Warp(SpawnPosition);
 
         _currSpeed = DefaultSpeed;
@@ -566,7 +567,7 @@ public class EnemyScript : MonoBehaviour
     {
         Vector2 trposV2 = transform.position;
         Vector2 trposTarV2 = _currentPatrolTarget.position;
-        if (trposV2 == trposTarV2)
+        if (Vector3.Distance(trposV2,trposTarV2) < 0.08f)
         {
             if (_currentPatrolPoint < PatrolPath.Length - 1)
             {
@@ -613,7 +614,7 @@ public class EnemyScript : MonoBehaviour
         ps.Slows = Slows;
         ps.Stuns = Stuns;
         ps.Damages = Damages;
-        ps.DamagePerHit = DamagePerHit;
+        ps.DamagePerHit = DamagesFor;
         ps.SlowFor = SlowFor;
         ps.StunFor = StunFor;
 
@@ -808,6 +809,7 @@ public class EnemyScript : MonoBehaviour
         { if (chtr.GetComponent<SoundBiteInstance>() != null) chtr.GetComponent<SoundBiteInstance>().StopImmediately(); }
 
         Destroy(this.gameObject);
+        
 
         // instantiate elements
         if (DeathObject != null && noCorpse == false) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }

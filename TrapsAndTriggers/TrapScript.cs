@@ -36,9 +36,10 @@ public class TrapScript : MonoBehaviour
 
             else
             {
-                if (Slows[0] && Stuns[0]) { es.Stun(StunFor[0]); }
-                else if (Slows[0]) { es.Slow(SlowFor[0]); }
-                else if (Stuns[0]) { es.Stun(StunFor[0]); }
+                if (Slows[0] && Stuns[0] && es.Stunned != true) { es.Stun(StunFor[0]); }
+                else if (Stuns[0] && es.Stunned != true) { es.Stun(StunFor[0]); }
+                else if (Slows[0] && es.Slowed != true) { es.Slow(SlowFor[0]); }
+                
             }
         }
 
@@ -46,9 +47,10 @@ public class TrapScript : MonoBehaviour
         {
             PlayerScript ps = collision.gameObject.GetComponent<PlayerScript>();
 
-            if (Slows[1] && Stuns[1]) { ps.Stun(StunFor[1]); }
-            else if (Slows[1]) { ps.Slow(SlowFor[1]); }
-            else if (Stuns[1]) { ps.Stun(StunFor[1]); }
+            if (Slows[1] && Stuns[1] && ps.Stunned != true) { ps.Stun(StunFor[1]); }
+            else if (Stuns[1] && ps.Stunned != true) { ps.Stun(StunFor[1]); }
+            else if (Slows[1] && ps.Slowed != true) { ps.Slow(SlowFor[1]); }
+            
         }
     }
 

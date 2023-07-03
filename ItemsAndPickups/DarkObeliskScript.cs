@@ -17,6 +17,7 @@ public class DarkObeliskScript : MonoBehaviour
     public float _countdownDerenderCurrent;
 
     private bool _incremented = false;
+    [HideInInspector]public bool SendSpawnIncrementInfo = true; // only for boss levels
 
     public delegate void MyHandler(int aItemStageLevel, GameObject aGameObject);
     public static event MyHandler OnDie;
@@ -26,7 +27,7 @@ public class DarkObeliskScript : MonoBehaviour
     {
         if (_levelManager == null) _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
         if (!_levelManager._playerCanSeeThroughWalls) { this.gameObject.GetComponent<SpriteRenderer>().enabled = false; }
-        OnSpawn?.Invoke(ItemStageLevel, this.gameObject);
+        if (SendSpawnIncrementInfo) OnSpawn?.Invoke(ItemStageLevel, this.gameObject);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

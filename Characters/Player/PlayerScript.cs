@@ -496,7 +496,7 @@ public class PlayerScript : MonoBehaviour
             ProjectileScript projScript = col.gameObject.GetComponent<ProjectileScript>();
             if (!_isDamaged)
             {
-                if (projScript.DamagePerHit > 0) _isDamaged = true;
+                if (projScript.DamagePerHit > 0 && projScript.Damages[1] == true) _isDamaged = true;
                 TakeDamage(projScript.DamagePerHit);
             }
         }
