@@ -563,7 +563,7 @@ public class PlayerScript : MonoBehaviour
         if (PlayerDeathObject != null)
         {
             GameObject go = Instantiate(PlayerDeathObject, transform.position, new Quaternion());
-            go.name = PlayerDeathObject.name; // make sure Player spawns with name of prefab, no (clone)
+            go.name = PlayerDeathObject.name; 
             go.GetComponent<SpriteSheetSwapper_PlayerDeath>()._playerLevel = PlayerLevel;
         }
     }

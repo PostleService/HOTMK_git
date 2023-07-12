@@ -120,7 +120,7 @@ public class EnemyScript : MonoBehaviour
     [Header("Boss behaviour")]
     public GameObject TeleportVoidZone;
     [HideInInspector] public GameObject _currentTPVoidZone;
-    public bool CurrentlyTeleporting = true;
+    public bool CurrentlyTeleporting = false;
     public bool AllowedToTeleport = false;
     [Tooltip("Distance in path length at which boss starts counting down to teleport")]
     public float DistanceToTeleport = 6f;
@@ -198,10 +198,16 @@ public class EnemyScript : MonoBehaviour
     public static event PositionTracker OnPositionChange;
 
     private void OnEnable()
-    { PlayerScript.OnSpawn += AssignPlayer; }
+    { 
+        PlayerScript.OnSpawn += AssignPlayer;
+        AnimationEndDetection_PlayerDeath.OnDie += ReactToPlayerDeath;
+    }
 
     private void OnDisable()
-    { PlayerScript.OnSpawn -= AssignPlayer; }
+    { 
+        PlayerScript.OnSpawn -= AssignPlayer;
+        AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath;
+    }
 
     void Start()
     {
@@ -220,7 +226,6 @@ public class EnemyScript : MonoBehaviour
 
         _levelManager = GameObject.Find("LevelManager").GetComponent<LevelManagerScript>();
         _fogManager = GameObject.Find("FogManager").GetComponent<FogManager>();
-
 
         OnSpawn?.Invoke(ItemStageLevel, this.gameObject);
         if (ItemStageLevel == 3) { OnPositionChange?.Invoke(this.gameObject, transform.position); }
@@ -263,6 +268,9 @@ public class EnemyScript : MonoBehaviour
     #region START FUNCTIONS
     private void AssignPlayer(GameObject aGameObject)
     { _player = aGameObject; }
+
+    private void ReactToPlayerDeath()
+    { _isRushing = false; }
 
     // In order to use layermask, its decimal representation needs to be converted to binary for Unity to read
     public void PathfindingLayersConversion()
@@ -844,11 +852,11 @@ public class EnemyScript : MonoBehaviour
         }
     }
     
-    public void TeleportToSpawn()
+    public void TeleportToDestination(Vector3 aDestination)
     {
         CurrentlyTeleporting = true;
         gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnOut();
-        SpawnOutDestination = new Vector3(SpawnPosition.x, SpawnPosition.y, 0);
+        SpawnOutDestination = aDestination;
 
         if (_currentTPVoidZone != null) Destroy(_currentTPVoidZone.gameObject);
         _currentTPVoidZone = Instantiate(TeleportVoidZone, SpawnOutDestination, new Quaternion(), null);
@@ -987,11 +995,8 @@ public class EnemyScript : MonoBehaviour
         if (ConsideringTeleport)
         {
             if (_currentTeleportCountDown >= 0) { _currentTeleportCountDown -= Time.deltaTime; }
-            else 
-            {
-                // placeholder behaviour:
-                PerformBossTeleport();
-            }
+            else if (_currentTeleportCountDown < 0 && CurrentlyTeleporting != true)
+            { PerformBossTeleport(); }
         }
     }
 

@@ -50,7 +50,7 @@ public class ProjectileScript : MonoBehaviour
         MoveProjectile();
     }
 
-    // this motherfucking thing requires RigidBody2D to properly function. Otherwise it won't detect TilemapCollider2D
+    // it requires RigidBody2D to properly function. Otherwise it won't detect TilemapCollider2D
     private void OnTriggerStay2D(Collider2D collision)
     {
         // if layer of collision is contained within layers to interact with, react

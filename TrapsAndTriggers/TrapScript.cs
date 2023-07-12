@@ -18,6 +18,14 @@ public class TrapScript : MonoBehaviour
     public float[] StunFor = new float[] { 2.15f , 1.75f };
 
     private bool _requestedTeleport = false;
+    private float _requestCooldown;
+    private float _requestCooldownDefault = 1.5f;
+
+    private void Start()
+    { _requestCooldown = _requestCooldownDefault; }
+
+    private void FixedUpdate()
+    { DecrementCooldown();  }
 
     // if a wall collapses on top of a health potion
     private void OnTriggerStay2D(Collider2D collision)
@@ -29,7 +37,8 @@ public class TrapScript : MonoBehaviour
         {
             EnemyScript es = collision.gameObject.GetComponent<EnemyScript>();
 
-            if (Collapsable && es.EnemyLevel >= 3 && !_requestedTeleport) { es.TeleportToSpawn(); _requestedTeleport = true; }
+            if (Collapsable && es.EnemyLevel >= 3 && es.CurrentlyTeleporting != true && _requestedTeleport == false) 
+            { es.TeleportToDestination(new Vector3(es.SpawnPosition.x, es.SpawnPosition.y, 0)); _requestedTeleport = true; }
 
             if (Damages[0])
             { if (es.EnemyLevel < 3) es.Die(NoCorpse); }
@@ -52,6 +61,14 @@ public class TrapScript : MonoBehaviour
             else if (Slows[1] && ps.Slowed != true) { ps.Slow(SlowFor[1]); }
             
         }
+    }
+
+    private void DecrementCooldown()
+    {
+        if (_requestedTeleport == true && _requestCooldown > 0)
+        { _requestCooldown -= Time.fixedDeltaTime; }
+        else if (_requestedTeleport == true && _requestCooldown < 0)
+        { _requestedTeleport = false; _requestCooldown = _requestCooldownDefault; }
     }
 
 }

@@ -8,7 +8,7 @@ public class AnimationEndDetection_Boss : MonoBehaviour
     public string AnimationNameOut;
     private Animator _thisObjectAnimator;
 
-    private bool _tpOutPerformed = false;
+    public bool _tpOutPerformed = false;
 
     /// <summary>
     /// THIS SCRIPT WILL RELY ON DEFAULT ANIMATION STATE TRANSITIONING INTO A
@@ -31,9 +31,7 @@ public class AnimationEndDetection_Boss : MonoBehaviour
 
     // Update is called once per frame
     void FixedUpdate()
-    {
-        CheckAnimationEnd();
-    }
+    { CheckAnimationEnd(); }
 
     public void CheckAnimationEnd()
     {
@@ -48,21 +46,14 @@ public class AnimationEndDetection_Boss : MonoBehaviour
         EnemyScript es = gameObject.GetComponent<EnemyScript>();
         es.CurrentlyTeleporting = false;
         gameObject.GetComponent<BoxCollider2D>().enabled = true;
-
-        _tpOutPerformed = false;
     }
 
     public void OnAnimationFinishOut()
     {
-        if (_tpOutPerformed == false)
-        {
-            EnemyScript es = gameObject.GetComponent<EnemyScript>();
-            es._agent.Warp(new Vector3(es.SpawnOutDestination.x, es.SpawnOutDestination.y, 0));
-            es._currentTPVoidZone.GetComponent<TeleportVoidZone>().RequestDestruction();
-            gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnIn();
-
-            _tpOutPerformed = true;
-        }
+        EnemyScript es = gameObject.GetComponent<EnemyScript>();
+        es._agent.Warp(new Vector3(es.SpawnOutDestination.x, es.SpawnOutDestination.y, 0));
+        if (es._currentTPVoidZone != null) es._currentTPVoidZone.GetComponent<TeleportVoidZone>().RequestDestruction();
+        gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnIn();
     }
 
 }
