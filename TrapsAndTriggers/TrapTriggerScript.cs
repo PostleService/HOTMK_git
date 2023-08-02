@@ -22,7 +22,7 @@ public class TrapTriggerScript : MonoBehaviour
 
     [Tooltip("GameObject with animation")]
     public GameObject Trap;
-    public float SpawnOffset = 0.125f;
+    public Vector3 SpawnOffset;
     [Tooltip("How soon after triggering does the trap start damaging")]
     public float ActivationTimer = 3f;
     private float _activationTimerCurrent;
@@ -44,6 +44,10 @@ public class TrapTriggerScript : MonoBehaviour
     [HideInInspector] public bool _hasBeenSpawned = false;
     private bool _allowedToCooldown = false;
     private LevelManagerScript _levelManager;
+
+    [Header("Pass to trap")]
+    public bool TeleportBossToCustom = false;
+    public Vector3 CustomTeleportDestination = Vector3.zero;
 
     // Start is called before the first frame update
     void Start()
@@ -134,12 +138,29 @@ public class TrapTriggerScript : MonoBehaviour
                 // No navmesh recalculation required - using Nav Mesh Obstacle to carve from calculated navmesh
                 _levelManager.AllWalkableTiles.Remove(this.gameObject.transform.position);
 
-                pos = new Vector3(transform.position.x, transform.position.y - SpawnOffset, 0);
+                pos = new Vector3(transform.position.x + SpawnOffset.x, transform.position.y + SpawnOffset.y, 0);
             }
             else pos = transform.position;
 
             if (Trap != null)
-            { _trap = Instantiate(Trap, pos, new Quaternion(), this.gameObject.transform); }
+            {  
+                _trap = Instantiate(Trap, pos, new Quaternion(), this.gameObject.transform);
+
+                AnimationEndDetection_CollapsableCeiling aed1 = _trap.GetComponent<AnimationEndDetection_CollapsableCeiling>();
+                if (aed1 != null)
+                {
+                    aed1.TeleportBossToCustom = TeleportBossToCustom;
+                    aed1.CustomTeleportDestination = CustomTeleportDestination;
+                }
+                AnimationEndDetection_LaserTrap aed2 = _trap.GetComponent<AnimationEndDetection_LaserTrap>();
+                if (aed2 != null)
+                {
+                    aed2.TeleportBossToCustom = TeleportBossToCustom;
+                    aed2.CustomTeleportDestination = CustomTeleportDestination;
+                }
+                    
+            }
+
             _hasBeenSpawned = true;
             if (DestroySelfAfterSpawn == true)
             {

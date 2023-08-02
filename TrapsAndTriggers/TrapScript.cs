@@ -17,9 +17,13 @@ public class TrapScript : MonoBehaviour
     public float[] SlowFor = new float[] { 2.15f , 1.125f };
     public float[] StunFor = new float[] { 2.15f , 1.75f };
 
+    public bool TeleportBossToCustom = false;
+    public Vector3 CustomTeleportDestination = Vector3.zero;
+
     private bool _requestedTeleport = false;
     private float _requestCooldown;
     private float _requestCooldownDefault = 1.5f;
+
 
     private void Start()
     { _requestCooldown = _requestCooldownDefault; }
@@ -38,7 +42,13 @@ public class TrapScript : MonoBehaviour
             EnemyScript es = collision.gameObject.GetComponent<EnemyScript>();
 
             if (Collapsable && es.EnemyLevel >= 3 && es.CurrentlyTeleporting != true && _requestedTeleport == false) 
-            { es.TeleportToDestination(new Vector3(es.SpawnPosition.x, es.SpawnPosition.y, 0)); _requestedTeleport = true; }
+            {
+                Vector3 destination = Vector3.zero;
+                if (TeleportBossToCustom == false) { destination = new Vector3(es.SpawnPosition.x, es.SpawnPosition.y, 0); }
+                else { destination = CustomTeleportDestination; }
+
+                es.TeleportToDestination(destination); _requestedTeleport = true; 
+            }
 
             if (Damages[0])
             { if (es.EnemyLevel < 3) es.Die(NoCorpse); }

@@ -470,7 +470,7 @@ public class MenuManagerScript : MonoBehaviour
     {
         // change back to if (SceneManager.GetActiveScene().buildIndex < LevelProgress.Count) after more levels are ready
         // if the level is last level, quit to main menu
-        if (SceneManager.GetActiveScene().buildIndex < 3)
+        if (SceneManager.GetActiveScene().buildIndex < 4)
         {
             UnsubscribeAll();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
@@ -478,7 +478,7 @@ public class MenuManagerScript : MonoBehaviour
         else
         {
             UnsubscribeAll();
-            SceneManager.LoadScene(4); 
+            SceneManager.LoadScene(5); 
         }
     }
 

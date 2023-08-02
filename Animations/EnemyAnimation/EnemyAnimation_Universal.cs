@@ -25,6 +25,9 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
     protected float _state;
     private float _animationSpeedModifier;
 
+    public bool HasDesiredIdleDirection = false;
+    public Vector2 DesiredIdleDirection = Vector2.zero;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -35,7 +38,7 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
         _animator = gameObject.GetComponent<Animator>();
     }
 
-    public void MonitorEnemyDirection()
+    public virtual void MonitorEnemyDirection()
     {
         
         if (_agent.desiredVelocity.x != 0 || _agent.desiredVelocity.y != 0 && _enemyScript.CurrentTarget != gameObject.transform)
@@ -110,5 +113,14 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
         _animator.SetFloat("Vertical", _enemyRotation.y);
         _animator.SetFloat("State", _state);
         _animator.speed = _animationSpeedModifier;
+    }
+
+    public void AssumeDesiredIdleDirection()
+    {
+        if (_state == 0 && _enemyScript.CurrentlyAggroed == false)
+        {
+            _animator.SetFloat("Horizontal", DesiredIdleDirection.x);
+            _animator.SetFloat("Vertical", DesiredIdleDirection.y);
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class SpawnerScript : MonoBehaviour
 {
@@ -21,6 +22,12 @@ public class SpawnerScript : MonoBehaviour
     private bool _instantiated = false;
 
     public bool AllowLvl3Spawn = false;
+
+    public bool CanAggrDeaggr = false;
+    public bool CurrentlyAggroed = true;
+    public bool CustomPatrol = false;
+    public EnemyScript.PatrolPathVector[] PatrolPath = new EnemyScript.PatrolPathVector[] { };
+    
 
     private void Start()
     { _delayDecremented = Delay; }
@@ -47,10 +54,19 @@ public class SpawnerScript : MonoBehaviour
                 EnemyScript es = go.GetComponent<EnemyScript>();
                 es.SpawnPosition.x = Coordinates.x;
                 es.SpawnPosition.y = Coordinates.y;
-                
-                EnemyScript.PatrolPathVector ppv = new EnemyScript.PatrolPathVector();
-                ppv.vec = new Vector2(Coordinates.x, Coordinates.y);
-                es.PatrolPath[0] = ppv;
+                es.CanAggrDeaggr = CanAggrDeaggr;
+                es.CurrentlyAggroed = CurrentlyAggroed;
+
+                EnemyScript.PatrolPathVector[] ppv = new EnemyScript.PatrolPathVector[] { new EnemyScript.PatrolPathVector() };
+                if (CustomPatrol == false)
+                {
+                    ppv[0].vec = new Vector2(Coordinates.x, Coordinates.y);
+                    es.PatrolPath = ppv;
+                }
+                else
+                {
+                    es.PatrolPath = PatrolPath;
+                }
 
                 go.name = ObjectToSpawn.name;
                 

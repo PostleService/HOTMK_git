@@ -22,7 +22,7 @@ class AnimationEndDetection_WallBreakEffect : MonoBehaviour
         _srThisObj = gameObject.GetComponent<SpriteRenderer>();
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         CheckAnimationEnd();
         if (_srParent.enabled == true) _srThisObj.enabled = true;

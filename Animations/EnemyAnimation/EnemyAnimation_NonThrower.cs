@@ -15,5 +15,6 @@ class EnemyAnimation_NonThrower : EnemyAnimation_Universal
         MonitorEnemyDirection();
         MonitorEnemyState();
         PassInformationToAnimator();
+        if (HasDesiredIdleDirection) AssumeDesiredIdleDirection();
     }
 }

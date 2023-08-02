@@ -28,10 +28,10 @@ public class VictoryTriggerScript : MonoBehaviour
         if (collision.name == "Player")
         {
             // change it back when more levels are ready
-            if (SceneManager.GetActiveScene().buildIndex < 3)
+            if (SceneManager.GetActiveScene().buildIndex < 4)
             { _nextSceneToUnlock = (SceneManager.GetActiveScene().buildIndex + 1); }
-            else if (SceneManager.GetActiveScene().buildIndex >= 3)
-            { _nextSceneToUnlock = 3; }
+            else if (SceneManager.GetActiveScene().buildIndex >= 4)
+            { _nextSceneToUnlock = 4; }
 
             // substitute mm part with subscription when win conditions are assigned to a player despawn animation object
             MenuManagerScript mm = GameObject.Find("MenuManager").GetComponent<MenuManagerScript>();

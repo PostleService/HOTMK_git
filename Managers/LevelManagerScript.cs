@@ -18,20 +18,21 @@ public class LevelManagerScript : MonoBehaviour
     public GameObject PlayerSpawner;
     public GameObject Lvl3Spawner;
 
+
     [Header("Level Progression")]
     [Tooltip("Five in total: items_lvl1,mobs_lvl1,items_lvl2,mobs_lvl2,endgame_lvl3")]
-    public int LevelStage = -1;
+    public int LevelStage = 0;
+    public bool RegularLevelProgressionTracking = true;
 
     [Tooltip("A number of items of each level the game will attempt to spawn")]
     public List<int> DefaultItemsCount = new List<int>();
     public List<int> _currentItemsCount = new List<int>();
 
-    public GameObject ObeliskPrefab;
+    [Tooltip("A visual representation of levelstage objective: enemy or item")]
+    public List<Sprite> LevelStageIcons = new List<Sprite>() { };
 
-    // ITEM SPAWN
-    public List<Vector3> Lvl1ItemLocations = new List<Vector3>();
-    [Tooltip("A distance in units below which items do not spawn close to each other")]
-    public float ItemSpawnDistance = 5;
+    [Header("Walkable Tiles")]
+    // COMPILING LIST OF WALKABLE TILES
     [Tooltip("Layers which will be discarded when trying to spawn items. Walls, collision")]
     public LayerMask ObstacleLayers;
     public LayerMask ItemLayers;
@@ -42,7 +43,6 @@ public class LevelManagerScript : MonoBehaviour
     public List<Vector2> ZonesToExcludeMaxVal = new List<Vector2>() { };
     
     public List<Vector3> AllWalkableTiles = new List<Vector3>();
-
     private float _colliderSearchRadiusObstacle = 0.2f; // renders best results and least false positives
     
     [HideInInspector]
@@ -54,16 +54,15 @@ public class LevelManagerScript : MonoBehaviour
     [Tooltip("By how many items is the pool of potential healing items decreased")]
     public int HealthCountDecrement = 2;
 
-    public delegate void MyHandler(int aLevelStage, int aCurrentItems, int aDefaultItems);
+    public delegate void MyHandler(int aLevelStage, int aCurrentItems, int aDefaultItems, Sprite aSprite);
     public static event MyHandler OnLevelStageChange;
     public delegate void Decrementer (int aLevelStage, int aCurrentItems, int aDefaultItems, int aLevelStageItem);
     public static event Decrementer OnObjectiveDecrement;
 
     private void OnEnable()
     {
-        PlayerScript.OnSpawn += SynchronizePlayerLevel;
+        PlayerScript.OnSpawn += RaiseLevelStage;
         PlayerScript.OnEnemiesDeconceal += StopConcealingEnemies;
-        AllowLvl3SpawnScript.OnLvl3TriggerAllow += AllowLvl3ToSpawn;
         EnemyScript.OnSpawn += ReactToEnemySpawn;
         EnemyScript.OnDie += ReactToDeath;
         DarkObeliskScript.OnSpawn += ReactToEnemySpawn;
@@ -79,7 +78,6 @@ public class LevelManagerScript : MonoBehaviour
         SpawnHealth();
         PlayerSpawner.GetComponent<SpawnerScript>().Activated = true; 
         LocateWalkableTiles();
-        SpawnItems();
     }
 
     // Update is called once per frame
@@ -88,20 +86,13 @@ public class LevelManagerScript : MonoBehaviour
 
     public void Unsubscribe()
     {
-        PlayerScript.OnSpawn -= SynchronizePlayerLevel;
+        PlayerScript.OnSpawn -= RaiseLevelStage;
         PlayerScript.OnEnemiesDeconceal -= StopConcealingEnemies;
-        AllowLvl3SpawnScript.OnLvl3TriggerAllow -= AllowLvl3ToSpawn;
         EnemyScript.OnSpawn -= ReactToEnemySpawn;
         EnemyScript.OnDie -= ReactToDeath;
         DarkObeliskScript.OnSpawn -= ReactToEnemySpawn;
         DarkObeliskScript.OnDie -= ReactToDeath;
     }
-
-    private void SynchronizePlayerLevel(GameObject aGameObject)
-    { aGameObject?.GetComponent<PlayerScript>().SyncronizeLevelUps(LevelStage); }
-
-    private void AllowLvl3ToSpawn()
-    { Lvl3Spawner.GetComponent<SpawnerScript>().AllowLvl3Spawn = true; }
 
     public void ReactToEnemySpawn(int aStageLevel, GameObject aEnemyObject)
     {
@@ -114,8 +105,11 @@ public class LevelManagerScript : MonoBehaviour
     {
         if (aStageLevel > -1 && aStageLevel < DefaultItemsCount.Count)
         {
+            // always decrement current item count even if boss level to track progress to victory
             _currentItemsCount[aStageLevel] -= 1;
-            OnObjectiveDecrement?.Invoke(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage], aStageLevel);
+
+            // if not a boss level
+            if (RegularLevelProgressionTracking) OnObjectiveDecrement?.Invoke(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage], aStageLevel);
         }
     }
 
@@ -123,25 +117,26 @@ public class LevelManagerScript : MonoBehaviour
 
     private void MonitorItems()
     {
-        if (LevelStage > - 1 && LevelStage < 3)
+        if ((LevelStage > - 1 && LevelStage < 3) && _currentItemsCount[LevelStage] <= 0)
         {
-            if (_currentItemsCount[LevelStage] <= 0)
-            {
-                RaiseLevelStage();
-                if (LevelStage == 2) { SpawnLevel3(LevelStage); }
-            }
+            RaiseLevelStage(null);
+            if (LevelStage == 2) SpawnLevel3();
         }
-
-        else if (LevelStage == 3)
-        { if (EnemyLvl3 != null) 
-            {  EnemyLvl3.GetComponent<EnemyScript>().Die(false); } 
-        }
+        else if (LevelStage == 3) KillCurrentLvl3();
     }
 
-    private void RaiseLevelStage()
-    {
+    public void KillCurrentLvl3()
+    { if (EnemyLvl3 != null) EnemyLvl3.GetComponent<EnemyScript>().Die(false); }
+
+    public void RequestUIItemUpdate(int aLvlStage, int aCurrItms, int aDefItms, Sprite aSprite)
+    { OnLevelStageChange?.Invoke(aLvlStage, aCurrItms, aDefItms, aSprite); }
+
+    private void RaiseLevelStage(GameObject aGo)
+    { 
         LevelStage += 1;
-        OnLevelStageChange?.Invoke(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage]);
+        // if not boss level, provide item count and icons based on level stage values
+        if (RegularLevelProgressionTracking == true) RequestUIItemUpdate(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage], LevelStageIcons[LevelStage]);
+        else { GameObject.Find("AudioManager").GetComponent<AudioManager>().ReactToLvlChange(LevelStage, 0, 0, null); }
     }
 
     public void StopConcealingEnemies() { _playerCanSeeThroughWalls = true; }
@@ -186,71 +181,8 @@ public class LevelManagerScript : MonoBehaviour
         }
     }
 
-    // even if no items are spawned, it will still increment lvl stage form -1, which will initiate monitoring process and give time for enemies to increment respective counts
-    private void SpawnItems()
-    {
-        int nItemsToSpawn = DefaultItemsCount[0]; // take level stage and check corresponding index within the DefaultItemsCount list
-        int randomNumber = new System.Random().Next(AllWalkableTiles.Count);
-        Vector3 itemSpawnLocation = Vector3.zero;
-
-        for (int i = 0; i < nItemsToSpawn; i++)
-        {
-            int IterationsOfManual = -1;
-            IterationsOfManual = Lvl1ItemLocations.Count();
-            
-            // create a temp list of vectors, checking whether any of them are close to already spawned items
-            List<Vector3> tempV3List = new List<Vector3>();
-
-            if (i < IterationsOfManual)
-            {
-                itemSpawnLocation = Lvl1ItemLocations[i];
-
-                GameObject itemToSpawn = Instantiate(ObeliskPrefab, itemSpawnLocation, new Quaternion(), GameObject.Find("ItemHolder").transform);
-                itemToSpawn.GetComponent<DarkObeliskScript>().SendSpawnIncrementInfo = false;
-                _currentItemsCount[0] += 1;
-                itemToSpawn.GetComponent<DarkObeliskScript>()._levelManager = this.gameObject.GetComponent<LevelManagerScript>();
-            }
-
-            // If we have no manually placed locations or run out of predefined item location List positions and the nItemsToSpawn is still iterating, switch to random
-            else
-            {
-                // for each item we spawn. If index = 0, spawn right away at random location
-                // otherwise, list only vectors far enough from other items, pick random, spawn, repeat.
-                if (i == 0)
-                { itemSpawnLocation = AllWalkableTiles[randomNumber]; }
-                else
-                {
-                    foreach (Vector3 vec3 in AllWalkableTiles)
-                    {
-                        if (!Physics2D.OverlapCircle(vec3, ItemSpawnDistance, ItemLayers))
-                        { tempV3List.Add(vec3); }
-                    }
-                    // if cannot place any more items with distance limitations set - will search ever smaller circles until can populate temp list
-                    while (!tempV3List.Any())
-                    {
-                        for (int x = (int)ItemSpawnDistance - 1; x >= 0; x -= 1)
-                        {
-                            foreach (Vector3 vec3 in AllWalkableTiles)
-                            {
-                                if (!Physics2D.OverlapCircle(vec3, x, ItemLayers))
-                                { tempV3List.Add(vec3); }
-                            }
-                        }
-                    }
-                    randomNumber = new System.Random().Next(tempV3List.Count);
-                    itemSpawnLocation = tempV3List[randomNumber];
-                }
-                GameObject itemToSpawn = Instantiate(ObeliskPrefab, itemSpawnLocation, new Quaternion(), GameObject.Find("ItemHolder").transform);
-                itemToSpawn.GetComponent<DarkObeliskScript>().SendSpawnIncrementInfo = false;
-                _currentItemsCount[0] += 1;
-                itemToSpawn.GetComponent<DarkObeliskScript>()._levelManager = this.gameObject.GetComponent<LevelManagerScript>();
-            }
-        }
-        RaiseLevelStage();
-    }
-
-    private void SpawnLevel3(int aLevelStage)
-    { Lvl3Spawner.GetComponent<SpawnerScript>().StartSpawnCountdown(); }
+    private void SpawnLevel3()
+    { if (Lvl3Spawner != null) Lvl3Spawner.GetComponent<SpawnerScript>().StartSpawnCountdown(); }
 
     public void SpawnHealth()
     {

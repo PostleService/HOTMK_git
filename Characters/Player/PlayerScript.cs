@@ -515,13 +515,13 @@ public class PlayerScript : MonoBehaviour
         {
             // go through each lvl one by one
             int NewLevel = PlayerLevel + 1;
-            LevelUp(NewLevel, 0,0);
+            LevelUp(NewLevel, 0,0, null);
         }
     }
 
-    public void LevelUp(int aLevelStage, int aCurrentItems, int aDefaultItems)
+    public void LevelUp(int aLevelStage, int aCurrentItems, int aDefaultItems, Sprite aSprite)
     {
-        if (aLevelStage < 3 && AllowLevelUp)
+        if (AllowLevelUp && aLevelStage < 3 && aLevelStage > PlayerLevel)
         {
             PlayerLevel = aLevelStage;
             if (LevelUpObject != null) Instantiate(LevelUpObject, transform.position, new Quaternion(), gameObject.transform);

@@ -16,6 +16,7 @@ class EnemyAnimation_Boss : EnemyAnimation_Universal
         MonitorEnemyDirection();
         MonitorEnemyState();
         PassInformationToAnimator();
+        if (HasDesiredIdleDirection) AssumeDesiredIdleDirection();
     }
 
     public void ExecuteAnimationSpawnIn()

@@ -11,11 +11,16 @@ public class FogManager : MonoBehaviour
     private GameObject _lvl3;
     private GridLayout _gridLayout;
 
+    public bool DespawnFogOnLvl3Death = true;
+
     public Tilemap FogTilemap;
     public Tile[] TileArray;
     [Tooltip("For debugging preferrably. Otherwise - set reconceal tiles to false from start")]
     public bool SpawnFogFromStart = true;
+    [Tooltip("Reconceal tiles after player")]
     public bool ReconcealTiles = false;
+    [Tooltip("Boss will conceal tiles")]
+    public bool ConcealTiles = true;
     [Tooltip("At what distance player's entity removes fog")]
     public int DistanceFromPlayer;
     [Tooltip("At what distance lvl3's entity creates fog")]
@@ -177,8 +182,11 @@ public class FogManager : MonoBehaviour
         if (aGameObject == _lvl3 && vec2Int != _lvl3Position) 
         { 
             _lvl3Position = vec2Int;
-            Conceal();
-            CreateConcealEdges();
+            if (ConcealTiles == true)
+            {
+                Conceal();
+                CreateConcealEdges();
+            }
 
             if (_player != null)
             {
@@ -456,7 +464,7 @@ public class FogManager : MonoBehaviour
 
     public void DespawnAllFog(int aLevelStage, GameObject aEnemyObject)
     {
-        if (aLevelStage == 3)
+        if (aLevelStage == 3 && DespawnFogOnLvl3Death == true)
         {
             _lvl3 = null;
 

@@ -9,6 +9,7 @@ public class AnimationEndDetection_Boss : MonoBehaviour
     private Animator _thisObjectAnimator;
 
     public bool _tpOutPerformed = false;
+    public EnemyScript es;
 
     /// <summary>
     /// THIS SCRIPT WILL RELY ON DEFAULT ANIMATION STATE TRANSITIONING INTO A
@@ -27,11 +28,14 @@ public class AnimationEndDetection_Boss : MonoBehaviour
     {
         if (gameObject.GetComponent<Animator>() != null)
         { _thisObjectAnimator = gameObject.GetComponent<Animator>(); }
+        es = gameObject.GetComponent<EnemyScript>();
     }
 
     // Update is called once per frame
-    void FixedUpdate()
-    { CheckAnimationEnd(); }
+    void Update()
+    { 
+        CheckAnimationEnd(); 
+    }
 
     public void CheckAnimationEnd()
     {
@@ -43,14 +47,12 @@ public class AnimationEndDetection_Boss : MonoBehaviour
 
     public void OnAnimationFinishIn()
     {
-        EnemyScript es = gameObject.GetComponent<EnemyScript>();
         es.CurrentlyTeleporting = false;
         gameObject.GetComponent<BoxCollider2D>().enabled = true;
     }
 
     public void OnAnimationFinishOut()
     {
-        EnemyScript es = gameObject.GetComponent<EnemyScript>();
         es._agent.Warp(new Vector3(es.SpawnOutDestination.x, es.SpawnOutDestination.y, 0));
         if (es._currentTPVoidZone != null) es._currentTPVoidZone.GetComponent<TeleportVoidZone>().RequestDestruction();
         gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnIn();

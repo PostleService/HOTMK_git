@@ -17,11 +17,12 @@ public class UIManager : MonoBehaviour
     public List<GameObject> ItemPanel = new List<GameObject>();
 
     [Header("StageItems")]
-    [Tooltip("A visual representation of levelstage objective: enemy or item")]
-    public List<Sprite> LevelStageIcons = new List<Sprite>() { };
     [Tooltip("When item is picked up, it will 'pulse' to this scale and back to 1")]
     public float PulseObjectIconUntilScale = 0.75f;
     public float SpeedOfPulse = 1f;
+
+    [Tooltip("true - count from zero up. False count down to zero")]
+    public List<bool> LvlStageIncrementUp = new List<bool>() { true, false, false };
 
     [Header("Arrow Pointers")]
     public GameObject LevelStageEndPointer;
@@ -29,6 +30,8 @@ public class UIManager : MonoBehaviour
     public float ShowPointersAtPercentage = 0.2f;
     [Tooltip("Failsafe number of items/enemies in case percentage does not land on full value")]
     public int FailsafeObjectCount = 1;
+    public bool RegularLevelProgressionTracking = true;
+    public GameObject CurrentAreaProgressionMonitor;
     private bool _stagePointersSpawned = false;
 
     // THIS BIT IS FOR ITEM PULSING
@@ -43,6 +46,9 @@ public class UIManager : MonoBehaviour
         LevelManagerScript.OnObjectiveDecrement += InitiateLevelStageIconPulse;
         LevelManagerScript.OnObjectiveDecrement += DecrementItemsCount;
 
+        BossLevelArenaDecrementMonitor.OnPlayerCollision += UpdateItems;
+        BossLevelArenaDecrementMonitor.OnObjectiveDecrement += InitiateLevelStageIconPulse;
+        BossLevelArenaDecrementMonitor.OnObjectiveDecrement += DecrementItemsCount;
     }
 
     private void OnDisable()
@@ -60,15 +66,23 @@ public class UIManager : MonoBehaviour
         LevelManagerScript.OnLevelStageChange -= UpdateItems;
         LevelManagerScript.OnObjectiveDecrement -= InitiateLevelStageIconPulse;
         LevelManagerScript.OnObjectiveDecrement -= DecrementItemsCount;
+
+        BossLevelArenaDecrementMonitor.OnPlayerCollision -= UpdateItems;
+        BossLevelArenaDecrementMonitor.OnObjectiveDecrement -= InitiateLevelStageIconPulse;
+        BossLevelArenaDecrementMonitor.OnObjectiveDecrement -= DecrementItemsCount;
     }
 
     #region ITEMS
 
-    private void UpdateItems(int aLevelStage, int aCurrentItems, int aDefaultItems)
+    public void ShowHideItems(bool aBool)
+    { foreach (GameObject go in ItemPanel) { go.SetActive(aBool); } }
+
+    private void UpdateItems(int aLevelStage, int aCurrentItems, int aDefaultItems, Sprite aSprite)
     {
         _stagePointersSpawned = false;
         if (aLevelStage < 3)
         {
+            ShowHideItems(true);
             // Enable item counter and image of current objective at the start of the level
             foreach (GameObject go in ItemPanel) { go.SetActive(true); }
             
@@ -77,7 +91,7 @@ public class UIManager : MonoBehaviour
             TextMeshProUGUI outOfTxt = ItemPanel[0].GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI currTxt = ItemPanel[2].GetComponent<TextMeshProUGUI>();
             string currValue;
-            if (aLevelStage == 0) { currValue = (aDefaultItems - aCurrentItems).ToString(); }
+            if (LvlStageIncrementUp[aLevelStage] == true) { currValue = (aDefaultItems - aCurrentItems).ToString(); }
             else { currValue = aCurrentItems.ToString(); }
 
             outOfTxt.text = aDefaultItems.ToString();
@@ -86,7 +100,7 @@ public class UIManager : MonoBehaviour
             // initiate icon for current stage
             float iconScaleDownValue = 3;
 
-            ItemPanel[3].GetComponent<Image>().sprite = LevelStageIcons[aLevelStage];
+            ItemPanel[3].GetComponent<Image>().sprite = aSprite;
             RectTransform imageObjRT = ItemPanel[3].GetComponent<RectTransform>();
             Image imageObjImg = ItemPanel[3].GetComponent<Image>();
             Vector2 imageObjSize = new Vector2(imageObjImg.sprite.rect.width, imageObjImg.sprite.rect.height);
@@ -96,7 +110,7 @@ public class UIManager : MonoBehaviour
 
             LevelStagePointersDecision(aLevelStage, aCurrentItems, aDefaultItems);
         }
-        else { foreach (GameObject go in ItemPanel) { go.SetActive(false); } }
+        else ShowHideItems(false);
     }
 
     private void InitiateLevelStageIconPulse(int aLevelStage, int aCurrentItems, int aDefaultItems, int aLevelStageItem)
@@ -140,7 +154,11 @@ public class UIManager : MonoBehaviour
 
             TextMeshProUGUI currTxt = CounterElement.GetComponent<TextMeshProUGUI>();
             string currValue;
-            if (aLevelStage == 0) { currValue = (_lm.DefaultItemsCount[aLevelStage] - aCurrentItems).ToString(); }
+            if (LvlStageIncrementUp[aLevelStage] == true) 
+            {
+                currValue = (aDefaultItems - aCurrentItems).ToString(); 
+            }
+
             else { currValue = (aCurrentItems).ToString(); }
             
             currTxt.text = currValue;
@@ -179,16 +197,22 @@ public class UIManager : MonoBehaviour
 
     private void LevelStagePointersDecision(int aLevelStage, int aCurrentItemCount, int aDefaultItems)
     {
-        if ((aCurrentItemCount <= aDefaultItems * ShowPointersAtPercentage ||
-            aCurrentItemCount <= FailsafeObjectCount) && _stagePointersSpawned == false)
+        if ((aCurrentItemCount != 0 && (aCurrentItemCount <= aDefaultItems * ShowPointersAtPercentage ||
+            aCurrentItemCount <= FailsafeObjectCount) && _stagePointersSpawned == false))
         {
-            
             List<GameObject> goLis = new List<GameObject>();
+            if (RegularLevelProgressionTracking == true)
+            {
+                DarkObeliskScript[] goArr1 = GameObject.FindObjectsOfType<DarkObeliskScript>();
+                EnemyScript[] goArr2 = GameObject.FindObjectsOfType<EnemyScript>();
+                foreach (DarkObeliskScript doS in goArr1) { if (doS.ItemStageLevel == aLevelStage) goLis.Add(doS.gameObject); }
+                foreach (EnemyScript ES in goArr2) { if (ES.ItemStageLevel == aLevelStage) goLis.Add(ES.gameObject); }
 
-            DarkObeliskScript[] goArr1 = GameObject.FindObjectsOfType<DarkObeliskScript>();
-            EnemyScript[] goArr2 = GameObject.FindObjectsOfType<EnemyScript>();
-            foreach (DarkObeliskScript doS in goArr1) { if (doS.ItemStageLevel == aLevelStage) goLis.Add(doS.gameObject); }
-            foreach (EnemyScript ES in goArr2) { if (ES.ItemStageLevel == aLevelStage) goLis.Add(ES.gameObject); }
+            }
+            else if (RegularLevelProgressionTracking == false && CurrentAreaProgressionMonitor != null)
+            {
+                goLis = CurrentAreaProgressionMonitor.GetComponent<BossLevelArenaDecrementMonitor>().Items;
+            }
 
             foreach (GameObject go in goLis) 
             {

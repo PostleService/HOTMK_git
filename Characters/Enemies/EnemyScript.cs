@@ -38,7 +38,8 @@ public class EnemyScript : MonoBehaviour
     {
         Roamer,
         Rusher,
-        Thrower
+        Thrower,
+        Boss
     }
     public EnemyOfType EnemyType;
 
@@ -110,12 +111,15 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("Speed modifier when rushing (only rusher)")] public float SpeedModifier_Rush = 1.5f;
     [Tooltip("Speed modifier when slowed")] public float SpeedModifier_Slow = 0.33f;
     [Tooltip("Speed modifier when stunned")] public float SpeedModifier_Stun = 0f;
+    private float SpeedModifier_Teleporting = 0f;
 
     private float _currSpeed;
     private float _currSpeedModifier_Flee = 1;
     private float _currSpeedModifier_Rush = 1;
     private float _currSpeedModifier_Slow = 1;
     private float _currSpeedModifier_Stun = 1;
+    
+    private float _currSpeedModifier_Teleporting = 1;
 
     [Header("Boss behaviour")]
     public GameObject TeleportVoidZone;
@@ -197,6 +201,8 @@ public class EnemyScript : MonoBehaviour
     public delegate void PositionTracker (GameObject aGameObject, Vector2 aPosition);
     public static event PositionTracker OnPositionChange;
 
+    private bool _diedOnce = false;
+
     private void OnEnable()
     { 
         PlayerScript.OnSpawn += AssignPlayer;
@@ -266,11 +272,9 @@ public class EnemyScript : MonoBehaviour
     }
 
     #region START FUNCTIONS
-    private void AssignPlayer(GameObject aGameObject)
-    { _player = aGameObject; }
+    private void AssignPlayer(GameObject aGameObject) { _player = aGameObject; }
 
-    private void ReactToPlayerDeath()
-    { _isRushing = false; }
+    private void ReactToPlayerDeath() { _isRushing = false; }
 
     // In order to use layermask, its decimal representation needs to be converted to binary for Unity to read
     public void PathfindingLayersConversion()
@@ -326,14 +330,15 @@ public class EnemyScript : MonoBehaviour
         else _currSpeedModifier_Slow = 1;
         if (Stunned) _currSpeedModifier_Stun = SpeedModifier_Stun;
         else _currSpeedModifier_Stun = 1;
+        if (CurrentlyTeleporting) _currSpeedModifier_Teleporting = SpeedModifier_Teleporting;
+        else _currSpeedModifier_Teleporting = 1;
 
-        _currSpeed = DefaultSpeed * _currSpeedModifier_Flee * _currSpeedModifier_Rush * _currSpeedModifier_Slow * _currSpeedModifier_Stun;
+        _currSpeed = DefaultSpeed * _currSpeedModifier_Flee * _currSpeedModifier_Rush * _currSpeedModifier_Slow * _currSpeedModifier_Stun * _currSpeedModifier_Teleporting;
         return _currSpeed;
     }
 
     public void FollowTarget()
     {
-
         if (CurrentlyAggroed)
         {
             if (!IsAfraid)
@@ -342,25 +347,14 @@ public class EnemyScript : MonoBehaviour
                 if (EnemyLevel == 1) 
                 { _agent.areaMask = _areaDict["Walkable"];}
                 
-                if (EnemyLevel == 2 && (EnemyType == EnemyOfType.Roamer || EnemyType == EnemyOfType.Thrower))
+                if (EnemyLevel == 2 && EnemyType == EnemyOfType.Roamer)
                 { _agent.areaMask = _areaDict["Walkable"] + _areaDict["WalkableWhenAngry"]; }
-                if (EnemyLevel == 2 && (EnemyType == EnemyOfType.Rusher))
-                { _agent.areaMask = _areaDict["Walkable"] + _areaDict["WalkableWhenAngry"] + _areaDict["OnlyRusherAndLvl3"]; }
-
-                if (EnemyLevel == 3)
+                if (EnemyLevel == 3 || (EnemyType == EnemyOfType.Rusher))
                 { _agent.areaMask = _areaDict["Walkable"] + _areaDict["WalkableWhenAngry"] + _areaDict["OnlyRusherAndLvl3"]; }
 
                 // NavMesh agent targets
                 if (EnemyType == EnemyOfType.Roamer)
-                {
-                    if (EnemyLevel != 3) { if (_player != null) { CurrentTarget = _player.transform; } }
-                    // boss should stand still while teleporting
-                    else
-                    {
-                        if (CurrentlyTeleporting) { CurrentTarget = gameObject.transform; }
-                        else { if (_player != null) { CurrentTarget = _player.transform; } }
-                    }
-                } // walks to player
+                { if (_player != null) { CurrentTarget = _player.transform; } }
 
                 else if (EnemyType == EnemyOfType.Rusher)
                 { if (_currentRushTarget != null) { CurrentTarget = _currentRushTarget; } } // rushes to rushpoint
@@ -470,7 +464,6 @@ public class EnemyScript : MonoBehaviour
 
         if (CanAggrDeaggr)
         {
-            
             if (_player == null) { Deaggro(); }
 
             else if (!CurrentlyAggroed)
@@ -480,9 +473,7 @@ public class EnemyScript : MonoBehaviour
                     if (EnemyType == EnemyOfType.Roamer)
                     {
                         if (RayCast().Item1 && _fogManager._playerInsideFog != true)
-                        {
-                            CommonAggroSettings();
-                        }
+                        { CommonAggroSettings(); }
                     }
 
                     else if (EnemyType == EnemyOfType.Rusher)
@@ -807,24 +798,28 @@ public class EnemyScript : MonoBehaviour
 
     public void Die(bool noCorpse) 
     {
-        // destroy all elements
-        if (_currentFleeSpot != null) Destroy(_currentFleeSpot);
-        if (_currentRushTarget != null) Destroy(_currentRushTarget.gameObject);
-        if (_currentTPVoidZone != null) Destroy(_currentTPVoidZone);
+        if (_diedOnce == false)
+        {
+            // destroy all elements
+            if (_currentFleeSpot != null) Destroy(_currentFleeSpot);
+            if (_currentRushTarget != null) Destroy(_currentRushTarget.gameObject);
+            if (_currentTPVoidZone != null) Destroy(_currentTPVoidZone);
 
-        List<SoundBiteInstance> sbis = new List<SoundBiteInstance>();
-        foreach (Transform chtr in transform)
-        { if (chtr.GetComponent<SoundBiteInstance>() != null) chtr.GetComponent<SoundBiteInstance>().StopImmediately(); }
+            List<SoundBiteInstance> sbis = new List<SoundBiteInstance>();
+            foreach (Transform chtr in transform)
+            { if (chtr.GetComponent<SoundBiteInstance>() != null) chtr.GetComponent<SoundBiteInstance>().StopImmediately(); }
 
-        Destroy(this.gameObject);
-        
+            Destroy(this.gameObject);
 
-        // instantiate elements
-        if (DeathObject != null && noCorpse == false) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
-        else if (DeathObjectNoCorpse != null && noCorpse == true) { Instantiate(DeathObjectNoCorpse, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
 
-        // invoke events
-        OnDie?.Invoke(ItemStageLevel, this.gameObject);
+            // instantiate elements
+            if (DeathObject != null && noCorpse == false) { Instantiate(DeathObject, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
+            else if (DeathObjectNoCorpse != null && noCorpse == true) { Instantiate(DeathObjectNoCorpse, transform.position, Quaternion.identity, GameObject.Find("EnemyCorpseHolder").transform); }
+
+            // invoke events
+            OnDie?.Invoke(ItemStageLevel, this.gameObject);
+            _diedOnce = true;
+        }
     }
 
     public void Stun(float aLength)
