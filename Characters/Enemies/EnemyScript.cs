@@ -49,12 +49,16 @@ public class EnemyScript : MonoBehaviour
     public float NeutralIntensity = 1.35f;
     public float AggroNonFearIntensity = 1.5f;
 
-    [Header("Enemy Behaviour")]
+    [Header("Universal Enemy Behaviour")]
     [Tooltip("This point will autocorrect to within bounds even if accidentally assigned to a point not contained within NavMesh")]
     public GameObject NavMeshBoundPoint;
     [Tooltip("If true - will consider raycast and aggro range. Otherwise - if not by default aggroed - patrolling, if aggroed - always chasing")]
     public bool CanAggrDeaggr = true;
     public bool CanBeScared = true;
+    public bool HasMinimalAggroTime = false;
+    public float DefaultMinimalAggroTimer = 1.5f;
+    private float _currentMinimalAggroTimer;
+
     [Tooltip("Distance at which the enemy will notice player with raycast. In alternative aggro - raw distance to aggro")]
     public float RayCastDistance;
     private float _raycastModifier = 0f; // for when enemy is stunned
@@ -62,8 +66,7 @@ public class EnemyScript : MonoBehaviour
     public bool IgnoreSeethroughAggro = true;
     [Tooltip("If set to false - enemy will not aggro through fog")]
     public bool IgnoreFogAggro = true;
-    public bool DebugRaycast = false;
-    public bool DebugPath = false;
+
     public bool CurrentlyAggroed = false;
     private bool _currentlyAggroed
     {
@@ -114,11 +117,8 @@ public class EnemyScript : MonoBehaviour
     private float SpeedModifier_Teleporting = 0f;
 
     private float _currSpeed;
-    private float _currSpeedModifier_Flee = 1;
-    private float _currSpeedModifier_Rush = 1;
-    private float _currSpeedModifier_Slow = 1;
-    private float _currSpeedModifier_Stun = 1;
-    
+    private float _currSpeedModifier_Flee = 1; private float _currSpeedModifier_Rush = 1;
+    private float _currSpeedModifier_Slow = 1; private float _currSpeedModifier_Stun = 1;
     private float _currSpeedModifier_Teleporting = 1;
 
     [Header("Boss behaviour")]
@@ -203,6 +203,10 @@ public class EnemyScript : MonoBehaviour
 
     private bool _diedOnce = false;
 
+    [Header("Debug")]
+    public bool DebugRaycast = false;
+    public bool DebugPath = false;
+
     private void OnEnable()
     { 
         PlayerScript.OnSpawn += AssignPlayer;
@@ -218,6 +222,8 @@ public class EnemyScript : MonoBehaviour
     void Start()
     {
         AdaptLightingToState(false, false);
+
+        ResetMinimalAggroCooldown();
         ResetRushCooldown();
         ResetThrowCooldownPrepped();
         ResetTeleportCountDown();
@@ -250,6 +256,7 @@ public class EnemyScript : MonoBehaviour
         FollowTarget();
         AssessTeleportDistance();
 
+        MinimalAggroTimerDecrement();
         StunTimerDecrement();
         SlowTimerDecrement();
         TeleportDecrement();
@@ -449,6 +456,7 @@ public class EnemyScript : MonoBehaviour
         ResetThrowCooldownPrepped();
 
         _currentlyAggroed = false;
+        if (EnemyType == EnemyOfType.Roamer) ResetMinimalAggroCooldown();
         if (!IsAfraid) gameObject.GetComponent<Light2D>().lightOrder = 4;
     }
 
@@ -509,7 +517,10 @@ public class EnemyScript : MonoBehaviour
                     if (EnemyType == EnemyOfType.Roamer)
                     {
                         if (_remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
-                        { Deaggro(); }
+                        {
+                            if (HasMinimalAggroTime == false) Deaggro();
+                            else if (HasMinimalAggroTime == true && _currentMinimalAggroTimer <= 0) Deaggro();
+                        }
                     }
                     else if (EnemyType == EnemyOfType.Rusher)
                     {
@@ -947,6 +958,13 @@ public class EnemyScript : MonoBehaviour
     #endregion // ON CALL BEHAVIOURS
 
     #region TIMER DECREMENTS
+
+    public void MinimalAggroTimerDecrement()
+    {
+        if (HasMinimalAggroTime && CurrentlyAggroed == true && IsAfraid == false)
+            if (_currentMinimalAggroTimer >= 0) { _currentMinimalAggroTimer -= Time.deltaTime; }
+    }
+
     public void StunTimerDecrement()
     { 
         if (Stunned) 
@@ -1000,6 +1018,12 @@ public class EnemyScript : MonoBehaviour
     #region TIMER RESETS
     public void ResetStunTimer(float aLength) { _currentStunTimer = aLength; }
     public void ResetSlowTimer(float aLength) { _currentSlowTimer = aLength; }
+
+    public void ResetMinimalAggroCooldown()
+    {
+        if (EnemyType == EnemyOfType.Roamer)
+        { _currentMinimalAggroTimer = DefaultMinimalAggroTimer; }
+    }
 
     public void ResetRushCooldown()
     {

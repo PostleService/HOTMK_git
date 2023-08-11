@@ -37,7 +37,7 @@ public class TrapScript : MonoBehaviour
         if (collision.name.StartsWith("PotionOfHealth"))
         { collision.gameObject.GetComponent<HealthPickupScript>().DestroyItem();}
 
-        if (collision.tag == "Enemy")
+        if (collision.tag == "Enemy" && collision.GetComponent<EnemyScript>() != null)
         {
             EnemyScript es = collision.gameObject.GetComponent<EnemyScript>();
 

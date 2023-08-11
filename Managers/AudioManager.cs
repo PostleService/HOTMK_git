@@ -52,7 +52,6 @@ public class AudioManager : MonoBehaviour
 
     public void ReactToLvlChange(int aLevelStage, int aCurrentItems, int aDefaultItems, Sprite aSprite) 
     {
-        UnityEngine.Debug.LogWarning("Changed");
         LevelStageValue = aLevelStage;
         _levelStageChanged = true; 
         _instantCheck = false; 
