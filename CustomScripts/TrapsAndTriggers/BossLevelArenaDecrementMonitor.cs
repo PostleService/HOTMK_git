@@ -7,19 +7,25 @@ public class BossLevelArenaDecrementMonitor : MonoBehaviour
 {
     private bool _triggered = false;
     private UIManager _uiManager;
-    
+
+    [Header("Item details")]    
     public List<GameObject> Items = new List<GameObject>() { };
 
     [Tooltip("A number of items of each level the game will attempt to spawn")]
-    public int DefaultItemsCount;
-    public int _currentItemsCount;
+    private int DefaultItemsCount;
+    private int _currentItemsCount;
     public int LevelStage = 2;
-
-    public float ShowPointersAtPercentage = 0.2f;
-    public int FailsafeObjectCount = 1;
 
     [Tooltip("A visual representation of objectives in this area")]
     public Sprite Icon;
+
+    [Header("Progression arrows")]
+    public float ShowPointersAtPercentage = 0.2f;
+    public int FailsafeObjectCount = 1;
+
+    [Header("Counters")]
+    public int KillBossAtItemAmount = 0;
+    public int HideCounterAt = 0;
 
     public delegate void MyHandler(int aLevelStage, int aCurrentItems, int aDefaultItems, Sprite aSprite);
     public static event MyHandler OnPlayerCollision;
@@ -64,13 +70,15 @@ public class BossLevelArenaDecrementMonitor : MonoBehaviour
 
     private void MonitorItems()
     {
-        if (_triggered == true && _currentItemsCount <= 0)
-        { 
+        if (_triggered == true && _currentItemsCount <= KillBossAtItemAmount)
+        { OnDestroy?.Invoke(this.gameObject); }
+        if (_triggered == true && _currentItemsCount <= HideCounterAt)
+        {
             _uiManager.ShowHideItems(false);
             Destroy(this.gameObject);
             OnDestroy?.Invoke(this.gameObject);
         }
-        
+
     }
 
     private void ReactToDeath(int aInt, GameObject aGameObject)
