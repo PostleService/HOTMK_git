@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-class AnimationEndDetection_CollapsableCeiling : AnimationEndDetection
+class AnimationEndDetection_PathblockingTrap : AnimationEndDetection
 {
     public GameObject CollapsableObstacle;
 

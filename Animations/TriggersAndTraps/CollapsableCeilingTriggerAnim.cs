@@ -6,7 +6,7 @@ public class CollapsableCeilingTriggerAnim : MonoBehaviour
 {
     private bool _hasTriggered = false;
     private Animator _animator;
-    public TrapTriggerScript ParentTrapScript;
+    public PathblockingTrapTrigger ParentTrapScript;
 
     private void FixedUpdate()
     {
