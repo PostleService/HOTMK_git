@@ -181,6 +181,14 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    private void UpdateAnimatorHandlerValues(float aPlayerSpeed, float aHorizontalDirection = 0, float aVerticalDirection = 0)
+    {
+        _animator.SetFloat("Horizontal", aHorizontalDirection);
+        _animator.SetFloat("Vertical", aVerticalDirection);
+        _animator.SetFloat("Speed", aPlayerSpeed);
+        _animator.speed = _currentDamageAcceleration * _currentStunSpeedModifier * _currentSlowedSpeedModifier; // update animation speed based on status effects
+    }
+
     private void ProcessInput()
     {
         bool UpArrowPressed = false;
@@ -255,14 +263,6 @@ public class PlayerScript : MonoBehaviour
         else yInput = 0;
 
         #endregion UnifiedInput
-
-        void UpdateAnimatorHandlerValues(float aPlayerSpeed, float aHorizontalDirection = 0, float aVerticalDirection = 0)
-        {
-            _animator.SetFloat("Horizontal", aHorizontalDirection);
-            _animator.SetFloat("Vertical", aVerticalDirection);
-            _animator.SetFloat("Speed", aPlayerSpeed);
-            _animator.speed = _currentDamageAcceleration * _currentStunSpeedModifier * _currentSlowedSpeedModifier; // update animation speed based on status effects
-        }
 
         if (Vector3.Distance(transform.position, _movementPoint.transform.position) <= MovementSwitchFlipDistance)
         {
@@ -454,6 +454,7 @@ public class PlayerScript : MonoBehaviour
             movementInitiated = true;
 
             if (aFromPlayer) { _lastMovementDirection = movementDirectionV3; }
+            else { UpdateAnimatorHandlerValues(1, xinp, yinp); }
         }
         else { _lastMovementDirection = Vector2.zero; }
     }

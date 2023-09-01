@@ -76,7 +76,7 @@ public class SoundBiteInstance : MonoBehaviour
 
     public void OnEventInstCreation()
     {
-        evInst.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(callingGO));
+        evInst.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(callingGO.transform));
 
         FMOD.Studio.EventDescription evDescr;
         evInst.getDescription(out evDescr);

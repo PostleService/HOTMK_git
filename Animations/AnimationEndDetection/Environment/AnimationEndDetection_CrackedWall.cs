@@ -4,6 +4,7 @@ using UnityEngine;
 
 class AnimationEndDetection_CrackedWall : AnimationEndDetection
 {
+    public bool Main = false;
 
     public override void OnAnimationFinish()
     {

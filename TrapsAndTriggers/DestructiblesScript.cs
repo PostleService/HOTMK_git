@@ -29,15 +29,30 @@ public class DestructiblesScript : MonoBehaviour
     {
         // Spawn destruction animation, add a tilechanger script with the exact same settings to not have to make destruction prefabs
         GameObject destructPrefab = Instantiate(DestructionPrefab1, new Vector3(transform.position.x, transform.position.y, 0), new Quaternion(), GameObject.Find("DestructiblesHolder").transform);
-        destructPrefab.GetComponent<DestructibleWallAnimationEffectSpawner>().EnemyCausingDestruction = aGameObject;
-        if (DestructionPrefab2 != null)
-        { Instantiate(DestructionPrefab2, new Vector3(transform.position.x, transform.position.y+1, 0), new Quaternion(), GameObject.Find("DestructiblesHolder").transform); }
         
-        TileChangerScript tchScrTo = destructPrefab.AddComponent<TileChangerScript>();
-        TileChangerScript tchScrFr = this.gameObject.GetComponent<TileChangerScript>();
-        for (int i = 0; i < tchScrTo.TilesToSpawn.Length; i++)
-        { tchScrTo.TilesToSpawn[i] = tchScrFr.TilesToSpawn[i]; }
-        tchScrTo.NameOfTilemap = tchScrFr.NameOfTilemap;
+        List<Transform> trlis = new List<Transform>();
+        trlis.Add(destructPrefab.transform);
+        foreach (Transform chtr in destructPrefab.transform) { trlis.Add(chtr); }
+
+        foreach (Transform tr in trlis)
+        {
+            if (tr.gameObject.GetComponent<DestructibleWallAnimationEffectSpawner>() != null)
+            {
+                DestructibleWallAnimationEffectSpawner dwaes = tr.gameObject.GetComponent<DestructibleWallAnimationEffectSpawner>();
+                dwaes.EnemyCausingDestruction = aGameObject;
+            }
+            if (tr.gameObject.GetComponent<AnimationEndDetection_CrackedWall>() != null)
+            {
+                if (tr.gameObject.GetComponent<AnimationEndDetection_CrackedWall>().Main == true)
+                {
+                    TileChangerScript tchScrTo = tr.gameObject.AddComponent<TileChangerScript>();
+                    TileChangerScript tchScrFr = this.gameObject.GetComponent<TileChangerScript>();
+                    for (int i = 0; i < tchScrTo.TilesToSpawn.Length; i++)
+                    { tchScrTo.TilesToSpawn[i] = tchScrFr.TilesToSpawn[i]; }
+                    tchScrTo.NameOfTilemap = tchScrFr.NameOfTilemap;
+                }
+            }
+        }
 
         // destroy and rebuild navmesh
         Destroy(this.gameObject);
