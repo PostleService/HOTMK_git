@@ -81,6 +81,7 @@ public class PlayerScript : MonoBehaviour
     public float DegreeOfSpread = 2f;
 
     private Animator _animator;
+    private StatusEffectScript _statusEffect;
 
     public delegate void MyHandler (int aCurrentHealth, int aMaxHealth, string aUpdateState);
     public static event MyHandler OnHealthUpdate;
@@ -131,6 +132,8 @@ public class PlayerScript : MonoBehaviour
 
     private void Start()
     {
+        _statusEffect = GetComponentInChildren<StatusEffectScript>();
+
         OnSpawn?.Invoke(this.gameObject); // tell all related managers that player has spawned
         OnPositionChange?.Invoke(this.gameObject, transform.position);
 
@@ -504,10 +507,24 @@ public class PlayerScript : MonoBehaviour
     }
 
     public void Slow(float aLength)
-    { if (!Slowed) { Slowed = true; ResetSlowTimer(aLength); } }
+    { 
+        if (!Slowed) 
+        { 
+            Slowed = true;
+            _statusEffect.SetSlowed();
+            ResetSlowTimer(aLength);
+        } 
+    }
 
     public void Stun(float aLength)
-    { if (!Stunned) { Stunned = true; ResetStunTimer(aLength); } }
+    { 
+        if (!Stunned) 
+        { 
+            Stunned = true;
+            _statusEffect.SetStunned();
+            ResetStunTimer(aLength); 
+        } 
+    }
 
     public void SyncronizeLevelUps(int aLevelStage)
     {
@@ -637,7 +654,14 @@ public class PlayerScript : MonoBehaviour
         if (Stunned)
         {
             if (_currentStunTimer >= 0) { _currentStunTimer -= Time.deltaTime; }
-            else { Stunned = false; xInput = 0; yInput = 0; _lastMovementDirection = Vector2.zero; _justLeftStun = true; }
+            else 
+            { 
+                Stunned = false;
+                if (Slowed == true)
+                { _statusEffect.SetSlowed(); }
+                else _statusEffect.RemoveStatusEffect();
+                xInput = 0; yInput = 0; _lastMovementDirection = Vector2.zero; _justLeftStun = true; 
+            }
         }
     }
 
@@ -646,7 +670,11 @@ public class PlayerScript : MonoBehaviour
         if (Slowed)
         {
             if (_currentSlowTimer >= 0) { _currentSlowTimer -= Time.deltaTime; }
-            else { Slowed = false; }
+            else 
+            { 
+                Slowed = false;
+                _statusEffect.RemoveStatusEffect();
+            }
         }
     }
 

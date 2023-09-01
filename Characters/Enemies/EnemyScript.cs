@@ -191,6 +191,8 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("In case we ever wanted to change how much damage an enemy deals on contact")]
     public int DamagePerHit = 1;
 
+    private StatusEffectScript _statusEffect;
+
     [Header("Victory")]
     public GameObject DeathObject;
     public GameObject DeathObjectNoCorpse;
@@ -221,6 +223,7 @@ public class EnemyScript : MonoBehaviour
 
     void Start()
     {
+        _statusEffect = GetComponentInChildren<StatusEffectScript>();
         AdaptLightingToState(false, false);
 
         ResetMinimalAggroCooldown();
@@ -840,6 +843,7 @@ public class EnemyScript : MonoBehaviour
             ResetStunTimer(aLength);
 
             Stunned = true;
+            _statusEffect.SetStunned();
             gameObject.GetComponent<EnemySoundScript>().PlayDamagedSound();
         } 
     }
@@ -853,6 +857,7 @@ public class EnemyScript : MonoBehaviour
             {
                 ResetSlowTimer(aLength);
                 Slowed = true;
+                _statusEffect.SetSlowed();
                 if (gameObject.GetComponent<EnemySoundScript>() != null) gameObject.GetComponent<EnemySoundScript>().PlayDamagedSound();
             } 
         }
@@ -970,7 +975,13 @@ public class EnemyScript : MonoBehaviour
         if (Stunned) 
         {
             if (_currentStunTimer >= 0) { _currentStunTimer -= Time.deltaTime; }
-            else Stunned = false;
+            else 
+            { 
+                Stunned = false;
+                if (Slowed == true) { _statusEffect.SetSlowed(); }
+                else _statusEffect.RemoveStatusEffect();
+            }
+            
         }
     }
 
@@ -978,8 +989,12 @@ public class EnemyScript : MonoBehaviour
     {
         if (Slowed)
         {
-            if (_currentSlowTimer >= 0) { _currentSlowTimer -= Time.deltaTime;}
-            else Slowed = false;
+            if (_currentSlowTimer >= 0) { _currentSlowTimer -= Time.deltaTime; }
+            else
+            { 
+                Slowed = false;
+                _statusEffect.RemoveStatusEffect();
+            }
         }
     }
 
