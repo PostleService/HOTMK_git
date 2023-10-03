@@ -43,8 +43,8 @@ public class FogManager : MonoBehaviour
     [HideInInspector] public List<GameObject> ListOfDeconcealingObjects = new List<GameObject>();
 
     // These structs monitor player and lvl3 positions
-    private Vector2Int _playerPosition = Vector2Int.zero;
-    private Vector2Int _lvl3Position = Vector2Int.zero;
+    private Vector2Int _playerPosition = new Vector2Int(-20000, -20000);
+    private Vector2Int _lvl3Position = new Vector2Int(-20000, -20000);
 
 
     private void OnEnable()

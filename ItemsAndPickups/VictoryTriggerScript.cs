@@ -11,6 +11,7 @@ public class VictoryTriggerScript : MonoBehaviour
     public float DistanceOutOfNavMesh = 5f;
 
     public GameObject PlayerDespawnAnimation;
+    private int _maximumLevel;
 
     private void Start()
     {
@@ -21,6 +22,8 @@ public class VictoryTriggerScript : MonoBehaviour
         NavMeshAgent _agent = gameObject.GetComponent<NavMeshAgent>();
         _agent.updateRotation = false;
         _agent.updateUpAxis = false;
+
+        _maximumLevel = GameObject.Find("GameManager").GetComponent<GameManager>().GetMaximumLevel();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -28,10 +31,10 @@ public class VictoryTriggerScript : MonoBehaviour
         if (collision.name == "Player")
         {
             // change it back when more levels are ready
-            if (SceneManager.GetActiveScene().buildIndex < 4)
+            if (SceneManager.GetActiveScene().buildIndex < _maximumLevel)
             { _nextSceneToUnlock = (SceneManager.GetActiveScene().buildIndex + 1); }
-            else if (SceneManager.GetActiveScene().buildIndex >= 4)
-            { _nextSceneToUnlock = 4; }
+            else if (SceneManager.GetActiveScene().buildIndex >= _maximumLevel)
+            { _nextSceneToUnlock = _maximumLevel; }
 
             // substitute mm part with subscription when win conditions are assigned to a player despawn animation object
             MenuManagerScript mm = GameObject.Find("MenuManager").GetComponent<MenuManagerScript>();

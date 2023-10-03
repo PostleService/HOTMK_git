@@ -133,7 +133,8 @@ public class MenuManagerScript : MonoBehaviour
     public delegate void SFXStopper(bool aBool);
     public static event SFXStopper OnMenuOpen;
     public static event Action OnUntoggleTutorials;
-    
+
+    private int _maximumLevel;
 
     private void OnEnable()
     { 
@@ -160,6 +161,8 @@ public class MenuManagerScript : MonoBehaviour
 
     private void Start()
     {
+        _maximumLevel = GameObject.Find("GameManager").GetComponent<GameManager>().GetMaximumLevel();
+
         Cursor.SetCursor(CursorSkin, Vector2.zero, CursorMode.Auto);
         if (ConcealCursorInGame) CursorVisibility(false);
 
@@ -470,7 +473,7 @@ public class MenuManagerScript : MonoBehaviour
     {
         // change back to if (SceneManager.GetActiveScene().buildIndex < LevelProgress.Count) after more levels are ready
         // if the level is last level, quit to main menu
-        if (SceneManager.GetActiveScene().buildIndex < 4)
+        if (SceneManager.GetActiveScene().buildIndex < _maximumLevel)
         {
             UnsubscribeAll();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
@@ -478,7 +481,7 @@ public class MenuManagerScript : MonoBehaviour
         else
         {
             UnsubscribeAll();
-            SceneManager.LoadScene(5); 
+            SceneManager.LoadScene(_maximumLevel+1); 
         }
     }
 
@@ -1058,7 +1061,7 @@ public class MenuManagerScript : MonoBehaviour
     public void LoadCreditsScene()
     {
         UnsubscribeAll();
-        SceneManager.LoadScene(4); 
+        SceneManager.LoadScene(_maximumLevel+1); 
     }
 
     // QUIT TO OS

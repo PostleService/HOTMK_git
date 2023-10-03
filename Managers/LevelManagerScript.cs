@@ -131,12 +131,12 @@ public class LevelManagerScript : MonoBehaviour
     public void RequestUIItemUpdate(int aLvlStage, int aCurrItms, int aDefItms, Sprite aSprite)
     { OnLevelStageChange?.Invoke(aLvlStage, aCurrItms, aDefItms, aSprite); }
 
-    private void RaiseLevelStage(GameObject aGo)
+    public void RaiseLevelStage(GameObject aGo)
     { 
         LevelStage += 1;
         // if not boss level, provide item count and icons based on level stage values
         if (RegularLevelProgressionTracking == true) RequestUIItemUpdate(LevelStage, _currentItemsCount[LevelStage], DefaultItemsCount[LevelStage], LevelStageIcons[LevelStage]);
-        else { GameObject.Find("AudioManager").GetComponent<AudioManager>().ReactToLvlChange(LevelStage, 0, 0, null); }
+        // else { GameObject.Find("AudioManager").GetComponent<AudioManager>().ReactToLvlChange(LevelStage, 0, 0, null); }
     }
 
     public void StopConcealingEnemies() { _playerCanSeeThroughWalls = true; }

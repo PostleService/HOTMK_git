@@ -23,7 +23,13 @@ class AnimationEndDetection_PathblockingTrap : AnimationEndDetection
                 ts.TeleportBossToCustom = TeleportBossToCustom;
                 ts.CustomTeleportDestination = CustomTeleportDestination;
             }
-            
+            if (trap.GetComponent<AnimationEndDetection_PathblockingTrap>() != null)
+            {
+                AnimationEndDetection_PathblockingTrap ts = trap.GetComponent<AnimationEndDetection_PathblockingTrap>();
+                ts.TeleportBossToCustom = TeleportBossToCustom;
+                ts.CustomTeleportDestination = CustomTeleportDestination;
+            }
+
         }
 
         if (DestroyParent == true) Destroy(gameObject.transform.parent.gameObject);

@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    private int MaximumLevel = 4;
     private int _lastSceneIndex = 0;
     public int _deathCounter = 0;
 
@@ -91,4 +92,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateCounter(int aSceneIndex)
     { _deathCounter += 1; }
+
+    public int GetMaximumLevel()
+    { return MaximumLevel; }
 }

@@ -27,7 +27,10 @@ public class SpawnerScript : MonoBehaviour
     public bool CurrentlyAggroed = true;
     public bool CustomPatrol = false;
     public EnemyScript.PatrolPathVector[] PatrolPath = new EnemyScript.PatrolPathVector[] { };
-    
+
+    public bool BroadcastBossSpawn = false;
+    public delegate void MyHandler(GameObject aBossGO);
+    public static event MyHandler OnBossSpawn;
 
     private void Start()
     { _delayDecremented = Delay; }
@@ -71,7 +74,9 @@ public class SpawnerScript : MonoBehaviour
                 go.name = ObjectToSpawn.name;
                 
                 _instantiated = true;
+                if (BroadcastBossSpawn) { OnBossSpawn?.Invoke(go); }
                 if (DestroyAfterSpawn) { Destroy(gameObject); }
+                
             }
             // otherwise, if a player - just instantiate with spawner position
             else if (EnemyOrPlayer == EnemyVsPlayer.Player)

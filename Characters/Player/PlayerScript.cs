@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using FMODUnity;
 
 public class PlayerScript : MonoBehaviour
 {
@@ -139,7 +140,7 @@ public class PlayerScript : MonoBehaviour
 
         CurrentLives = MaxPlayerLives;
         OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartSpawn");
-        
+
         GameObject.Find("PlayerCamera").transform.SetParent(gameObject.transform);
         _animator = gameObject.GetComponent<Animator>();
 
