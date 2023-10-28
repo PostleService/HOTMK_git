@@ -413,7 +413,7 @@ public class EnemyScript : MonoBehaviour
  
     public void RayCast()
     {
-        if (CanAggrDeaggr && !CurrentlyAggroed)
+        if (CanAggrDeaggr)
         {
             RaycastHit2D colliderHit;
             List<string> colliderHitList = new List<string>();
@@ -435,7 +435,11 @@ public class EnemyScript : MonoBehaviour
                 foreach (string col in colliderHitList)
                 {
                     if (col == "Player")
-                    { _playerSighted = true; }
+                    {
+                        _playerSighted = true;
+                        break;
+                    }
+                    else _playerSighted = false;
                 }
             }
         }
