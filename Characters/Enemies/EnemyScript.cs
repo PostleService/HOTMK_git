@@ -107,8 +107,11 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("Measures distance in units on the navmesh rather than straight line")]
     public float DistanceToDeaggro;
     
-    [Tooltip("Layers which will stop rushing behaviour and item spawn")]
-    public LayerMask Layers;
+    [Header("LayerMasks")]
+    [Tooltip("Layers which will stop rushing behaviour")]
+    public LayerMask RushPointLayers;
+    private LayerMask _raycastLayers;
+    private LayerMask _rushSightLayers;
 
     [Header("Speed")]
     [Tooltip("Speed with no modifiers applied")] public float DefaultSpeed = 3;
@@ -238,7 +241,9 @@ public class EnemyScript : MonoBehaviour
         BecomeAgentAndSpawn();
         PathfindingLayersConversion();
         DropStartingPatrolPoints();
-        
+
+        RaycastLayerMaskCreation();
+
         _currentEscapeAttempt = 1;
         _currentPatrolTarget = _patrolTransforms[_currentPatrolPoint];
         SpawnOutDestination = SpawnPosition;
@@ -259,8 +264,8 @@ public class EnemyScript : MonoBehaviour
         AggroAndFlee();
         Patrol();
         Flee();
-        FollowTarget();
         AssessTeleportDistance();
+        FollowTarget();
 
         MinimalAggroTimerDecrement();
         StunTimerDecrement();
@@ -285,7 +290,14 @@ public class EnemyScript : MonoBehaviour
     #region START FUNCTIONS
     private void AssignPlayer(GameObject aGameObject) { _player = aGameObject; }
 
+    public void RaycastLayerMaskCreation()
+    {
+        _raycastLayers = ((1 << 6) | (1 << 8) | (1 << 10));
+        if (IgnoreSeethroughAggro) _raycastLayers = _raycastLayers | (1 << 13);
+        if (IgnoreFogAggro) _raycastLayers = _raycastLayers | (1 << 15);
 
+        _rushSightLayers = ((1 << 6) | (1 << 11) | (1 << 13));
+    }
 
     // In order to use layermask, its decimal representation needs to be converted to binary for Unity to read
     public void PathfindingLayersConversion()
@@ -404,7 +416,6 @@ public class EnemyScript : MonoBehaviour
         if (CanAggrDeaggr && !CurrentlyAggroed)
         {
             RaycastHit2D colliderHit;
-            LayerMask layerMask;
             List<string> colliderHitList = new List<string>();
             List<Vector2> vectorList = new List<Vector2> { new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, 0), new Vector2(-1, 0) };
 
@@ -413,17 +424,7 @@ public class EnemyScript : MonoBehaviour
                 if (DebugRaycast == true)
                 { Debug.DrawRay(transform.position, (vector * RayCastDistance * _raycastModifier), Color.red); }
 
-                // for some reason feeding the usual bitwise representation doesn't work for this motherfucker
-                // so shifting bits manually. the right side is the number of the layer if we need to add more
-                // the | is a bitwise addition
-                // if the enemy is a rusher, it disregards raycast through ObstaclesSeethrough
-
-                // progressively add more bit layers through checks
-                layerMask = (1 << 6) | (1 << 8) | (1 << 10);
-                if (IgnoreSeethroughAggro) layerMask = layerMask | (1 << 13);
-                if (IgnoreFogAggro) layerMask = layerMask | (1 << 15);
-
-                colliderHit = Physics2D.Raycast(transform.position, vector, RayCastDistance * _raycastModifier, layerMask);
+                colliderHit = Physics2D.Raycast(transform.position, vector, RayCastDistance * _raycastModifier, _raycastLayers);
 
                 if (colliderHit.collider != null)
                 { colliderHitList.Add(colliderHit.collider.name); }
@@ -635,14 +636,8 @@ public class EnemyScript : MonoBehaviour
     public void RayCastRush()
     {
         Vector2 direction = _playerDir;
-
-        Debug.DrawRay(transform.position, _playerDir * Vector3.Distance(this.gameObject.transform.position, _currentRushTarget.position), Color.yellow);
-
-        // for some reason feeding the usual bitwise representation doesn't work for this motherfucker
-        // so shifting bits manually. the right side is the number of the layer if we need to add more
-        // the | is a bitwise addition
-        LayerMask layerMask = ((1 << 6) | (1 << 11) | (1 << 13));
-        RaycastHit2D colliderHit = Physics2D.Raycast(transform.position, _playerDir, Vector3.Distance(this.gameObject.transform.position, _currentRushTarget.position), layerMask);
+        
+        RaycastHit2D colliderHit = Physics2D.Raycast(transform.position, _playerDir, Vector3.Distance(this.gameObject.transform.position, _currentRushTarget.position), _rushSightLayers);
         if (colliderHit.collider != null)
         {
             if (colliderHit.collider.tag == "RushTarget") { _rushTargetInSight = true; }
@@ -664,7 +659,7 @@ public class EnemyScript : MonoBehaviour
 
         for (int i = 0; i < RushDistange && !obstacleEncountered; i++) {
             currentlySearchedCell = posWhenPlayerDetected + (playerDirection * i);
-            if (!Physics2D.OverlapCircle(currentlySearchedCell, 0.2f, Layers))
+            if (!Physics2D.OverlapCircle(currentlySearchedCell, 0.2f, RushPointLayers))
             { searchedCells.Add(currentlySearchedCell); }
             else 
             { obstacleEncountered = true; RushPointPosition = searchedCells[i - 1]; }
@@ -975,7 +970,6 @@ public class EnemyScript : MonoBehaviour
                 if (Slowed == true) { _statusEffect.SetSlowed(); }
                 else _statusEffect.RemoveStatusEffect();
             }
-            
         }
     }
 
