@@ -5,6 +5,8 @@ using UnityEngine.Rendering.Universal;
 
 public class ShadowOcclusion : MonoBehaviour
 {
+    public bool TransformCheck = false;
+    private bool _occludeShadowsOnThisLevel = false;
     private ShadowCaster2D _shadow;
     private PolygonCollider2D _collider;
     private List<Vector2> ShadowCasterPoints = new List<Vector2>() { };
@@ -12,15 +14,18 @@ public class ShadowOcclusion : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        _occludeShadowsOnThisLevel = GameObject.Find("FogManager").GetComponent<FogManager>().OccludeShadowOnThisLevel;
         _collider = GetComponent<PolygonCollider2D>();
         _shadow = GetComponent<ShadowCaster2D>();
-        ShadowCasterPoints = GetListOfShadowCasterPoints();
+        if (TransformCheck == false) { ShadowCasterPoints = GetListOfShadowCasterPoints(); }        
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        OccludeShadow();
+        /* Seems to only worsen performance Turning it off until it is clear how to improve performance
+        if (_occludeShadowsOnThisLevel == true) OccludeShadow();
+        */
     }
 
     private List<Vector2> GetListOfShadowCasterPoints()
@@ -41,6 +46,17 @@ public class ShadowOcclusion : MonoBehaviour
         else return false;
     }
 
+    private bool TransformInView()
+    {
+        bool result = false;
+
+        Vector2 ViewportPos = Camera.main.WorldToViewportPoint(transform.position);
+        if (BetweenZeroOne(ViewportPos.x) && BetweenZeroOne(ViewportPos.y))
+        { result = true; }
+
+        return result;
+    }
+
     private bool ShadowCasterInView()
     {
         bool result = false;
@@ -55,9 +71,19 @@ public class ShadowOcclusion : MonoBehaviour
 
     private void OccludeShadow()
     {
-        if (ShadowCasterInView() == true) 
-        { _shadow.enabled = true; }
-        else _shadow.enabled = false;
+        if (TransformCheck == true)
+        {
+            if (_shadow.enabled != true && TransformInView() == true)
+            { _shadow.enabled = true; }
+            else if (TransformInView() != true && _shadow.enabled == true) _shadow.enabled = false;
+        }
+
+        else
+        {
+            if (_shadow.enabled != true && ShadowCasterInView() == true)
+            { _shadow.enabled = true; }
+            else if (ShadowCasterInView() != true && _shadow.enabled == true) _shadow.enabled = false;
+        }
     }
 
 }

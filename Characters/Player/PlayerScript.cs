@@ -86,6 +86,8 @@ public class PlayerScript : MonoBehaviour
 
     public delegate void MyHandler (int aCurrentHealth, int aMaxHealth, string aUpdateState);
     public static event MyHandler OnHealthUpdate;
+    public delegate void LevelUpTracker (int aPlayerLevel);
+    public static event LevelUpTracker OnLevelUp;
     public delegate void SpawnDelegate (GameObject aGameObject);
     public static event SpawnDelegate OnSpawn;
     public delegate void PositionTracker (GameObject aGameObject, Vector2 aPosition);
@@ -547,6 +549,7 @@ public class PlayerScript : MonoBehaviour
             if (PlayerLevel == RememberFogAtLevelStage) { RememberFog(); }
             if (PlayerLevel == CanSeeThroughWallsAtStage) { DeconcealEnemies(); }
             OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartLevelUp");
+            OnLevelUp?.Invoke(PlayerLevel);
         }
     }
 

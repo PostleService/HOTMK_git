@@ -15,6 +15,7 @@ public class FogManager : MonoBehaviour
 
     public Tilemap FogTilemap;
     public Tile[] TileArray;
+    public bool OccludeShadowOnThisLevel = false;
     [Tooltip("For debugging preferrably. Otherwise - set reconceal tiles to false from start")]
     public bool SpawnFogFromStart = true;
     [Tooltip("Reconceal tiles after player")]

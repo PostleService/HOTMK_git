@@ -80,6 +80,8 @@ public class EnemyScript : MonoBehaviour
             }
         }
     }
+    [HideInInspector] public bool _playerSighted = false;
+
     public bool IsAfraid = false;
     // for deaggroing the enemy once his state changes, so he can instantly find flee point
     private bool _isAfraid
@@ -212,12 +214,14 @@ public class EnemyScript : MonoBehaviour
     private void OnEnable()
     { 
         PlayerScript.OnSpawn += AssignPlayer;
+        PlayerScript.OnLevelUp += ReactToPlayerLevelUp;
         AnimationEndDetection_PlayerDeath.OnDie += ReactToPlayerDeath;
     }
 
     private void OnDisable()
     { 
         PlayerScript.OnSpawn -= AssignPlayer;
+        PlayerScript.OnLevelUp -= ReactToPlayerLevelUp;
         AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath;
     }
 
@@ -250,11 +254,10 @@ public class EnemyScript : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (!_agent.isOnNavMesh) _agent.Warp(SpawnPosition); // I'm sure I won't regret this
-
         GetRemainingDistance();
-        Aggro();
-        Patrolling();
+        RayCast();
+        AggroAndFlee();
+        Patrol();
         Flee();
         FollowTarget();
         AssessTeleportDistance();
@@ -276,15 +279,13 @@ public class EnemyScript : MonoBehaviour
 
         if (Stunned) _raycastModifier = 0f; else _raycastModifier = 1f;
 
-        if (_player != null) if (_player.GetComponent<PlayerScript>().PlayerLevel >= EnemyLevel) { _isAfraid = true;}
-
         if (ItemStageLevel == 3) OnPositionChange?.Invoke(this.gameObject, transform.position);
     }
 
     #region START FUNCTIONS
     private void AssignPlayer(GameObject aGameObject) { _player = aGameObject; }
 
-    private void ReactToPlayerDeath() { _isRushing = false; }
+
 
     // In order to use layermask, its decimal representation needs to be converted to binary for Unity to read
     public void PathfindingLayersConversion()
@@ -398,54 +399,45 @@ public class EnemyScript : MonoBehaviour
         { CurrentTarget = gameObject.transform; _agent.SetDestination(CurrentTarget.position); }
     }
  
-    public (bool, Vector3, Vector3) RayCast()
+    public void RayCast()
     {
-        RaycastHit2D colliderHit;
-        LayerMask layerMask;
-        List<string> colliderHitList = new List<string>();
-        List<Vector2> vectorList = new List<Vector2> { new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, 0), new Vector2(-1, 0) };
-
-        foreach (Vector2 vector in vectorList)
+        if (CanAggrDeaggr && !CurrentlyAggroed)
         {
-            if (DebugRaycast == true)
-            { Debug.DrawRay(transform.position, (vector * RayCastDistance * _raycastModifier), Color.red); }
+            RaycastHit2D colliderHit;
+            LayerMask layerMask;
+            List<string> colliderHitList = new List<string>();
+            List<Vector2> vectorList = new List<Vector2> { new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, 0), new Vector2(-1, 0) };
 
-            // for some reason feeding the usual bitwise representation doesn't work for this motherfucker
-            // so shifting bits manually. the right side is the number of the layer if we need to add more
-            // the | is a bitwise addition
-            // if the enemy is a rusher, it disregards raycast through ObstaclesSeethrough
-            
-            // progressively add more bit layers through checks
-            layerMask = (1 << 6) | (1 << 8) | (1 << 10);
-            if (IgnoreSeethroughAggro) layerMask = layerMask | (1 << 13);
-            if (IgnoreFogAggro) layerMask = layerMask | (1 << 15);
-
-            colliderHit = Physics2D.Raycast(transform.position, vector, RayCastDistance * _raycastModifier, layerMask);
-
-            if (colliderHit.collider != null) 
-            { colliderHitList.Add(colliderHit.collider.name); }
-        }
-
-        if (colliderHitList.Any())
-        {
-            bool result = false;
-            Vector3 enemyPos = Vector3.zero;
-            Vector3 playerPos = Vector3.zero;
-
-            foreach (string col in colliderHitList)
+            foreach (Vector2 vector in vectorList)
             {
-                if (col == "Player") 
-                { 
-                    result = true;
-                    enemyPos = this.gameObject.transform.position;
-                    playerPos = _player.transform.position;
+                if (DebugRaycast == true)
+                { Debug.DrawRay(transform.position, (vector * RayCastDistance * _raycastModifier), Color.red); }
+
+                // for some reason feeding the usual bitwise representation doesn't work for this motherfucker
+                // so shifting bits manually. the right side is the number of the layer if we need to add more
+                // the | is a bitwise addition
+                // if the enemy is a rusher, it disregards raycast through ObstaclesSeethrough
+
+                // progressively add more bit layers through checks
+                layerMask = (1 << 6) | (1 << 8) | (1 << 10);
+                if (IgnoreSeethroughAggro) layerMask = layerMask | (1 << 13);
+                if (IgnoreFogAggro) layerMask = layerMask | (1 << 15);
+
+                colliderHit = Physics2D.Raycast(transform.position, vector, RayCastDistance * _raycastModifier, layerMask);
+
+                if (colliderHit.collider != null)
+                { colliderHitList.Add(colliderHit.collider.name); }
+            }
+
+            if (colliderHitList.Any())
+            {
+                foreach (string col in colliderHitList)
+                {
+                    if (col == "Player")
+                    { _playerSighted = true; }
                 }
             }
-            if (result == true) { return (true, playerPos, enemyPos ); }
-            else return (false, Vector3.zero, Vector3.zero);
         }
-
-        return (false, Vector3.zero, Vector3.zero);
     }
 
     public void Deaggro()
@@ -455,17 +447,21 @@ public class EnemyScript : MonoBehaviour
             Destroy(_currentFleeSpot);
             _currentEscapeAttempt = 1;
         }
-        if (_currentRushTarget != null) { Destroy(_currentRushTarget.gameObject); }
+        if (_currentRushTarget != null) 
+        { 
+            Destroy(_currentRushTarget.gameObject);
+            _isRushing = false;
+        }
         ResetThrowCooldownPrepped();
 
+        _playerSighted = false;
         _currentlyAggroed = false;
         if (EnemyType == EnemyOfType.Roamer) ResetMinimalAggroCooldown();
         if (!IsAfraid) gameObject.GetComponent<Light2D>().lightOrder = 4;
     }
 
-    public void Aggro()
+    public void AggroAndFlee()
     {
-
         void CommonAggroSettings()
         { 
             _currentlyAggroed = true; 
@@ -483,29 +479,29 @@ public class EnemyScript : MonoBehaviour
                 {
                     if (EnemyType == EnemyOfType.Roamer)
                     {
-                        if (RayCast().Item1 && _fogManager._playerInsideFog != true)
+                        if (_playerSighted == true && _fogManager._playerInsideFog != true)
                         { CommonAggroSettings(); }
                     }
 
                     else if (EnemyType == EnemyOfType.Rusher)
                     {
-                        if (!_onCooldown && RayCast().Item1 && _fogManager._playerInsideFog != true) // only allow aggro if not on cooldown
+                        if (!_onCooldown && _playerSighted == true && _fogManager._playerInsideFog != true) // only allow aggro if not on cooldown
                         {
                             CommonAggroSettings();
-                            FindRushPoint(GetDirection(RayCast().Item2, RayCast().Item3));
+                            FindRushPoint(GetDirection(_player.transform.position, transform.position));
                         }
                     }
 
                     else if (EnemyType == EnemyOfType.Thrower)
-                    { if (RayCast().Item1 && _fogManager._playerInsideFog != true) CommonAggroSettings(); }
+                    { if (_playerSighted == true && _fogManager._playerInsideFog != true) CommonAggroSettings(); }
    
                 }
 
                 else if (IsAfraid)
                 {
-                    if (RayCast().Item1 && _fogManager._playerInsideFog != true)
+                    if (_playerSighted == true && _fogManager._playerInsideFog != true)
                     {
-                        FindFleeSpot(GetDirection(RayCast().Item2, RayCast().Item3));
+                        FindFleeSpot(GetDirection(_player.transform.position, transform.position));
                         gameObject.GetComponent<EnemySoundScript>().PlayFearSound();
                     }
                 }
@@ -528,12 +524,11 @@ public class EnemyScript : MonoBehaviour
                     else if (EnemyType == EnemyOfType.Rusher)
                     {
                         // Have to account for infinity because of navmesh rebuilding. While it's rebuilding, distance to target becomes incalculable
-                        if (!_isRushing && _remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
-                        { Deaggro(); }
+                        if (!_isRushing) { Deaggro(); }
                     }
                     else if (EnemyType == EnemyOfType.Thrower)
                     {
-                        if (!IsAfraid && !RayCast().Item1) { Deaggro(); }
+                        if (!IsAfraid && !_playerSighted) { Deaggro(); }
                     }
 
                 }
@@ -550,33 +545,29 @@ public class EnemyScript : MonoBehaviour
 
     public void Flee()
     {
-        if (IsAfraid)
+        if (IsAfraid && _currentFleeSpot != null)
         {
             Vector2 trposV2 = transform.position;
-            Vector2 trposTarV2 = Vector2.zero;
+            Vector2 trposTarV2 = _currentFleeSpot.transform.position;
 
-            if (_currentFleeSpot != null) { trposTarV2 = _currentFleeSpot.transform.position; }
-            if (_currentFleeSpot != null)
+            if (trposV2 == trposTarV2)
             {
-                if (trposV2 == trposTarV2)
+                Destroy(_currentFleeSpot);
+                if (_currentEscapeAttempt < EscapeAttempts)
                 {
-                    Destroy(_currentFleeSpot);
-                    if (_currentEscapeAttempt < EscapeAttempts)
-                    {
-                        _currentEscapeAttempt += 1;
-                        FindFleeSpot(GetDirection(_player.transform.position, transform.position));
-                    }
-                    else
-                    {
-                        _currentEscapeAttempt = 1;
-                        _currentlyAggroed = false;
-                    }
+                    _currentEscapeAttempt += 1;
+                    FindFleeSpot(GetDirection(_player.transform.position, transform.position));
+                }
+                else
+                {
+                    _currentEscapeAttempt = 1;
+                    _currentlyAggroed = false;
                 }
             }
         }
     }
 
-    public void Patrolling()
+    public void Patrol()
     {
         Vector2 trposV2 = transform.position;
         Vector2 trposTarV2 = _currentPatrolTarget.position;
@@ -594,19 +585,10 @@ public class EnemyScript : MonoBehaviour
 
     public void Rush()
     {
-        Vector2 trposV2 = transform.position;
-        Vector2 trposTarV2 = Vector2.zero;
-
         if (_currentRushTarget != null)
         {
-            void Deaggro()
-            {
-                Destroy(_currentRushTarget.gameObject);
-                _currentlyAggroed = false;
-                _isRushing = false;
-            }
-            
-            trposTarV2 = _currentRushTarget.transform.position;
+            Vector2 trposV2 = transform.position;
+            Vector2 trposTarV2 = _currentRushTarget.transform.position;
             _isRushing = true;
             RayCastRush();
 
@@ -646,7 +628,7 @@ public class EnemyScript : MonoBehaviour
         }
     }
 
-    #endregion // BEHAVIOURS
+    #endregion BEHAVIOURS
 
     #region AUXILIARY BEHAVIOURS
 
@@ -710,23 +692,26 @@ public class EnemyScript : MonoBehaviour
     /// </summary>
     public void GetRemainingDistance()
     {
-        float distance = 0;
-        Vector3[] corners = _agent.path.corners;
+        if (CurrentlyAggroed == true)
+        {
+            float distance = 0;
+            Vector3[] corners = _agent.path.corners;
 
-        if (corners.Length > 2)
-        {
-            for (int i = 1; i < corners.Length; i++)
+            if (corners.Length > 2)
             {
-                Vector2 previous = new Vector2(corners[i - 1].x, corners[i - 1].z);
-                Vector2 current = new Vector2(corners[i].x, corners[i].z);
-                distance += Vector2.Distance(previous, current);
+                for (int i = 1; i < corners.Length; i++)
+                {
+                    Vector2 previous = new Vector2(corners[i - 1].x, corners[i - 1].z);
+                    Vector2 current = new Vector2(corners[i].x, corners[i].z);
+                    distance += Vector2.Distance(previous, current);
+                }
             }
+            else
+            {
+                distance = _agent.remainingDistance;
+            }
+            _remainingDistance = distance;
         }
-        else
-        {
-            distance = _agent.remainingDistance;
-        }
-        _remainingDistance = distance;
     }
 
     public void FindFleeSpot(Vector2Int aPlayerPos)
@@ -809,6 +794,15 @@ public class EnemyScript : MonoBehaviour
     #endregion AUXILIARY BEHAVIOURS
 
     #region ON CALL BEHAVIOURS
+
+    private void ReactToPlayerLevelUp(int aPlayerLevel)
+    { if (aPlayerLevel >= EnemyLevel) _isAfraid = true; }
+
+    private void ReactToPlayerDeath()
+    {
+        _isRushing = false;
+        CurrentTarget = _patrolTransforms[_currentPatrolPoint];
+    }
 
     public void Die(bool noCorpse) 
     {
@@ -960,7 +954,7 @@ public class EnemyScript : MonoBehaviour
     }
 
 
-    #endregion // ON CALL BEHAVIOURS
+    #endregion ON CALL BEHAVIOURS
 
     #region TIMER DECREMENTS
 
@@ -1020,7 +1014,7 @@ public class EnemyScript : MonoBehaviour
 
     public void TeleportDecrement()
     {
-        if (ConsideringTeleport)
+        if (AllowedToTeleport && ConsideringTeleport)
         {
             if (_currentTeleportCountDown >= 0) { _currentTeleportCountDown -= Time.deltaTime; }
             else if (_currentTeleportCountDown < 0 && CurrentlyTeleporting != true)

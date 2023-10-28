@@ -55,7 +55,6 @@ public class AudioManager : MonoBehaviour
         LevelStageValue = aLevelStage;
         _levelStageChanged = true; 
         _instantCheck = false;
-        UnityEngine.Debug.LogWarning("Reacting to level statge change" + aLevelStage);
     }
 
     public void LevelStageTransition()

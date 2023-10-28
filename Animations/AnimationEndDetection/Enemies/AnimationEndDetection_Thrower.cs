@@ -12,9 +12,9 @@ class AnimationEndDetection_Thrower : AnimationEndDetection
         if (CanExecuteAgain)
         {
             // only perform throw if player is still within vision
-            if (es.RayCast().Item1)
+            if (es._playerSighted == true)
             { 
-                es.PerformThrow(es.GetDirection(es.RayCast().Item2, es.RayCast().Item3));
+                es.PerformThrow(es.GetDirection(es._player.transform.position, es.transform.position));
                 CanExecuteAgain = false;
             }
         }
