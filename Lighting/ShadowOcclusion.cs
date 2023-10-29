@@ -23,9 +23,9 @@ public class ShadowOcclusion : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        /* Seems to only worsen performance Turning it off until it is clear how to improve performance
-        if (_occludeShadowsOnThisLevel == true) OccludeShadow();
-        */
+        // Seems to only worsen performance Turning it off until it is clear how to improve performance
+        // if (_occludeShadowsOnThisLevel == true) OccludeShadow();
+        
     }
 
     private List<Vector2> GetListOfShadowCasterPoints()
@@ -73,15 +73,13 @@ public class ShadowOcclusion : MonoBehaviour
     {
         if (TransformCheck == true)
         {
-            if (_shadow.enabled != true && TransformInView() == true)
-            { _shadow.enabled = true; }
+            if (_shadow.enabled != true && TransformInView() == true) { _shadow.enabled = true; }
             else if (TransformInView() != true && _shadow.enabled == true) _shadow.enabled = false;
         }
 
         else
         {
-            if (_shadow.enabled != true && ShadowCasterInView() == true)
-            { _shadow.enabled = true; }
+            if (_shadow.enabled != true && ShadowCasterInView() == true) { _shadow.enabled = true; }
             else if (ShadowCasterInView() != true && _shadow.enabled == true) _shadow.enabled = false;
         }
     }

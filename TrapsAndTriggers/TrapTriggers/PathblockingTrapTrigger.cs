@@ -11,6 +11,10 @@ public class PathblockingTrapTrigger : TrapTrigger
     public bool TeleportBossToCustom = false;
     public Vector3 CustomTeleportDestination = Vector3.zero;
 
+    // to send a path update request to all agents
+    public delegate void TrapSpawnEvent(Transform aTransform);
+    public static event TrapSpawnEvent OnTrapSpawn;
+
     protected override void SpawnTrap()
     {
         if (!_hasBeenSpawned)
@@ -31,6 +35,7 @@ public class PathblockingTrapTrigger : TrapTrigger
                 AnimationEndDetection_PathblockingTrap aed = _trap.GetComponent<AnimationEndDetection_PathblockingTrap>();
                 aed.TeleportBossToCustom = TeleportBossToCustom;
                 aed.CustomTeleportDestination = CustomTeleportDestination;
+                OnTrapSpawn?.Invoke(null);
             }
 
             _hasBeenSpawned = true;

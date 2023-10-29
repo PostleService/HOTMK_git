@@ -219,6 +219,7 @@ public class EnemyScript : MonoBehaviour
         PlayerScript.OnSpawn += AssignPlayer;
         PlayerScript.OnLevelUp += ReactToPlayerLevelUp;
         AnimationEndDetection_PlayerDeath.OnDie += ReactToPlayerDeath;
+        PathblockingTrapTrigger.OnTrapSpawn += AssignTargetToFollow;
     }
 
     private void OnDisable()
@@ -226,6 +227,7 @@ public class EnemyScript : MonoBehaviour
         PlayerScript.OnSpawn -= AssignPlayer;
         PlayerScript.OnLevelUp -= ReactToPlayerLevelUp;
         AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath;
+        PathblockingTrapTrigger.OnTrapSpawn -= AssignTargetToFollow;
     }
 
     void Start()
@@ -265,7 +267,6 @@ public class EnemyScript : MonoBehaviour
         Patrol();
         Flee();
         AssessTeleportDistance();
-        FollowTarget();
 
         MinimalAggroTimerDecrement();
         StunTimerDecrement();
@@ -361,36 +362,12 @@ public class EnemyScript : MonoBehaviour
         return _currSpeed;
     }
 
-    public void FollowTarget()
+    public void AssignTargetToFollow(Transform aTarget)
     {
-        if (CurrentlyAggroed)
-        {
-            if (!IsAfraid)
-            {
-                // NavMesh agent targets
-                if (EnemyType == EnemyOfType.Roamer)
-                { if (_player != null) { CurrentTarget = _player.transform; } }
-
-                else if (EnemyType == EnemyOfType.Rusher)
-                { if (_currentRushTarget != null) { CurrentTarget = _currentRushTarget; } } // rushes to rushpoint
-
-            }
-            else if (IsAfraid) 
-            { 
-                if (_currentFleeSpot != null) { CurrentTarget = _currentFleeSpot.transform; } 
-            }
-        }
-        else
-        {
-            if (_currentPatrolTarget != null) { CurrentTarget = _currentPatrolTarget; }
-        }
-
-        if (CurrentTarget != null) { _agent.SetDestination(CurrentTarget.position); }
-        // sets target to itself and stands still
-        else
-        { CurrentTarget = gameObject.transform; _agent.SetDestination(CurrentTarget.position); }
+        if (aTarget != null) CurrentTarget = aTarget; // otherwise, use current target
+        _agent.SetDestination(CurrentTarget.position);
     }
- 
+
     public void RayCast()
     {
         if (CanAggrDeaggr)
@@ -455,6 +432,7 @@ public class EnemyScript : MonoBehaviour
         if (!IsAfraid) gameObject.GetComponent<Light2D>().lightOrder = 4;
 
         ChangeNavMeshMasks(CurrentlyAggroed, IsAfraid);
+        AssignTargetToFollow(_currentPatrolTarget);
     }
 
     public void AggroAndFlee()
@@ -465,7 +443,7 @@ public class EnemyScript : MonoBehaviour
 
             else if (!CurrentlyAggroed)
             {
-                if (!IsAfraid) 
+                if (!IsAfraid)
                 {
                     if (EnemyType == EnemyOfType.Roamer)
                     {
@@ -485,12 +463,12 @@ public class EnemyScript : MonoBehaviour
                     else if (EnemyType == EnemyOfType.Thrower)
                     {
                         if (_playerSighted == true && _fogManager._playerInsideFog != true)
-                        { 
+                        {
                             CommonAggroSettings();
                             _seesPlayer = true;
                         }
                     }
-   
+
                 }
 
                 else if (IsAfraid)
@@ -512,6 +490,7 @@ public class EnemyScript : MonoBehaviour
                 {
                     if (EnemyType == EnemyOfType.Roamer)
                     {
+                        if (_player != null) AssignTargetToFollow(_player.transform);
                         if (_remainingDistance > DistanceToDeaggro && _remainingDistance != Mathf.Infinity)
                         {
                             if (HasMinimalAggroTime == false) Deaggro();
@@ -538,6 +517,7 @@ public class EnemyScript : MonoBehaviour
 
             }
         }
+        else if (!CanAggrDeaggr && CurrentlyAggroed && _player != null) { AssignTargetToFollow(_player.transform); } 
     }
 
     public void Flee()
@@ -558,7 +538,7 @@ public class EnemyScript : MonoBehaviour
                 else
                 {
                     _currentEscapeAttempt = 1;
-                    _currentlyAggroed = false;
+                    Deaggro();
                 }
             }
         }
@@ -566,17 +546,21 @@ public class EnemyScript : MonoBehaviour
 
     public void Patrol()
     {
-        Vector2 trposV2 = transform.position;
-        Vector2 trposTarV2 = _currentPatrolTarget.position;
-        if (Vector3.Distance(trposV2,trposTarV2) < 0.08f)
+        if (!CurrentlyAggroed)
         {
-            if (_currentPatrolPoint < PatrolPath.Length - 1)
+            Vector2 trposV2 = transform.position;
+            Vector2 trposTarV2 = _currentPatrolTarget.position;
+            if (Vector3.Distance(trposV2, trposTarV2) < 0.08f)
             {
-                _currentPatrolPoint += 1;
+                if (_currentPatrolPoint < PatrolPath.Length - 1)
+                {
+                    _currentPatrolPoint += 1;
+                }
+                else
+                { _currentPatrolPoint = 0; }
+                _currentPatrolTarget = _patrolTransforms[_currentPatrolPoint];
+                AssignTargetToFollow(_currentPatrolTarget);
             }
-            else
-            { _currentPatrolPoint = 0; }
-            _currentPatrolTarget = _patrolTransforms[_currentPatrolPoint];
         }
     }
 
@@ -591,7 +575,7 @@ public class EnemyScript : MonoBehaviour
 
             // Deaggro patterns:
             if (!_rushTargetInSight) { Deaggro(); } // if lost sight to rushTarget - be ready to aggro instantly
-            if (trposV2 == trposTarV2) { Deaggro(); EnterRushCooldown(); } // if reached rush point - enter cooldown
+            if (Vector3.Distance(trposV2,trposTarV2) < 0.08f) { Deaggro(); EnterRushCooldown(); } // if reached rush point - enter cooldown
         }
     }
 
@@ -673,6 +657,7 @@ public class EnemyScript : MonoBehaviour
         _currentRushTarget = rushObject.transform;
         _rushTargetInSight = true;
 
+        AssignTargetToFollow(_currentRushTarget);
     }
 
     /// <summary>
@@ -766,6 +751,7 @@ public class EnemyScript : MonoBehaviour
         _patrolTransforms.Add(fleeObject.transform);
         _currentFleeSpot = fleeObject;
         _currentlyAggroed = true;
+        AssignTargetToFollow(_currentFleeSpot.transform);
     }
 
     public Vector2Int GetDirection(Vector3 aTargetPos, Vector3 aEnemyPos)
@@ -1067,5 +1053,5 @@ public class EnemyScript : MonoBehaviour
     public void ResetTeleportCountDown()
     { _currentTeleportCountDown = DefaultTeleportCountDown; }
 
-    #endregion // TIMER RESETS
+    #endregion TIMER RESETS
 }
