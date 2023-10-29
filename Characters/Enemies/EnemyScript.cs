@@ -119,12 +119,12 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("Speed modifier when rushing (only rusher)")] public float SpeedModifier_Rush = 1.5f;
     [Tooltip("Speed modifier when slowed")] public float SpeedModifier_Slow = 0.33f;
     [Tooltip("Speed modifier when stunned")] public float SpeedModifier_Stun = 0f;
-    private float SpeedModifier_Teleporting = 0f;
+    [Tooltip("For throwers and rushers on cooldown, and boss teleport")] private float SpeedModifier_Special = 0f;
 
     private float _currSpeed;
     private float _currSpeedModifier_Flee = 1; private float _currSpeedModifier_Rush = 1;
     private float _currSpeedModifier_Slow = 1; private float _currSpeedModifier_Stun = 1;
-    private float _currSpeedModifier_Teleporting = 1;
+    private float _currSpeedModifier_Special = 1;
 
     [Header("Boss behaviour")]
     public GameObject TeleportVoidZone;
@@ -162,8 +162,7 @@ public class EnemyScript : MonoBehaviour
     private Vector2 _playerDir;
     public float RushCooldown;
     public float _currentRushCooldown;
-    [HideInInspector]
-    public bool _onCooldown = false;
+    [HideInInspector] public bool _onCooldown = false;
     private bool _isRushing = false;
 
     [Header("Thrower behaviour")]
@@ -181,6 +180,7 @@ public class EnemyScript : MonoBehaviour
 
     public float ProjectileSpeed;
     public float ProjectileLifetime;
+    [HideInInspector] public bool _seesPlayer = false;
     
     [Tooltip("Basic projectile collision without enemy layer. If interacts with enemies in any way, projectile will add enemy layer on its own")]
     public LayerMask ProjectileCollision;
@@ -353,10 +353,11 @@ public class EnemyScript : MonoBehaviour
         else _currSpeedModifier_Slow = 1;
         if (Stunned) _currSpeedModifier_Stun = SpeedModifier_Stun;
         else _currSpeedModifier_Stun = 1;
-        if (CurrentlyTeleporting) _currSpeedModifier_Teleporting = SpeedModifier_Teleporting;
-        else _currSpeedModifier_Teleporting = 1;
 
-        _currSpeed = DefaultSpeed * _currSpeedModifier_Flee * _currSpeedModifier_Rush * _currSpeedModifier_Slow * _currSpeedModifier_Stun * _currSpeedModifier_Teleporting;
+        if (CurrentlyTeleporting || _seesPlayer || _onCooldown) { _currSpeedModifier_Special = SpeedModifier_Special; }
+        else _currSpeedModifier_Special = 1;
+
+        _currSpeed = DefaultSpeed * _currSpeedModifier_Flee * _currSpeedModifier_Rush * _currSpeedModifier_Slow * _currSpeedModifier_Stun * _currSpeedModifier_Special;
         return _currSpeed;
     }
 
@@ -366,15 +367,6 @@ public class EnemyScript : MonoBehaviour
         {
             if (!IsAfraid)
             {
-                // NavMesh layers
-                if (EnemyLevel == 1) 
-                { _agent.areaMask = _areaDict["Walkable"];}
-                
-                if (EnemyLevel == 2 && EnemyType == EnemyOfType.Roamer)
-                { _agent.areaMask = _areaDict["Walkable"] + _areaDict["WalkableWhenAngry"]; }
-                if (EnemyLevel == 3 || (EnemyType == EnemyOfType.Rusher))
-                { _agent.areaMask = _areaDict["Walkable"] + _areaDict["WalkableWhenAngry"] + _areaDict["OnlyRusherAndLvl3"]; }
-
                 // NavMesh agent targets
                 if (EnemyType == EnemyOfType.Roamer)
                 { if (_player != null) { CurrentTarget = _player.transform; } }
@@ -382,27 +374,15 @@ public class EnemyScript : MonoBehaviour
                 else if (EnemyType == EnemyOfType.Rusher)
                 { if (_currentRushTarget != null) { CurrentTarget = _currentRushTarget; } } // rushes to rushpoint
 
-                else if (EnemyType == EnemyOfType.Thrower)
-                { CurrentTarget = gameObject.transform; } // stands still
-
             }
-            else if (IsAfraid)
-            {
-                if (_currentFleeSpot != null)
-                {
-                    CurrentTarget = _currentFleeSpot.transform;
-                    _agent.areaMask = _areaDict["Walkable"];
-                }
+            else if (IsAfraid) 
+            { 
+                if (_currentFleeSpot != null) { CurrentTarget = _currentFleeSpot.transform; } 
             }
         }
         else
         {
-            // stand still if on cooldown
-            if (EnemyType == EnemyOfType.Rusher && _onCooldown)
-            { CurrentTarget = gameObject.transform; }
-            
-            else if (_currentPatrolTarget != null)
-            { CurrentTarget = _currentPatrolTarget; _agent.areaMask = _areaDict["Walkable"]; }
+            if (_currentPatrolTarget != null) { CurrentTarget = _currentPatrolTarget; }
         }
 
         if (CurrentTarget != null) { _agent.SetDestination(CurrentTarget.position); }
@@ -445,6 +425,14 @@ public class EnemyScript : MonoBehaviour
         }
     }
 
+    void CommonAggroSettings()
+    {
+        _currentlyAggroed = true;
+        gameObject.GetComponent<Light2D>().lightOrder = 5;
+        gameObject.GetComponent<EnemySoundScript>().PlayAggroSound();
+        ChangeNavMeshMasks(CurrentlyAggroed, IsAfraid);
+    }
+
     public void Deaggro()
     {
         if (_currentFleeSpot != null && IsAfraid)
@@ -457,23 +445,20 @@ public class EnemyScript : MonoBehaviour
             Destroy(_currentRushTarget.gameObject);
             _isRushing = false;
         }
-        ResetThrowCooldownPrepped();
+        if (EnemyType == EnemyOfType.Thrower) { _seesPlayer = false; ResetThrowCooldownPrepped(); }
+        if (EnemyType == EnemyOfType.Roamer) ResetMinimalAggroCooldown();
+        
 
         _playerSighted = false;
         _currentlyAggroed = false;
-        if (EnemyType == EnemyOfType.Roamer) ResetMinimalAggroCooldown();
+
         if (!IsAfraid) gameObject.GetComponent<Light2D>().lightOrder = 4;
+
+        ChangeNavMeshMasks(CurrentlyAggroed, IsAfraid);
     }
 
     public void AggroAndFlee()
     {
-        void CommonAggroSettings()
-        { 
-            _currentlyAggroed = true; 
-            gameObject.GetComponent<Light2D>().lightOrder = 5;
-            gameObject.GetComponent<EnemySoundScript>().PlayAggroSound();
-        }
-
         if (CanAggrDeaggr)
         {
             if (_player == null) { Deaggro(); }
@@ -498,7 +483,13 @@ public class EnemyScript : MonoBehaviour
                     }
 
                     else if (EnemyType == EnemyOfType.Thrower)
-                    { if (_playerSighted == true && _fogManager._playerInsideFog != true) CommonAggroSettings(); }
+                    {
+                        if (_playerSighted == true && _fogManager._playerInsideFog != true)
+                        { 
+                            CommonAggroSettings();
+                            _seesPlayer = true;
+                        }
+                    }
    
                 }
 
@@ -507,6 +498,7 @@ public class EnemyScript : MonoBehaviour
                     if (_playerSighted == true && _fogManager._playerInsideFog != true)
                     {
                         FindFleeSpot(GetDirection(_player.transform.position, transform.position));
+                        ChangeNavMeshMasks(CurrentlyAggroed, IsAfraid);
                         gameObject.GetComponent<EnemySoundScript>().PlayFearSound();
                     }
                 }
@@ -855,7 +847,23 @@ public class EnemyScript : MonoBehaviour
             } 
         }
     }
-    
+
+    public void ChangeNavMeshMasks(bool aAggroed, bool aAfraid)
+    {
+        if (aAggroed)
+        {
+            if (aAfraid) { _agent.areaMask = _areaDict["Walkable"]; }
+            else
+            {
+                if (EnemyLevel == 2 && EnemyType == EnemyOfType.Roamer)
+                { _agent.areaMask = _areaDict["Walkable"] + _areaDict["WalkableWhenAngry"]; }
+                else if (EnemyLevel == 3 || (EnemyType == EnemyOfType.Rusher))
+                { _agent.areaMask = _areaDict["Walkable"] + _areaDict["WalkableWhenAngry"] + _areaDict["OnlyRusherAndLvl3"]; }
+            }
+        }
+        else { _agent.areaMask = _areaDict["Walkable"];  }
+    }
+
     public void TeleportToDestination(Vector3 aDestination)
     {
         CurrentlyTeleporting = true;

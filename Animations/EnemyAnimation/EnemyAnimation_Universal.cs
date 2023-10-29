@@ -41,14 +41,14 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
     public virtual void MonitorEnemyDirection()
     {
         
-        if (_agent.desiredVelocity.x != 0 || _agent.desiredVelocity.y != 0 && _enemyScript.CurrentTarget != gameObject.transform)
+        if (_agent.desiredVelocity.x != 0 || _agent.desiredVelocity.y != 0)
         {
             // only update enemy rotation data if speed > 0. Otherwise - keep last known rotation data
             EnemyPosX = (transform.position.x + _agent.desiredVelocity.x) - transform.position.x;
             EnemyPosY = (transform.position.y + _agent.desiredVelocity.y) - transform.position.y;
         }
-        // Specifically for throwers in case they get aggroed with their back turned to the player
-        if (_enemyScript.CurrentTarget == gameObject.transform)
+        // For throwers and rushers to turn to player (during throw and after rush cooldown) if not stunned
+        if (_enemyScript._seesPlayer || _enemyScript._onCooldown && !_enemyScript.Stunned)
         {
             if (_enemyScript._player != null)
             {
