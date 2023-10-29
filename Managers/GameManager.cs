@@ -5,7 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    private int MaximumLevel = 4;
+    private int MaximumLevel = 5;
+    [HideInInspector] public int CreditsScene;
     private int _lastSceneIndex = 0;
     public int _deathCounter = 0;
 
@@ -38,7 +39,8 @@ public class GameManager : MonoBehaviour
         };
 
     private void Awake()
-    {    
+    {
+        CreditsScene = SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/CreditsScene.unity");
         // If there are no other instances of GameManager created, GameManager class will refer to this particular instance.
         // Otherwise, any copy of this object will be destroyed.
         // Do not child the object containing this script to anything or DoNotDestroyOnLoad cannot apply

@@ -527,7 +527,7 @@ public class EnemyScript : MonoBehaviour
             Vector2 trposV2 = transform.position;
             Vector2 trposTarV2 = _currentFleeSpot.transform.position;
 
-            if (trposV2 == trposTarV2)
+            if (Vector3.Distance(trposV2, trposTarV2) < 0.08f)
             {
                 Destroy(_currentFleeSpot);
                 if (_currentEscapeAttempt < EscapeAttempts)

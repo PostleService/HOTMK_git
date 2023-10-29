@@ -481,7 +481,7 @@ public class MenuManagerScript : MonoBehaviour
         else
         {
             UnsubscribeAll();
-            SceneManager.LoadScene(_maximumLevel+1); 
+            SceneManager.LoadScene(_gameManager.CreditsScene); 
         }
     }
 
@@ -1061,7 +1061,7 @@ public class MenuManagerScript : MonoBehaviour
     public void LoadCreditsScene()
     {
         UnsubscribeAll();
-        SceneManager.LoadScene(_maximumLevel+1); 
+        SceneManager.LoadScene(_gameManager.CreditsScene); 
     }
 
     // QUIT TO OS

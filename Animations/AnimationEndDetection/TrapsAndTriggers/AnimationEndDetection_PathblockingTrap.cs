@@ -9,7 +9,7 @@ class AnimationEndDetection_PathblockingTrap : AnimationEndDetection
     [Header("Pass to trap")]
     public bool TeleportBossToCustom = false;
     public Vector3 CustomTeleportDestination = Vector3.zero;
-
+    
     public bool DestroyParent = true;
 
     public override void OnAnimationFinish()

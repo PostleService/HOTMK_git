@@ -18,7 +18,6 @@ public class LevelManagerScript : MonoBehaviour
     public GameObject PlayerSpawner;
     public GameObject Lvl3Spawner;
 
-
     [Header("Level Progression")]
     [Tooltip("Five in total: items_lvl1,mobs_lvl1,items_lvl2,mobs_lvl2,endgame_lvl3")]
     public int LevelStage = 0;
