@@ -8,6 +8,8 @@ public class OpenDoorsSpawnShadows : MonoBehaviour
     public GameObject GateOpeningPrefab;
     public GameObject ShadowsToEnable;
 
+    public int LevelStage = 1;
+
     private void OnEnable()
     {
         LevelManagerScript.OnLevelStageChange += ReactToLevelStageChange;
@@ -19,7 +21,7 @@ public class OpenDoorsSpawnShadows : MonoBehaviour
 
     private void ReactToLevelStageChange(int aLevelStage, int aCurrentItems, int aDefaultItems, Sprite aSprite)
     {
-        if (aLevelStage == 2)
+        if (aLevelStage == LevelStage)
         {
             foreach (GameObject gate in Gates)
             {
