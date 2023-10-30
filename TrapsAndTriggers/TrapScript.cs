@@ -51,7 +51,7 @@ public class TrapScript : MonoBehaviour
             }
 
             if (Damages[0])
-            { if (es.EnemyLevel < 3) es.Die(NoCorpse); }
+            { if (es.EnemyLevel < 3) { es.Die(NoCorpse); } }
 
             else
             {

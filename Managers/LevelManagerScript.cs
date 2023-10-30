@@ -81,7 +81,9 @@ public class LevelManagerScript : MonoBehaviour
 
     // Update is called once per frame
     void FixedUpdate()
-    { MonitorItems(); }
+    {
+        MonitorItems(); 
+    }
 
     public void Unsubscribe()
     {

@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Visibility_Observed : MonoBehaviour
 {
+    public float FrequencyOfVisibilityChecks = 0.05f;
     public float RangeOfVisibilityCheck = 10f;
     [HideInInspector] public float DegreeOfSpread = 2f;
     private LevelManagerScript _levelManager;
@@ -12,6 +13,8 @@ public class Visibility_Observed : MonoBehaviour
     private List<SpriteRenderer> _listOfSpriteRenders = new List<SpriteRenderer>(); // for this object
     private bool _finallyVisible = false;
     public bool _alwaysVisible = false;
+
+    private CustomFixedUpdate _fixedUpdate;
 
     private void OnEnable()
     {
@@ -43,9 +46,16 @@ public class Visibility_Observed : MonoBehaviour
             else { FinalRender(); }
         }
         else FinalRender();
+
+         _fixedUpdate = new CustomFixedUpdate(FrequencyOfVisibilityChecks, MyFixedUpdate);
     }
 
-    private void FixedUpdate()
+    private void Update()
+    {
+        _fixedUpdate.Update();
+    }
+
+    void MyFixedUpdate(float aFloat)
     { if (!_finallyVisible) ScanForObjects(); }
 
     private void AssignPlayer(GameObject aGameObject)
@@ -153,7 +163,6 @@ public class Visibility_Observed : MonoBehaviour
                     if (!ObstaclePresent) { ObjectVisible = true; }
                 }
             }
-            
             
             if (ObjectVisible)
             {
