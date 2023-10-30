@@ -19,9 +19,9 @@ public class EnemyScript : MonoBehaviour
     [HideInInspector] public NavMeshAgent _agent;
     private float _remainingDistance;
     private Transform _currentPatrolTarget;
-    private Transform _currentRushTarget;
+    [HideInInspector] public Transform _currentRushTarget;
     private int _currentPatrolPoint = 0; // also doubles as starting position
-    private GameObject _currentFleeSpot;
+    [HideInInspector] public GameObject _currentFleeSpot;
     private int _currentEscapeAttempt;
 
     [Header("Pathfinding")]
@@ -650,6 +650,7 @@ public class EnemyScript : MonoBehaviour
         
         int rushTargetLayer = LayerMask.NameToLayer("RushTarget");
         GameObject rushObject = Instantiate(NavMeshBoundPoint, new Vector3(RushPointPosition.x, RushPointPosition.y, 0), new Quaternion(), GameObject.Find("RushPointHolder").transform);
+        rushObject.GetComponent<NavMeshBoundPointScript>().InstantiatingGameObject = gameObject;
         rushObject.name = this.gameObject.name + ", rush point";
         rushObject.layer = rushTargetLayer; rushObject.tag = "RushTarget";
         BoxCollider2D col2D = rushObject.AddComponent<BoxCollider2D>();
@@ -747,6 +748,8 @@ public class EnemyScript : MonoBehaviour
         if (_currentFleeSpot != null) { Destroy(_currentFleeSpot); }
 
         GameObject fleeObject = Instantiate(NavMeshBoundPoint, new Vector3(fleeSpotPosition.x, fleeSpotPosition.y, 0), new Quaternion(), GameObject.Find("FleePointHolder").transform);
+        fleeObject.GetComponent<NavMeshBoundPointScript>().InstantiatingGameObject = gameObject;
+
         fleeObject.name = this.gameObject.name + ", flee point " + _currentEscapeAttempt;
         _patrolTransforms.Add(fleeObject.transform);
         _currentFleeSpot = fleeObject;

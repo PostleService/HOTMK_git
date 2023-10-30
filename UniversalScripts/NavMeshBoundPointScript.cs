@@ -7,12 +7,22 @@ public class NavMeshBoundPointScript : MonoBehaviour
 {
     [Tooltip("How far away from NavMesh can the agent be to be snapped back")]
     public float DistanceOutOfNavMesh = 5f;
+    [HideInInspector] public GameObject InstantiatingGameObject;
 
     private void Start()
     {
         NavMeshHit myNavHit;
         if (NavMesh.SamplePosition(transform.position, out myNavHit, DistanceOutOfNavMesh, -1))
-        { transform.position = myNavHit.position; }
+        { 
+            transform.position = myNavHit.position;
+            // if point is off navmesh, make sure to update target after acquisition
+            if (InstantiatingGameObject != null)
+            {
+                EnemyScript _es = InstantiatingGameObject.GetComponent<EnemyScript>();
+                if (_es._currentFleeSpot != null || _es._currentRushTarget != null) _es.AssignTargetToFollow(gameObject.transform);
+            }
+
+        }
         SelfDestruct();
     }
 
