@@ -559,7 +559,6 @@ public class PlayerScript : MonoBehaviour
     // perhaps later a call to Animator from within this function, etc.
     public void TakeDamage(int aDamage) 
     {
-        /*
         CurrentLives = CurrentLives - aDamage;
 
         if (CurrentLives <= 0)
@@ -574,7 +573,6 @@ public class PlayerScript : MonoBehaviour
                 gameObject.GetComponent<PlayerSoundScript>().PlayDamageSound();
             }
         }
-        */
     }
 
     private void Die() 
