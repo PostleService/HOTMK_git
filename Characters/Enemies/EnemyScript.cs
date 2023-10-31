@@ -884,6 +884,7 @@ public class EnemyScript : MonoBehaviour
         _agent.pathStatus != NavMeshPathStatus.PathInvalid &&
         _agent.path.corners.Length != 0)
         {
+            Debug.LogWarning("Inside teleport loop");
             float distanceBeforeCalc = 0.0f;
             float NextStretch = 0.0f;
             float totalDistanceSoFar = 0.0f;
@@ -910,36 +911,43 @@ public class EnemyScript : MonoBehaviour
                         // Debug.LogWarning("Point " + TempDestination + " is within range of distance and distance upper. Teleporting");
                         TempDestination = _agent.path.corners[i - 1];
                         SpawnOutDestination = new Vector3(TempDestination.x, TempDestination.y, 0);
-                        break;
                     }
                     else
                     {
-                        //Debug.LogWarning("Point exceeds range of distance and distance upper. Further actions needed");
+                        // Debug.LogWarning("Point exceeds range of distance and distance upper. Further actions needed");
 
                         float distanceTemp = totalDistanceSoFar;
                         int AttemptNum = 0;
                         TempDestination = _agent.path.corners[i - 1];
                         Vector3 BetterTeleportPosition = Vector3.zero;
 
-                        while (distanceTemp > (TeleportToPointPastDistanceOf + TeleportToPointPastDistanceOfUpper) && AttemptNum < 25)
+                        while (distanceTemp > (TeleportToPointPastDistanceOf + TeleportToPointPastDistanceOfUpper) || AttemptNum < 25)
                         {
                             // take V3 of currently examined vector and the next considered corner (closer to boss) and find midpoint skewed towards next point
                             BetterTeleportPosition = Vector3.Lerp(_agent.path.corners[i], TempDestination, 0.9f);
                             distanceTemp = distanceBeforeCalc + Vector3.Distance(_agent.path.corners[i], TempDestination);
 
                             if (distanceTemp <= (TeleportToPointPastDistanceOf + TeleportToPointPastDistanceOfUpper))
-                            { /* Debug.LogWarning("Success. " + BetterTeleportPosition + " will be a new point after " + AttemptNum + " attempts. Teleporting"); */ }
-
+                            { 
+                                // Debug.LogWarning("Success. " + BetterTeleportPosition + " will be a new point after " + AttemptNum + " attempts. Teleporting");
+                                TempDestination = BetterTeleportPosition;
+                                SpawnOutDestination = new Vector3(TempDestination.x, TempDestination.y, 0);
+                                break;
+                            }
+                            // if all attempts have been depleted, this will be last SpawnOutDestination:
+                            SpawnOutDestination = new Vector3(TempDestination.x, TempDestination.y, 0);
                             TempDestination = BetterTeleportPosition;
                             AttemptNum++;
                         }
-                        SpawnOutDestination = new Vector3(TempDestination.x, TempDestination.y, 0);
-                        if (TeleportVoidZone != null)
-                        {
-                            if (_currentTPVoidZone != null) Destroy(_currentTPVoidZone.gameObject);
-                            _currentTPVoidZone = Instantiate(TeleportVoidZone, SpawnOutDestination, new Quaternion(), null);
-                        }
+
                     }
+
+                    if (TeleportVoidZone != null)
+                    {
+                        if (_currentTPVoidZone != null) Destroy(_currentTPVoidZone.gameObject);
+                        _currentTPVoidZone = Instantiate(TeleportVoidZone, SpawnOutDestination, new Quaternion(), null);
+                    }
+
                     CurrentlyTeleporting = true;
                     gameObject.GetComponent<BoxCollider2D>().enabled = false;
                     gameObject.GetComponent<EnemyAnimation_Boss>().ExecuteAnimationSpawnOut();
@@ -1012,8 +1020,7 @@ public class EnemyScript : MonoBehaviour
         if (AllowedToTeleport && ConsideringTeleport)
         {
             if (_currentTeleportCountDown >= 0) { _currentTeleportCountDown -= Time.deltaTime; }
-            else if (_currentTeleportCountDown < 0 && CurrentlyTeleporting != true)
-            { PerformBossTeleport(); }
+            else if (_currentTeleportCountDown < 0 && CurrentlyTeleporting != true) PerformBossTeleport(); 
         }
     }
 

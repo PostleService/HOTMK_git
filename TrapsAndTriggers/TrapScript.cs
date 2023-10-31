@@ -34,9 +34,6 @@ public class TrapScript : MonoBehaviour
     // if a wall collapses on top of a health potion
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.name.StartsWith("PotionOfHealth"))
-        { collision.gameObject.GetComponent<HealthPickupScript>().DestroyItem();}
-
         if (collision.tag == "Enemy" && collision.GetComponent<EnemyScript>() != null)
         {
             EnemyScript es = collision.gameObject.GetComponent<EnemyScript>();
