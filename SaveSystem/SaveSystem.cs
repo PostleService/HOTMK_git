@@ -4,11 +4,13 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class SaveSystem
 {
-    // Current location of save files is in C:\Users\<username>\AppData\LocalLow\DefaultCompany\<project_name>
+    // Current location of save files is 
+    // Win: C:\Users\<username>\AppData\LocalLow\DefaultCompany\<project_name>
+    // iOS: /var/mobile/Containers/Data/Application/<guid>/Documents.
     public static void SaveGame(GameManager aGameManager)
     {
         BinaryFormatter formatter = new BinaryFormatter();
-        string path = Application.persistentDataPath + "/gamestate.sav";
+        string path = Application.persistentDataPath + "/gamestate_" + aGameManager.GameVersion + ".sav";
         FileStream stream = new FileStream(path, FileMode.Create);
 
         SaveData data = new SaveData(aGameManager);
@@ -19,7 +21,7 @@ public class SaveSystem
 
     public static SaveData LoadGame()
     {
-        string path = Application.persistentDataPath + "/gamestate.sav";
+        string path = Application.persistentDataPath + "/gamestate_" + GameObject.Find("GameManager").GetComponent<GameManager>().GameVersion + ".sav";
         if (File.Exists(path))
         {
             BinaryFormatter formatter = new BinaryFormatter();

@@ -65,6 +65,7 @@ public class PlayerScript : MonoBehaviour
     public int MaxPlayerLives = 3;
     public int CurrentLives;
     public GameObject PlayerDeathObject;
+    public GameObject PlayerDeathObjectNoCorpse;
     public float CountdownIFramesDefault = 5.0f;
     public float _countdownIFramesCurrent;
 
@@ -482,7 +483,7 @@ public class PlayerScript : MonoBehaviour
                     if (!_isDamaged)
                     {
                         _isDamaged = true;
-                        TakeDamage(enemyScript.DamagePerHit);
+                        TakeDamage(enemyScript.DamagePerHit, false);
                     }
                 }
                 else if (PlayerLevel >= enemyScript.EnemyLevel)
@@ -495,7 +496,9 @@ public class PlayerScript : MonoBehaviour
             if (!_isDamaged)
             {
                 if (enemyScript.DamagePerHit > 0) _isDamaged = true;
-                TakeDamage(enemyScript.DamagePerHit);
+                
+                if (!enemyScript.NoCorpse) TakeDamage(enemyScript.DamagePerHit, false);
+                else TakeDamage(enemyScript.DamagePerHit, true);
             }
         }
         else if (col.tag == "Projectile")
@@ -504,7 +507,7 @@ public class PlayerScript : MonoBehaviour
             if (!_isDamaged)
             {
                 if (projScript.DamagePerHit > 0 && projScript.Damages[1] == true) _isDamaged = true;
-                TakeDamage(projScript.DamagePerHit);
+                TakeDamage(projScript.DamagePerHit, false);
             }
         }
     }
@@ -557,12 +560,12 @@ public class PlayerScript : MonoBehaviour
     public void DeconcealEnemies() { OnEnemiesDeconceal?.Invoke(); }
 
     // perhaps later a call to Animator from within this function, etc.
-    public void TakeDamage(int aDamage) 
+    public void TakeDamage(int aDamage, bool aNoCorpse) 
     {
         CurrentLives = CurrentLives - aDamage;
 
         if (CurrentLives <= 0)
-        { Die(); }
+        { Die(aNoCorpse); }
         else 
         {
             if (aDamage < 0) { OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartHeal"); }
@@ -575,16 +578,20 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    private void Die() 
+    private void Die(bool aNoCorpse) 
     {
         foreach (Transform childtr in this.gameObject.transform)
         { if (childtr.GetComponent<Camera>() != null) { childtr.parent = null; } }
         OnHealthUpdate?.Invoke(CurrentLives, MaxPlayerLives, "HeartDeath");
         Destroy(this.gameObject);
 
-        if (PlayerDeathObject != null)
+        if (PlayerDeathObject != null && PlayerDeathObjectNoCorpse != null)
         {
-            GameObject go = Instantiate(PlayerDeathObject, transform.position, new Quaternion());
+            GameObject toInstantiate;
+            if (!aNoCorpse) toInstantiate = PlayerDeathObject;
+            else toInstantiate = PlayerDeathObjectNoCorpse;
+
+            GameObject go = Instantiate(toInstantiate, transform.position, new Quaternion());
             go.name = PlayerDeathObject.name; 
             go.GetComponent<SpriteSheetSwapper_PlayerDeath>()._playerLevel = PlayerLevel;
         }

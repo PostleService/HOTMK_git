@@ -884,7 +884,6 @@ public class EnemyScript : MonoBehaviour
         _agent.pathStatus != NavMeshPathStatus.PathInvalid &&
         _agent.path.corners.Length != 0)
         {
-            Debug.LogWarning("Inside teleport loop");
             float distanceBeforeCalc = 0.0f;
             float NextStretch = 0.0f;
             float totalDistanceSoFar = 0.0f;

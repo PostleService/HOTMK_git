@@ -17,7 +17,6 @@ public class SpikesTrigger : TrapTrigger
     private float _selfActivationCurrent;
     private bool _selfActivationComplete = false;
 
-    private bool _trapDestroyed = false;
     private LevelManagerScript _levelManager;
     private Animator _animator;
 
@@ -58,7 +57,6 @@ public class SpikesTrigger : TrapTrigger
                 _cooldownTimerCurrent = Cooldown;
                 _destroyTimerCurrent = DestroyAfter;
                 _hasBeenTriggered = false;
-                _trapDestroyed = false;
                 _allowedToCooldown = false;
             }
         }
@@ -116,7 +114,7 @@ public class SpikesTrigger : TrapTrigger
         
         _animator.Play("SpikesFallingAnim");
 
-        _hasBeenSpawned = false; _allowedToCooldown = true; _trapDestroyed = true;
+        _hasBeenSpawned = false; _allowedToCooldown = true;
     }
 
 }

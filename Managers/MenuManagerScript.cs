@@ -171,7 +171,7 @@ public class MenuManagerScript : MonoBehaviour
         _postProcessingManager = GameObject.Find("PostProcessingManager").GetComponent<Volume>();
 
         foreach (Transform ChTr in GameObject.Find("Menu").transform)
-        { ChTr.GetComponent<Canvas>().worldCamera = Camera.main; }
+        { ChTr.GetComponent<Canvas>().worldCamera = GameObject.Find("UICamera").GetComponent<Camera>(); }
 
         LoadSettings();
         GatherResolutions();
@@ -804,7 +804,7 @@ public class MenuManagerScript : MonoBehaviour
         
         GameObject TutorialGO = Instantiate(aTutorialWindow, Vector3.zero, Quaternion.identity, GameObject.Find("Menu").transform);
         TutorialGO.name = aTutorialWindow.name;
-        TutorialGO.GetComponent<Canvas>().worldCamera = Camera.main;
+        TutorialGO.GetComponent<Canvas>().worldCamera = GameObject.Find("UICamera").GetComponent<Camera>();
         CurrentTutorialObject = TutorialGO;
 
         void AddTrigger(GameObject aButton)

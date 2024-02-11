@@ -5,13 +5,14 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    private int MaximumLevel = 5;
+    private int MaximumLevel = 4;
     [HideInInspector] public int CreditsScene;
     private int _lastSceneIndex = 0;
     public int _deathCounter = 0;
 
     public static GameManager Instance { get; private set; }
 
+    [HideInInspector] public string GameVersion = "v0.7.0.0.1";
     public Vector2 ScreenResolution;
     public bool VSyncSetting;
     public bool FullScreenSetting;

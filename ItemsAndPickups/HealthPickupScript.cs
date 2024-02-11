@@ -26,7 +26,7 @@ public class HealthPickupScript : MonoBehaviour
             if (collision.GetComponent<PlayerScript>().CurrentLives < collision.GetComponent<PlayerScript>().MaxPlayerLives && !_hasHealed)
             {
                 // basically decreases the player's health by negative of what it's supposed to heal - adding the value
-                collision.GetComponent<PlayerScript>().TakeDamage(-HealsBy);
+                collision.GetComponent<PlayerScript>().TakeDamage(-HealsBy, false);
                 _hasHealed = true; // prevents from executing more than once
                 DestroyItem();
                 if (DeathObject != null) Instantiate(DeathObject, transform.position, new Quaternion(), GameObject.Find("ItemHolder").transform);
