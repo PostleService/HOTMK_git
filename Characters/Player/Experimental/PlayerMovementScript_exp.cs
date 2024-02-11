@@ -8,7 +8,7 @@ public class PlayerMovementScript_exp : MonoBehaviour
 {
     // This is the actual object controlled by keyboard input. The parent object will attempt to move towards it.
     private InputControl _inputControl;
-    private PlayerScript _playerScript;
+    private PlayerScript_exp _playerScript;
     private Rigidbody2D _rigidbody2D;
     private Animator _animator;
 
@@ -79,7 +79,7 @@ public class PlayerMovementScript_exp : MonoBehaviour
 
     private void Awake()
     {
-        _playerScript = GetComponent<PlayerScript>();
+        _playerScript = GetComponent<PlayerScript_exp>();
         _rigidbody2D = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
     }

@@ -776,7 +776,13 @@ public class EnemyScript : MonoBehaviour
     #region ON CALL BEHAVIOURS
 
     private void ReactToPlayerLevelUp(int aPlayerLevel)
-    { if (aPlayerLevel >= EnemyLevel) _isAfraid = true; }
+    {
+        if (aPlayerLevel >= EnemyLevel)
+        {
+            _isAfraid = true;
+            GetComponent<SpriteSheetSwapper_EnemyFear>().InitiateSwapping(aPlayerLevel, EnemyLevel);
+        }
+    }
 
     private void ReactToPlayerDeath()
     {
