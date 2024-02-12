@@ -62,6 +62,7 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("Distance at which the enemy will notice player with raycast. In alternative aggro - raw distance to aggro")]
     public float RayCastDistance;
     private float _raycastModifier = 0f; // for when enemy is stunned
+    private GameObject _rotatableChild;
     [Tooltip("If set to false - enemy will aggro even through seethrough obstacles")]
     public bool IgnoreSeethroughAggro = true;
     [Tooltip("If set to false - enemy will not aggro through fog")]
@@ -232,6 +233,7 @@ public class EnemyScript : MonoBehaviour
 
     void Start()
     {
+        _rotatableChild = transform.Find("RotatableChild").gameObject;
         _statusEffect = GetComponentInChildren<StatusEffectScript>();
         AdaptLightingToState(false, false);
 
@@ -368,13 +370,26 @@ public class EnemyScript : MonoBehaviour
         _agent.SetDestination(CurrentTarget.position);
     }
 
+
+    public static List<Vector2> GetRotations(Vector3 aTargetPosition, Vector3 aOriginPoint)
+    {
+        Vector3 direction = (aTargetPosition - aOriginPoint);
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        List<Vector2> QuatLis = new List<Vector2> { Quaternion.Euler(new Vector3(0, 0, angle)) * Vector2.up, Quaternion.Euler(new Vector3(0, 0, angle - 90)) * Vector2.up, Quaternion.Euler(new Vector3(0, 0, angle - 180)) * Vector2.up };
+        return QuatLis;
+    }
+
     public void RayCast()
     {
         if (CanAggrDeaggr)
         {
             RaycastHit2D colliderHit;
             List<string> colliderHitList = new List<string>();
-            List<Vector2> vectorList = new List<Vector2> { new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, 0), new Vector2(-1, 0) };
+            List<Vector2> vectorList = new List<Vector2> { _rotatableChild.transform.up, _rotatableChild.transform.right, -_rotatableChild.transform.right };
+
+            // List<Vector2> vectorList = new List<Vector2> { new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, 0), new Vector2(-1, 0) };
+            
+             
 
             foreach (Vector2 vector in vectorList)
             {

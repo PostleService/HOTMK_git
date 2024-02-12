@@ -121,6 +121,14 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
         {
             _animator.SetFloat("Horizontal", DesiredIdleDirection.x);
             _animator.SetFloat("Vertical", DesiredIdleDirection.y);
+
+            // correcting rotatable child rotation to cast raycasts in proper direction
+
+            EnemyPosX = (transform.position.x + DesiredIdleDirection.x) - transform.position.x;
+            EnemyPosY = (transform.position.y + DesiredIdleDirection.y) - transform.position.y;
+
+            float angle = Mathf.Atan2(EnemyPosY, EnemyPosX) * Mathf.Rad2Deg;
+            _rotatableChild.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle - 90));
         }
     }
 }
