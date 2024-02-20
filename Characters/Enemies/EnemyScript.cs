@@ -9,7 +9,6 @@ using UnityEngine.AI;
 using UnityEngine.Events;
 using UnityEngine.Rendering.Universal;
 
-
 public class EnemyScript : MonoBehaviour
 {
     private LevelManagerScript _levelManager;
@@ -90,9 +89,7 @@ public class EnemyScript : MonoBehaviour
             if (IsAfraid != value && CanBeScared == true)
             {
                 IsAfraid = value;
-                _currentlyAggroed = false;
-                _isRushing = false;
-                if (_currentRushTarget != null) Destroy(_currentRushTarget.gameObject);
+                Deaggro();
                 gameObject.GetComponent<Light2D>().lightOrder = 2;
             } }
     }
@@ -385,11 +382,9 @@ public class EnemyScript : MonoBehaviour
         {
             RaycastHit2D colliderHit;
             List<string> colliderHitList = new List<string>();
-            List<Vector2> vectorList = new List<Vector2> { _rotatableChild.transform.up, _rotatableChild.transform.right, -_rotatableChild.transform.right };
 
-            // List<Vector2> vectorList = new List<Vector2> { new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, 0), new Vector2(-1, 0) };
+            List<Vector2> vectorList = new List<Vector2> { Vector2Int.RoundToInt(_rotatableChild.transform.up), Vector2Int.RoundToInt(_rotatableChild.transform.right), Vector2Int.RoundToInt(-_rotatableChild.transform.right) };
             
-             
 
             foreach (Vector2 vector in vectorList)
             {

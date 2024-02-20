@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    private int MaximumLevel = 4;
+    private int MaximumLevel = 5;
     [HideInInspector] public int CreditsScene;
     private int _lastSceneIndex = 0;
     public int _deathCounter = 0;

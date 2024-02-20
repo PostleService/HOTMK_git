@@ -38,7 +38,7 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
         _animator = gameObject.GetComponent<Animator>();
     }
 
-    public virtual void MonitorEnemyDirection()
+    public Vector3 MonitorEnemyDirection()
     {
         
         if (_agent.desiredVelocity.x != 0 || _agent.desiredVelocity.y != 0)
@@ -61,9 +61,7 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
         float angle = Mathf.Atan2(EnemyPosY, EnemyPosX) * Mathf.Rad2Deg;
         _rotatableChild.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle - 90));
 
-        Vector2 direction = _rotatableChild.transform.up;
-
-        _enemyRotation = direction;
+        return _rotatableChild.transform.up;
 
     }
 
@@ -109,8 +107,9 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
 
     public void PassInformationToAnimator()
     {
-        _animator.SetFloat("Horizontal", _enemyRotation.x);
-        _animator.SetFloat("Vertical", _enemyRotation.y);
+        Vector2 direction = MonitorEnemyDirection(); 
+        _animator.SetFloat("Horizontal", direction.x);
+        _animator.SetFloat("Vertical", direction.y);
         _animator.SetFloat("State", _state);
         _animator.speed = _animationSpeedModifier;
     }

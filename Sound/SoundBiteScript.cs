@@ -50,7 +50,7 @@ public class SoundBiteInstance : MonoBehaviour
     public GameObject callingGO;
     public List<string> TagsToIgnore = new List<string>();
     private float _visibilityIncrementMultiplier = 6.5f;
-    private float soundClipTimer = 0;
+    public float soundClipTimer = 0;
     private bool Started = false;
     private bool _menuOpen = false;
     public bool _isVisible = true;
@@ -68,6 +68,8 @@ public class SoundBiteInstance : MonoBehaviour
     {
         if (Started == true && _menuOpen == false)
         {
+            if (callingGO != null) 
+                { evInst.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(callingGO.transform)); }
             DetermineVisibility();
             UpdateVisibilityValue();
             UpdateValuesWhileSoundBiteLasts();

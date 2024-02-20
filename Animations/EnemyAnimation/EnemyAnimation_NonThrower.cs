@@ -12,7 +12,6 @@ class EnemyAnimation_NonThrower : EnemyAnimation_Universal
 {
     private void FixedUpdate()
     {
-        MonitorEnemyDirection();
         MonitorEnemyState();
         PassInformationToAnimator();
         if (HasDesiredIdleDirection) AssumeDesiredIdleDirection();
