@@ -71,10 +71,10 @@ public class EnemyScript : MonoBehaviour
     private bool _currentlyAggroed
     {
         get { return _currentlyAggroed; }
-        set 
+        set
         {
             if (CurrentlyAggroed != value)
-            { 
+            {
                 CurrentlyAggroed = value;
                 AdaptLightingToState(value, IsAfraid);
             }
@@ -104,7 +104,7 @@ public class EnemyScript : MonoBehaviour
     public int EscapeAttempts = 3;
     [Tooltip("Measures distance in units on the navmesh rather than straight line")]
     public float DistanceToDeaggro;
-    
+
     [Header("LayerMasks")]
     [Tooltip("Layers which will stop rushing behaviour")]
     public LayerMask RushPointLayers;
@@ -141,10 +141,10 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("Boolean in control of activating and maintaining countdown")]
     public bool ConsideringTeleport = false;
     private bool _consideringTeleport
-    { set 
+    { set
         {
             if (ConsideringTeleport != value)
-            { 
+            {
                 ConsideringTeleport = value;
                 if (value != true)
                 { ResetTeleportCountDown(); }
@@ -179,12 +179,12 @@ public class EnemyScript : MonoBehaviour
     public float ProjectileSpeed;
     public float ProjectileLifetime;
     [HideInInspector] public bool _seesPlayer = false;
-    
+
     [Tooltip("Basic projectile collision without enemy layer. If interacts with enemies in any way, projectile will add enemy layer on its own")]
     public LayerMask ProjectileCollision;
     [Tooltip("If hit by slow, slow down to X of speed")]
     public float SlowToSpeed = 0.5f;
-    
+
     public bool _performingThrow = false;
 
     [Header("Enemy Stats")]
@@ -203,7 +203,7 @@ public class EnemyScript : MonoBehaviour
     public delegate void MyHandler(int aItemStageLevel, GameObject aEnemyObject);
     public static event MyHandler OnDie;
     public static event MyHandler OnSpawn;
-    public delegate void PositionTracker (GameObject aGameObject, Vector2 aPosition);
+    public delegate void PositionTracker(GameObject aGameObject, Vector2 aPosition);
     public static event PositionTracker OnPositionChange;
 
     private bool _diedOnce = false;
@@ -213,7 +213,7 @@ public class EnemyScript : MonoBehaviour
     public bool DebugPath = false;
 
     private void OnEnable()
-    { 
+    {
         PlayerScript.OnSpawn += AssignPlayer;
         PlayerScript.OnLevelUp += ReactToPlayerLevelUp;
         AnimationEndDetection_PlayerDeath.OnDie += ReactToPlayerDeath;
@@ -221,7 +221,7 @@ public class EnemyScript : MonoBehaviour
     }
 
     private void OnDisable()
-    { 
+    {
         PlayerScript.OnSpawn -= AssignPlayer;
         PlayerScript.OnLevelUp -= ReactToPlayerLevelUp;
         AnimationEndDetection_PlayerDeath.OnDie -= ReactToPlayerDeath;
@@ -257,9 +257,17 @@ public class EnemyScript : MonoBehaviour
         AssignPlayer(GameObject.Find("Player"));
     }
 
+    private void Update()
+    {
+        // Test fix for navmesh slowdown?
+        if (_agent.desiredVelocity.x != 0 || _agent.desiredVelocity.y != 0)
+        { transform.position = new Vector3(transform.position.x, transform.position.y, 0); }
+    }
+
     // Update is called once per frame
     void FixedUpdate()
     {
+
         GetRemainingDistance();
         RayCast();
         AggroAndFlee();

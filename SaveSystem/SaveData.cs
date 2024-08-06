@@ -15,6 +15,7 @@ public class SaveData
     public float MusicVolumeSetting;
     public float AmbientVolumeSetting;
     public float SoundEffectsVolumeSetting;
+    public bool TutorialPassed;
 
     // Level states broken down in separate bools to be able to pass to SaveSystem
     public bool LevelState_lvl1 = true;
@@ -43,6 +44,7 @@ public class SaveData
         MusicVolumeSetting = 1;
         AmbientVolumeSetting = 1;
         SoundEffectsVolumeSetting = 1;
+        TutorialPassed = false;
 
         LevelState_lvl1 = true;
         LevelState_lvl2 = false;
@@ -71,6 +73,7 @@ public class SaveData
         MusicVolumeSetting = aGameManager.MusicVolumeSetting;
         AmbientVolumeSetting = aGameManager.AmbientVolumeSetting;
         SoundEffectsVolumeSetting = aGameManager.SoundEffectsVolumeSetting;
+        TutorialPassed = aGameManager.TutorialPassed;
 
         LevelState_lvl1 = aGameManager.LevelProgress[1];
         LevelState_lvl2 = aGameManager.LevelProgress[2];

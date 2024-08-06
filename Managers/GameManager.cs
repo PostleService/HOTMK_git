@@ -5,14 +5,15 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    private int MaximumLevel = 5;
+    private int MaximumLevel = 4;
     [HideInInspector] public int CreditsScene;
+    [HideInInspector] public int TutorialScene;
     private int _lastSceneIndex = 0;
     public int _deathCounter = 0;
 
     public static GameManager Instance { get; private set; }
 
-    [HideInInspector] public string GameVersion = "v0.7.0.0.1";
+    [HideInInspector] public string GameVersion = "v0.7.0.0.2";
     public Vector2 ScreenResolution;
     public bool VSyncSetting;
     public bool FullScreenSetting;
@@ -38,10 +39,12 @@ public class GameManager : MonoBehaviour
             { 11, false },
             { 12, false }
         };
+    public bool TutorialPassed = false;
 
     private void Awake()
     {
         CreditsScene = SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/CreditsScene.unity");
+        TutorialScene = SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/lvl0.unity");
         // If there are no other instances of GameManager created, GameManager class will refer to this particular instance.
         // Otherwise, any copy of this object will be destroyed.
         // Do not child the object containing this script to anything or DoNotDestroyOnLoad cannot apply
@@ -69,6 +72,7 @@ public class GameManager : MonoBehaviour
         MusicVolumeSetting = saveData.MusicVolumeSetting;
         AmbientVolumeSetting = saveData.AmbientVolumeSetting;
         SoundEffectsVolumeSetting = saveData.SoundEffectsVolumeSetting;
+        TutorialPassed = saveData.TutorialPassed;
 
         LevelProgress[1] = saveData.LevelState_lvl1;
         LevelProgress[2] = saveData.LevelState_lvl2;

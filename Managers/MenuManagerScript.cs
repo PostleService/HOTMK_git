@@ -62,6 +62,9 @@ public class MenuManagerScript : MonoBehaviour
     private bool _playerWon = false;
     private bool _defeatShown = false;
 
+    public GameObject _confirmTutorialMenuObject;
+    private bool _confirmTutorialMenuCalled = false;
+
     [Header("Menu navigation")]
     public GameObject EventSystemObject;
     public GameObject LastSelectedButton;
@@ -329,7 +332,7 @@ public class MenuManagerScript : MonoBehaviour
 
     private void MonitorSubmenuEscape()
     {
-        if (_resetProgressMenuCalled || _restartMenuCalled || _chooseLevelMenuCalled || _quitToMainMenuMenuCalled || _quitToOSMenuCalled)
+        if (_resetProgressMenuCalled || _restartMenuCalled || _chooseLevelMenuCalled || _quitToMainMenuMenuCalled || _quitToOSMenuCalled || _confirmTutorialMenuCalled)
         {
             if (_submenuCancelCall)
             { CloseSubmenu(); }
@@ -397,7 +400,7 @@ public class MenuManagerScript : MonoBehaviour
 
         if (_menuObject.transform.Find("ContinueButton") != null)
         {
-            if (lastActiveLevel == 1)
+            if (lastActiveLevel == 1 && _gameManager.TutorialPassed == false)
             { _menuObject.transform.Find("ContinueButton").GetChild(0).GetComponent<TextMeshProUGUI>().text = "New Game"; }
             else
             { _menuObject.transform.Find("ContinueButton").GetChild(0).GetComponent<TextMeshProUGUI>().text = "Continue"; }
@@ -469,19 +472,41 @@ public class MenuManagerScript : MonoBehaviour
         }
     }
 
+    public void UnlockNextLevel()
+    {
+        int _nextSceneToUnlock = 0;
+        if (SceneManager.GetActiveScene().buildIndex == _gameManager.TutorialScene)
+        {
+            _gameManager.TutorialPassed = true;
+            _nextSceneToUnlock = SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/lvl1.unity"); 
+        }
+
+        else if (SceneManager.GetActiveScene().buildIndex < _maximumLevel)
+        { _nextSceneToUnlock = (SceneManager.GetActiveScene().buildIndex + 1); }
+
+        else if (SceneManager.GetActiveScene().buildIndex >= _maximumLevel)
+        { _nextSceneToUnlock = _maximumLevel; }
+
+        // substitute values in Menu and Game Managers before save data
+        LevelProgress[_nextSceneToUnlock] = true;
+        _gameManager.LevelProgress[_nextSceneToUnlock] = true;
+
+        _gameManager.SaveGame();
+    }
+
     public void VictoryScreen_NextLevel()
     {
         // change back to if (SceneManager.GetActiveScene().buildIndex < LevelProgress.Count) after more levels are ready
         // if the level is last level, quit to main menu
-        if (SceneManager.GetActiveScene().buildIndex < _maximumLevel)
-        {
-            UnsubscribeAll();
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        UnsubscribeAll();
+        if (SceneManager.GetActiveScene().buildIndex == _gameManager.TutorialScene)
+        { SceneManager.LoadScene(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/lvl1.unity"));
+        }
+        else if (SceneManager.GetActiveScene().buildIndex < _maximumLevel)
+        { SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         }
         else
-        {
-            UnsubscribeAll();
-            SceneManager.LoadScene(_gameManager.CreditsScene); 
+        { SceneManager.LoadScene(_gameManager.CreditsScene);
         }
     }
 
@@ -523,6 +548,8 @@ public class MenuManagerScript : MonoBehaviour
         _quitToMainMenuMenuObject.SetActive(false);
         _quitToOSMenuObject.SetActive(false);
         _acceptChangesOrLeaveMenuObject.SetActive(false);
+        if (_confirmTutorialMenuObject != null)
+            _confirmTutorialMenuObject.SetActive(false);
         if (_resetProgressMenuObject != null)
             _resetProgressMenuObject.SetActive(false);
 
@@ -533,6 +560,7 @@ public class MenuManagerScript : MonoBehaviour
         _quitToOSMenuCalled = false;
         _acceptChangesOrLeaveMenuCalled = false;
         _resetProgressMenuCalled = false;
+        _confirmTutorialMenuCalled = false;
 
         _submenuCalled = false;
 
@@ -555,11 +583,50 @@ public class MenuManagerScript : MonoBehaviour
             if (LevelProgress[i] == true) { lastActiveLevel = i; }
             else break;
         }
-        Time.timeScale = 1;
-        
-        UnsubscribeAll();
-        SceneManager.LoadScene(lastActiveLevel);
+
+        if (lastActiveLevel == 1 && _gameManager.TutorialPassed == false)
+        {
+            // placeholder code 
+            EnterSubmenu();
+            _submenuCalled = true;
+            _confirmTutorialMenuCalled = true;
+
+            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
+            EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_confirmTutorialMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
+
+            _confirmTutorialMenuObject.SetActive(true);
+        }
+        else
+        {
+            Time.timeScale = 1;
+
+            UnsubscribeAll();
+            SceneManager.LoadScene(lastActiveLevel);
+        }
     }
+
+    public void ConfirmTutorial_Yes()
+    {
+        CloseMenu();
+        CloseSubmenu();
+        Time.timeScale = 1;
+
+        UnsubscribeAll();
+        SceneManager.LoadScene(_gameManager.TutorialScene);
+    }
+
+    public void ConfirmTutorial_No() 
+    {
+        CloseMenu();
+        CloseSubmenu();
+        Time.timeScale = 1;
+
+        UnsubscribeAll();
+        SceneManager.LoadScene(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/lvl1.unity"));
+    }
+
+    public void ConfirmTutorial_Back() 
+    { CloseSubmenu(); }
 
     public void RestartButton()
     {
@@ -600,7 +667,13 @@ public class MenuManagerScript : MonoBehaviour
         foreach (Transform childtrf in _chooseLevelMenuObject.transform)
         {
             if (childtrf.GetComponent<LevelChoiceButton>() != null)
-            { childtrf.GetComponent<Button>().interactable = LevelProgress[childtrf.GetComponent<LevelChoiceButton>().LevelIndexToLoad]; }
+            {
+                if (childtrf.GetComponent<LevelChoiceButton>().TutorialButton && childtrf.GetComponent<LevelChoiceButton>().LevelIndexToLoad == _gameManager.TutorialScene)
+                { childtrf.GetComponent<Button>().interactable = true; }
+                else
+                childtrf.GetComponent<Button>().interactable = LevelProgress[childtrf.GetComponent<LevelChoiceButton>().LevelIndexToLoad]; 
+                
+            }
         }
 
         _chooseLevelMenuObject.SetActive(true);
@@ -639,6 +712,7 @@ public class MenuManagerScript : MonoBehaviour
         {
             LevelProgress[i] = false;
             _gameManager.LevelProgress[i] = false;
+            _gameManager.TutorialPassed = false;
             _gameManager.SaveGame();
         }
         CloseSubmenu();
