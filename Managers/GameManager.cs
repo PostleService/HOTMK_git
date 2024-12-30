@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    private int MaximumLevel = 4;
+    private int MaximumLevel = 7;
     [HideInInspector] public int CreditsScene;
     [HideInInspector] public int TutorialScene;
     private int _lastSceneIndex = 0;
@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
 
-    [HideInInspector] public string GameVersion = "v0.7.0.0.2";
+    [HideInInspector] public string GameVersion = "v0.7.0.0.3";
     public Vector2 ScreenResolution;
     public bool VSyncSetting;
     public bool FullScreenSetting;

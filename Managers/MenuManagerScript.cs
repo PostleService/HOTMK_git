@@ -657,6 +657,23 @@ public class MenuManagerScript : MonoBehaviour
 
     public void ChooseLevelButton()
     {
+        void ActivateButtons()
+        {
+            foreach (Transform childtrf in _chooseLevelMenuObject.transform)
+            {
+                if (childtrf.GetComponent<LevelChoiceButton>() != null)
+                {
+                    if (childtrf.GetComponent<LevelChoiceButton>().TutorialButton && childtrf.GetComponent<LevelChoiceButton>().LevelIndexToLoad == _gameManager.TutorialScene)
+                    {
+                        childtrf.GetComponent<Button>().interactable = true;
+                    }
+                    else
+                        childtrf.GetComponent<Button>().interactable = LevelProgress[childtrf.GetComponent<LevelChoiceButton>().LevelIndexToLoad];
+
+                }
+            }
+        }
+
         EnterSubmenu();
         _chooseLevelMenuCalled = true;
         _submenuCalled = true;
@@ -664,19 +681,9 @@ public class MenuManagerScript : MonoBehaviour
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(null);
         EventSystemObject.GetComponent<EventSystem>().SetSelectedGameObject(_chooseLevelMenuObject.GetComponent<DefaultButton>().DefaultButtonOfMenu);
 
-        foreach (Transform childtrf in _chooseLevelMenuObject.transform)
-        {
-            if (childtrf.GetComponent<LevelChoiceButton>() != null)
-            {
-                if (childtrf.GetComponent<LevelChoiceButton>().TutorialButton && childtrf.GetComponent<LevelChoiceButton>().LevelIndexToLoad == _gameManager.TutorialScene)
-                { childtrf.GetComponent<Button>().interactable = true; }
-                else
-                childtrf.GetComponent<Button>().interactable = LevelProgress[childtrf.GetComponent<LevelChoiceButton>().LevelIndexToLoad]; 
-                
-            }
-        }
-
+        ActivateButtons(); // I can't be bothered to understand why this prevents buttons from popping up as active after menu start. The sole reason "ActivateButtons" is also present after menu object activation is that inactive objects cannot be called prior.
         _chooseLevelMenuObject.SetActive(true);
+        ActivateButtons();
     }
 
     public void ChooseLevel_ChangeLevel(Button aButton)

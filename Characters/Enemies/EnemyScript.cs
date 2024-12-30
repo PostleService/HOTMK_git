@@ -160,6 +160,7 @@ public class EnemyScript : MonoBehaviour
     private Vector2 _playerDir;
     public float RushCooldown;
     public float _currentRushCooldown;
+    [HideInInspector] public bool _onCooldownPreRush = false;
     [HideInInspector] public bool _onCooldown = false;
     private bool _isRushing = false;
 

@@ -20,6 +20,8 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
 
     private bool _aggroed; private bool _afraid;
     private bool _slowed; private bool _stunned;
+    int _stationaryPatrolPosX;
+    int _stationaryPatrolPosY;
 
     // 0 - idle; 1 - walk; 2 - aggro
     protected float _state;
@@ -36,11 +38,13 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
         _agent = gameObject.GetComponent<NavMeshAgent>();
         _rotatableChild = transform.Find("RotatableChild").gameObject;
         _animator = gameObject.GetComponent<Animator>();
+
+        _stationaryPatrolPosX = (int)_enemyScript.PatrolPath[0].vec.x;
+        _stationaryPatrolPosY = (int)_enemyScript.PatrolPath[0].vec.y;
     }
 
     public Vector3 MonitorEnemyDirection()
     {
-        
         if (_agent.desiredVelocity.x != 0 || _agent.desiredVelocity.y != 0)
         {
             // only update enemy rotation data if speed > 0. Otherwise - keep last known rotation data
@@ -116,7 +120,7 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
 
     public void AssumeDesiredIdleDirection()
     {
-        if (_state == 0 && _enemyScript.CurrentlyAggroed == false)
+        if (_state == 0 && _enemyScript.CurrentlyAggroed == false && (int)gameObject.transform.position.x == _stationaryPatrolPosX && (int)gameObject.transform.position.y == _stationaryPatrolPosY)
         {
             _animator.SetFloat("Horizontal", DesiredIdleDirection.x);
             _animator.SetFloat("Vertical", DesiredIdleDirection.y);
