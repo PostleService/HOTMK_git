@@ -363,7 +363,7 @@ public class EnemyScript : MonoBehaviour
         if (Stunned) _currSpeedModifier_Stun = SpeedModifier_Stun;
         else _currSpeedModifier_Stun = 1;
 
-        if (CurrentlyTeleporting || _seesPlayer || _onCooldown) { _currSpeedModifier_Special = SpeedModifier_Special; }
+        if (CurrentlyTeleporting || _seesPlayer || _onCooldownPreRush || _onCooldown) { _currSpeedModifier_Special = SpeedModifier_Special; }
         else _currSpeedModifier_Special = 1;
 
         _currSpeed = DefaultSpeed * _currSpeedModifier_Flee * _currSpeedModifier_Rush * _currSpeedModifier_Slow * _currSpeedModifier_Stun * _currSpeedModifier_Special;
@@ -474,6 +474,8 @@ public class EnemyScript : MonoBehaviour
                     {
                         if (!_onCooldown && _playerSighted == true && _fogManager._playerInsideFog != true) // only allow aggro if not on cooldown
                         {
+                            _onCooldownPreRush = true;
+                            gameObject.GetComponent<EnemyAnimation_NonThrower>().ExecutePreRushAnimation();
                             CommonAggroSettings();
                             FindRushPoint(GetDirection(_player.transform.position, transform.position));
                         }

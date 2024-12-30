@@ -52,7 +52,7 @@ abstract class EnemyAnimation_Universal : MonoBehaviour
             EnemyPosY = (transform.position.y + _agent.desiredVelocity.y) - transform.position.y;
         }
         // For throwers and rushers to turn to player (during throw and after rush cooldown) if not stunned
-        if (_enemyScript._seesPlayer || _enemyScript._onCooldown && !_enemyScript.Stunned)
+        if (_enemyScript._seesPlayer || _enemyScript._onCooldownPreRush || _enemyScript._onCooldown && !_enemyScript.Stunned)
         {
             if (_enemyScript._player != null)
             {

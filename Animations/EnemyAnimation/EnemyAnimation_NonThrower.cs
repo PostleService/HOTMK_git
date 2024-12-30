@@ -16,4 +16,9 @@ class EnemyAnimation_NonThrower : EnemyAnimation_Universal
         PassInformationToAnimator();
         if (HasDesiredIdleDirection) AssumeDesiredIdleDirection();
     }
+
+    public void ExecutePreRushAnimation()
+    {
+        _animator.Play("PreRush", 0, 0);
+    }
 }
