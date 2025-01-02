@@ -61,6 +61,10 @@ public class EnemyScript : MonoBehaviour
     [Tooltip("Distance at which the enemy will notice player with raycast. In alternative aggro - raw distance to aggro")]
     public float RayCastDistance;
     private float _raycastModifier = 0f; // for when enemy is stunned
+    /// <summary>
+    /// Modify raycast distance once player is seen to "lead" the shot
+    /// </summary>
+    public float RaycastModifierThrower = 1.2f;
     private GameObject _rotatableChild;
     [Tooltip("If set to false - enemy will aggro even through seethrough obstacles")]
     public bool IgnoreSeethroughAggro = true;
@@ -397,15 +401,20 @@ public class EnemyScript : MonoBehaviour
 
             foreach (Vector2 vector in vectorList)
             {
-                if (DebugRaycast == true)
-                { Debug.DrawRay(transform.position, (vector * RayCastDistance * _raycastModifier), Color.red); }
+                float Modifier = 0f;
+                if (EnemyType == EnemyOfType.Thrower && _playerSighted) { Modifier = _raycastModifier * RaycastModifierThrower; }
+                else { Modifier = _raycastModifier; }
 
-                colliderHit = Physics2D.Raycast(transform.position, vector, RayCastDistance * _raycastModifier, _raycastLayers);
+                colliderHit = Physics2D.Raycast(transform.position, vector, RayCastDistance * Modifier, _raycastLayers);
+
+                if (DebugRaycast == true)
+                { Debug.DrawRay(transform.position, (vector * RayCastDistance * Modifier), Color.red); }
+
 
                 if (colliderHit.collider != null)
                 { colliderHitList.Add(colliderHit.collider.name); }
             }
-
+            _playerSighted = false;
             if (colliderHitList.Any())
             {
                 foreach (string col in colliderHitList)
@@ -415,9 +424,9 @@ public class EnemyScript : MonoBehaviour
                         _playerSighted = true;
                         break;
                     }
-                    else _playerSighted = false;
                 }
             }
+
         }
     }
 
