@@ -425,7 +425,10 @@ public class EnemyScript : MonoBehaviour
     {
         _currentlyAggroed = true;
         gameObject.GetComponent<Light2D>().lightOrder = 5;
-        gameObject.GetComponent<EnemySoundScript>().PlayAggroSound();
+
+        // Rusher plays his aggro sound afteer a pre-rush downtime instead. Placed in animation end detection script. 
+        // If pre-rush animation is extended later on - can return previous structure and add rush scream as a separate type of sound
+        if (EnemyType != EnemyOfType.Rusher) { gameObject.GetComponent<EnemySoundScript>().PlayAggroSound(); }
         ChangeNavMeshMasks(CurrentlyAggroed, IsAfraid);
     }
 
