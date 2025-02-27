@@ -38,7 +38,7 @@ public class TrapScript : MonoBehaviour
         {
             EnemyScript es = collision.gameObject.GetComponent<EnemyScript>();
 
-            if (Collapsable && es.EnemyLevel >= 3 && es.CurrentlyTeleporting != true && _requestedTeleport == false) 
+            if (Collapsable && es.EnemyLevel == 3 && es.CurrentlyTeleporting != true && _requestedTeleport == false) 
             {
                 Vector3 destination = Vector3.zero;
                 if (TeleportBossToCustom == false) { destination = new Vector3(es.SpawnPosition.x, es.SpawnPosition.y, 0); }
@@ -48,7 +48,7 @@ public class TrapScript : MonoBehaviour
             }
 
             if (Damages[0])
-            { if (es.EnemyLevel < 3) { es.Die(NoCorpse); } }
+            { if (es.EnemyLevel != 3) { es.Die(NoCorpse); } }
 
             else
             {

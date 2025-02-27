@@ -14,26 +14,27 @@ public class CameraShakeManager : MonoBehaviour
     private List<GameObject> _observedCameras = new List<GameObject>();
     public List<ScreenShakerOrigin> _observedShakers = new List<ScreenShakerOrigin>();
 
-    private GameObject _player;
+    public GameObject _player;
 
     private void OnEnable()
     {
         ScreenShaker.OnShake += UpdateShakerList;
         ScreenShakerOrigin.OnTimerEnd += ShakerDestroyAndListClear;
-        PlayerScript.OnSpawn += AddPlayer;
+        // PlayerScript.OnSpawn += AddPlayer;
     }
 
     private void OnDisable()
     {
         ScreenShaker.OnShake -= UpdateShakerList;
         ScreenShakerOrigin.OnTimerEnd -= ShakerDestroyAndListClear;
-        PlayerScript.OnSpawn -= AddPlayer;
+        // PlayerScript.OnSpawn -= AddPlayer;
     }
 
     void Start()
     {
         AddObservedCameras();
         ResetShakingTickTimer();
+        _player = GameObject.Find("PlayerCamera");
     }
 
     private void FixedUpdate()
@@ -84,7 +85,7 @@ public class CameraShakeManager : MonoBehaviour
             {
             foreach (ScreenShakerOrigin sso in _observedShakers)
                 {
-                    if (Vector3.Distance(_player.transform.position, sso.transform.position) < MaxReactToShakingDistance) 
+                if (_player != null && Vector3.Distance(new Vector3(_player.transform.position.x, _player.transform.position.y, 0), sso.transform.position) < MaxReactToShakingDistance)
                     return true;
                 }
             return false;
@@ -141,8 +142,10 @@ public class CameraShakeManager : MonoBehaviour
         foreach (ScreenShakerOrigin sso in _observedShakers)
         {
             // Basically, returns a coefficient of distance to max distance times intencity. if distance = 0, then coefficient is 1. 1 * 1 = 1. Everything else is lower
-            float priority = sso.Intensity * 
-                ((MaxReactToShakingDistance - Vector3.Distance(sso.transform.position, _player.transform.position))/ MaxReactToShakingDistance);
+            float priority = sso.Intensity *
+                ((MaxReactToShakingDistance - Vector3.Distance(sso.transform.position, new Vector3(_player.transform.position.x, _player.transform.position.y, 0))) / MaxReactToShakingDistance);
+
+
             if (maxPrioritySoFar < priority)
             {
                 maxPrioritySoFar = priority;

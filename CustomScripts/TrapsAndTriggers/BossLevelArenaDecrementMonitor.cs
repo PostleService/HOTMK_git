@@ -33,7 +33,7 @@ public class BossLevelArenaDecrementMonitor : MonoBehaviour
     public delegate void Decrementer(int aLevelStage, int aCurrentItems, int aDefaultItems, int aLevelStageItem);
     public static event Decrementer OnObjectiveDecrement;
 
-    public delegate void DestructionMonitor(GameObject aGameObject);
+    public delegate void DestructionMonitor(GameObject aGameObject); // passes to BossDespawnMonitor
     public static event DestructionMonitor OnDestroy;
 
     private void OnEnable()
